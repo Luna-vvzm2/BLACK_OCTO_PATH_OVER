@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{528cff62-2e96-4ef5-a150-e6959d8dfd75}</ProjectGuid>
+    <RootNamespace>SHINOBIclass</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>BLACK_OCTO_PATH_OVER</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;$(IncludePath)</IncludePath>
+    <ExternalIncludePath>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="AnimationComponent.cpp" />
+    <ClCompile Include="ArmorEnemyEntity.cpp" />
+    <ClCompile Include="ArrowEnemyEntity.cpp" />
+    <ClCompile Include="BackGroundUI.cpp" />
+    <ClCompile Include="BlockActor.cpp" />
+    <ClCompile Include="BossEntity.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ClearBlock.cpp" />
+    <ClCompile Include="ClearPlatformBlock.cpp" />
+    <ClCompile Include="ClearScene.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ClearUI.cpp" />
+    <ClCompile Include="CollisionComponent.cpp" />
+    <ClCompile Include="Component.cpp" />
+    <ClCompile Include="DropItemEntity.cpp" />
+    <ClCompile Include="EffectActor.cpp" />
+    <ClCompile Include="EnemyBullet.cpp" />
+    <ClCompile Include="EnemyEntity.cpp" />
+    <ClCompile Include="EnemyHPBar.cpp" />
+    <ClCompile Include="EquipmentMenu.cpp" />
+    <ClCompile Include="EventManager.cpp" />
+    <ClCompile Include="EventTexture.cpp" />
+    <ClCompile Include="GameOverMenuUI.cpp" />
+    <ClCompile Include="GunnerEnemyEntity.cpp" />
+    <ClCompile Include="HealerEnemyEntity.cpp" />
+    <ClCompile Include="HitboxData.cpp" />
+    <ClCompile Include="HouseBlock.cpp" />
+    <ClCompile Include="JutsuChargeUI.cpp" />
+    <ClCompile Include="KaryuTextUI.cpp" />
+    <ClCompile Include="KunaiActor.cpp" />
+    <ClCompile Include="Menu.cpp" />
+    <ClCompile Include="MenuCursor.cpp" />
+    <ClCompile Include="MenuPage.cpp" />
+    <ClCompile Include="MoneyUI.cpp" />
+    <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="PlatformBlock.cpp" />
+    <ClCompile Include="PlatformOboroLBlock.cpp" />
+    <ClCompile Include="PlatformOboroMBlock.cpp" />
+    <ClCompile Include="PlatformOboroSBlock.cpp" />
+    <ClCompile Include="ScarecrowEnemyEntity.cpp" />
+    <ClCompile Include="SekienkiBossEntity.cpp" />
+    <ClCompile Include="ShurikenUI.cpp" />
+    <ClCompile Include="SkillMenu.cpp" />
+    <ClCompile Include="SoundComponent.cpp" />
+    <ClCompile Include="StageBackActor.cpp" />
+    <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StoneLBlock.cpp" />
+    <ClCompile Include="StoneSBlock.cpp" />
+    <ClCompile Include="StructureABlock.cpp" />
+    <ClCompile Include="StructureBBlocke.cpp" />
+    <ClCompile Include="Trap.cpp" />
+    <ClCompile Include="TreasureBox.cpp" />
+    <ClCompile Include="WhiteEnemyEntity.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="EntityActor.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GravityComponent.cpp" />
+    <ClCompile Include="GroundBlock.cpp" />
+    <ClCompile Include="HitEffect.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="HPBerUI.cpp" />
+    <ClCompile Include="HPComponent.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Joypad.cpp" />
+    <ClCompile Include="Key.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MapData.cpp" />
+    <ClCompile Include="PlayerEntity.cpp" />
+    <ClCompile Include="PlayScene.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SpriteComponent.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="TitleUI.cpp" />
+    <ClCompile Include="TransformComponent.cpp" />
+    <ClCompile Include="UIActor.cpp" />
+    <ClCompile Include="VelocityComponent.cpp" />
+    <ClCompile Include="WhiteShurikenBullet.cpp" />
+    <ClCompile Include="WoodLBlock.cpp" />
+    <ClCompile Include="WoodSBlock.cpp" />
+    <ClCompile Include="YaguraLBlock.cpp" />
+    <ClCompile Include="YaguraLLBlock.cpp" />
+    <ClCompile Include="YaguraMBlock.cpp" />
+    <ClCompile Include="YaguraSBlock.cpp" />
+    <ClCompile Include="YellowEnemyEntity.cpp" />
+    <ClCompile Include="YoroiBossEntity.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="AnimationComponent.h" />
+    <ClInclude Include="ArmorEnemyEntity.h" />
+    <ClInclude Include="ArrowEnemyEntity.h" />
+    <ClInclude Include="BackGroundUI.h" />
+    <ClInclude Include="BlockActor.h" />
+    <ClInclude Include="BossEntity.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="ClearBlock.h" />
+    <ClInclude Include="ClearPlatformBlock.h" />
+    <ClInclude Include="ClearScene.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="ClearUI.h" />
+    <ClInclude Include="CollisionComponent.h" />
+    <ClInclude Include="Color.h" />
+    <ClInclude Include="Component.h" />
+    <ClInclude Include="DropData.h" />
+    <ClInclude Include="DropItemEntity.h" />
+    <ClInclude Include="EffectActor.h" />
+    <ClInclude Include="EnemyBullet.h" />
+    <ClInclude Include="EnemyEntity.h" />
+    <ClInclude Include="EnemyHPBar.h" />
+    <ClInclude Include="EnemySpawner.h" />
+    <ClInclude Include="EquipmentMenu.h" />
+    <ClInclude Include="EventManager.h" />
+    <ClInclude Include="EventTexture.h" />
+    <ClInclude Include="GameOverMenuUI.h" />
+    <ClInclude Include="GunnerEnemyEntity.h" />
+    <ClInclude Include="HealerEnemyEntity.h" />
+    <ClInclude Include="HitboxData.h" />
+    <ClInclude Include="HouseBlock.h" />
+    <ClInclude Include="JutsuChargeUI.h" />
+    <ClInclude Include="KaryuTextUI.h" />
+    <ClInclude Include="KunaiActor.h" />
+    <ClInclude Include="Menu.h" />
+    <ClInclude Include="MenuCursor.h" />
+    <ClInclude Include="MenuPage.h" />
+    <ClInclude Include="MoneyUI.h" />
+    <ClInclude Include="Mouse.h" />
+    <ClInclude Include="PlatformBlock.h" />
+    <ClInclude Include="PlatformOboroLBlock.h" />
+    <ClInclude Include="PlatformOboroMBlock.h" />
+    <ClInclude Include="PlatformOboroSBLock.h" />
+    <ClInclude Include="ScarecrowEnemyEntity.h" />
+    <ClInclude Include="SekienkiBossEntity.h" />
+    <ClInclude Include="ShurikenUI.h" />
+    <ClInclude Include="SkillData.h" />
+    <ClInclude Include="SkillMenu.h" />
+    <ClInclude Include="SoundComponent.h" />
+    <ClInclude Include="StageBackActor.h" />
+    <ClInclude Include="StageExitActor.h" />
+    <ClInclude Include="StoneLBlock.h" />
+    <ClInclude Include="StoneSBlock.h" />
+    <ClInclude Include="StructureABlock.h" />
+    <ClInclude Include="StructureBBlock.h" />
+    <ClInclude Include="Trap.h" />
+    <ClInclude Include="TreasureBox.h" />
+    <ClInclude Include="WhiteEnemyEntity.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="EntityActor.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GravityComponent.h" />
+    <ClInclude Include="GroundBlock.h" />
+    <ClInclude Include="HitEffect.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="HPBarUI.h" />
+    <ClInclude Include="HPComponent.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="Joypad.h" />
+    <ClInclude Include="Key.h" />
+    <ClInclude Include="MapData.h" />
+    <ClInclude Include="PlayerEntity.h" />
+    <ClInclude Include="PlayScene.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SpriteComponent.h" />
+    <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="TitleUI.h" />
+    <ClInclude Include="TransformComponent.h" />
+    <ClInclude Include="UIActor.h" />
+    <ClInclude Include="Vector2d.h" />
+    <ClInclude Include="VelocityComponent.h" />
+    <ClInclude Include="WhiteShurikenBullet.h" />
+    <ClInclude Include="WoodLBlock.h" />
+    <ClInclude Include="WoodSBlock.h" />
+    <ClInclude Include="YaguraLBlock.h" />
+    <ClInclude Include="YaguraLLBlock.h" />
+    <ClInclude Include="YaguraMBlock.h" />
+    <ClInclude Include="YaguraSBlock.h" />
+    <ClInclude Include="YellowEnemyEntity.h" />
+    <ClInclude Include="YoroiBossEntity.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\maps\stage1\map.csv" />
+    <None Include="assets\maps\stage1\obj.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\images\blocks\ground.png" />
+    <Image Include="assets\images\entities\players\musashi_sheet.PNG" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

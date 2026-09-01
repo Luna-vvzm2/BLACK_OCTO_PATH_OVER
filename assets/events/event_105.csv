@@ -1,0 +1,15 @@
+type,name,time,pos,path,text
+TALK,トモエ,None,L,assets\images\events\stand\tomoe\tomoe3.png,くっ……敵の数が多すぎる！<br>こ、このままでは……！！
+type,areaMin,areaMax,enemyType,posX,posY
+BATTLE,,,1,50,0
+,,,2,720,0
+,,,2,820,0
+BATTLE,,,1,50,0
+,,,2,720,0
+BATTLE,,,2,720,0
+,,,2,820,0
+type,name,time,pos,path,text
+TALK,トモエ,None,L,assets\images\events\stand\tomoe\tomoe3.png,師匠、ありがとうございます。<br>助かりました。 
+,ジョー・ムサシ,None,R,assets\images\events\stand\musashi\musashi.png,……
+,トモエ,None,L,assets\images\events\stand\tomoe\tomoe3.png,……確かに、師匠の言う通りですね。<br>悔しいですが、私の実力では足手まといに…… 
+,トモエ,None,L,assets\images\events\stand\tomoe\tomoe3.png,であれば、<br>私は、師匠の家でナオコさんを守ります。<br>師匠は早くみんなを助けに行ってください。

@@ -1,0 +1,4 @@
+type,name,time,pos,path,text
+TALK,ナオコ,None,L,assets/images/events/stand/naoko/naoko1.png,おはようあなた。<br>きょうもいい天気ね。
+,ナオコ,None,L,assets/images/events/stand/naoko/naoko1.png,風が暖かかくて心地いい。<br>もうすぐ生まれるこの子を<br>まるで世界が祝福しているみたい
+,ナオコ,None,R,assets/images/events/stand/naoko/naoko2.png,そう言えば、今日は道場で<br>弟子たちに稽古をつける日だったわね。<br>私のことは大丈夫だから、いってらっしゃい。

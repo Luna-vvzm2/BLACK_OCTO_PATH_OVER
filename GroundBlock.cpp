@@ -1,0 +1,6 @@
+#include "GroundBlock.h"
+
+GroundBlock::GroundBlock(Scene* scene, const Vector2d& pos, const Vector2d& size)
+    : BlockActor(scene, pos, size)
+{
+}

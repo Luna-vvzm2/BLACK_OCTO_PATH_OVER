@@ -1,0 +1,17 @@
+type,name,time,pos,path,text
+TALK,トモエ,None,L,assets\images\events\stand\tomoe\tomoe2.png,そこのお前！ 何者だ！？
+,忍者,None,R,assets\images\events\stand\enemy\shiro.png,……まだ朧の忍者がいたか。<br>覚悟するんだな。
+,トモエ,None,L,assets\images\events\stand\tomoe\tomoe2.png,答えろ！<br>何者だと聞いている！！ 
+,忍者,None,R,assets\images\events\stand\enemy\shiro.png,我はルーズ様の配下の忍。<br>朧一族は、すべて殲滅する。
+,トモエ,None,L,assets\images\events\stand\tomoe\tomoe2.png,せ……殲滅！？
+,忍者,None,R,assets\images\events\stand\enemy\shiro.png,お前たちが消えればもはや障害は何もない。<br>ルーズ様率いるNEO-CORPが……<br>世界を支配するのだ。
+,忍者,None,R,assets\images\events\stand\enemy\shiro.png,さあ、いくぞ……<br>その首、頂戴する！！
+type,areaMin,areaMax,enemyType,posX,posY
+BATTLE,,,1,50,0
+,,,1,720,0
+,,,1,820,0
+BATTLE,,,1,50,0
+,,,1,720,0
+,,,1,820,0
+type,name,time,pos,path,text
+TALK,トモエ,None,R,assets\images\events\stand\tomoe\tomoe1.png,朧一族を殲滅するだって……？<br>師匠、急ぎましょう！みんなが危ない！！

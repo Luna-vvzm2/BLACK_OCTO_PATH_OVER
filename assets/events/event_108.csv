@@ -1,0 +1,5 @@
+type,name,time,pos,path,text
+TALK,ˆ«—ì‚ÌŠZ•m,None,R,assets\images\events\stand\enemy\ghost.png,‚Ü‚¾O‚Ì”EÒ‚ªc‚Á‚Ä‚¢‚½‚©cc
+,ˆ«—ì‚ÌŠZ•m,None,R,assets\images\events\stand\enemy\ghost.png,ŠoŒå‚µ‚ëcc‰ä‚É“|‚³‚êA<br>Î‚Æ‚È‚Á‚½’‡ŠÔ‚½‚¿‚Æ“¯‚¶‰^–½‚ğ‚½‚Ç‚é‚Ì‚¾B 
+type,areaMin,areaMax,enemyType,posX,posY
+BATTLE,,,7,720,0

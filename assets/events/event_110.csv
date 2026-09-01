@@ -1,0 +1,11 @@
+type,name,time,pos,path,text,
+TALK,赤猿鬼,None,R,assets\images\events\stand\enemy\ghost.png,……忍たちの家を燃やしてやった。,
+,赤猿鬼,None,R,,道場を破壊し、戦旗を折り、<br>向かってくる忍を全員ひとりひとり殺して<br>やった。,
+,赤猿鬼,None,R,,だが、それもお前で最後……<br>これで、朧一族も終わりだ！,
+,赤猿鬼,None,R,,覚悟しろ、ムサシ！<br>いくぞ！！,
+type,rName,jName,time,bossPath,musashiPath,bandPath
+CUTIN,KOZARU,赤猿鬼,180,assets\images\events\cutIn\cutInKozaru.png,assets\images\events\cutIn\cutInMusashi.png,assets\images\events\cutIn\cutInBandBlack.png
+type,areaMin,areaMax,enemyType,posX,posY,
+BATTLE,,,8,720,0,
+type,,,,,,
+CLEAR,,,,,,
