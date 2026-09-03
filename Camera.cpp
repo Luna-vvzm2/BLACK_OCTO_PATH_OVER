@@ -17,6 +17,51 @@ void Camera::SetCenter(const Vector2d& center) {
     m_center = ClampCenter(center);
 }
 
+// プレイヤーなどの対象を滑らかに追従する
+void Camera::UpdateFollow(const Vector2d& target, float deltaTime)
+{
+    const float horizontalSpeed = 0.15f;
+
+    // プレイヤーとカメラの縦方向の距離
+    float diffY = target.y - m_center.y;
+
+    Vector2d nextCenter = m_center;
+
+    // 横方向は常に追従
+    nextCenter.x +=
+        (target.x - m_center.x) *
+        (horizontalSpeed * 60.0f * deltaTime);
+
+
+    // =========================
+    // 縦方向のカメラ処理
+    // =========================
+
+    // 1段ジャンプ程度なら上方向にカメラを動かさない
+    const float upperDeadZone = 250.0f;
+
+    if (diffY < -upperDeadZone)
+    {
+        // 一定以上高い場所に行ったら上方向へ追従
+        const float verticalUpSpeed = 0.01f;
+
+        nextCenter.y +=
+            (target.y - m_center.y) *
+            (verticalUpSpeed * 60.0f * deltaTime);
+    }
+    else if (diffY > 0.0f)
+    {
+        // 下方向は普通に追従
+        const float verticalDownSpeed = 0.10f;
+
+        nextCenter.y +=
+            (target.y - m_center.y) *
+            (verticalDownSpeed * 60.0f * deltaTime);
+    }
+
+    m_center = ClampCenter(nextCenter);
+}
+
 // クランプ処理：左端・右端・上端・下端をブロック端に合わせる
 Vector2d Camera::ClampCenter(const Vector2d& center) const {
     float halfW = m_screenWidth / 2.0f / m_zoom;
@@ -61,7 +106,3 @@ Vector2d Camera::GetCenter() const {
 void Camera::SetTileHalfSize(const Vector2d& halfSize) {
     m_tileHalfSize = halfSize;
 }
-
-//調整しましたtest
-
-//void----
