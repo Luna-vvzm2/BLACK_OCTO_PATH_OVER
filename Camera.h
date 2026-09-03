@@ -10,6 +10,9 @@ public:
     void SetCenter(const Vector2d& center);
     Vector2d GetCenter() const;
 
+    // プレイヤーなどの対象を滑らかに追従する
+    void UpdateFollow(const Vector2d& target, float deltaTime);
+
     // ワールド座標 → 画面座標
     Vector2d WorldToScreen(const Vector2d& worldPos) const;
 

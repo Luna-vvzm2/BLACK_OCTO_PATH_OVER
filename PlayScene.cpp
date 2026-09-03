@@ -104,6 +104,11 @@ bool PlayScene::Init() {
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
 
+	// ゲーム開始時のカメラ位置をプレイヤーに合わせる
+	Vector2d initialCameraPos = m_playerSpawnPoints[0];
+	initialCameraPos.y -= 150.0f;
+	m_camera.SetCenter(initialCameraPos);
+
 	// ---- HP UI 作成 ----
 	HPBarUI* hpBar = new HPBarUI(
 		this,
@@ -601,28 +606,26 @@ void PlayScene::Update(float deltaTime) {
 			}
 		}
 	}
-	if (m_player) {
-		Vector2d playerPos = m_player->GetComponent<TransformComponent>()->GetPosition();
 
-		// 中間点をカメラ位置に
-		Vector2d camPos = playerPos;
-		camPos.y -= 150;
-		m_camera.SetCenter(camPos);
-		m_camera.SetZoom(1.0f);
-		/*
-		// 線形補間で徐々にズーム変更
-		float currentZoom = m_camera.GetZoom();
-		float zoomSpeed = 5.0f;
-		float newZoom = currentZoom + (targetZoom - currentZoom) * std::min(zoomSpeed * deltaTime, 1.0f);
-		*/
+	if (m_player)
+	{
+		TransformComponent* transform =
+			m_player->GetComponent<TransformComponent>();
 
-		float fixedCameraY = 400.0f;  // スクロール開始位置の上限
+		if (transform)
+		{
+			Vector2d playerPos = transform->GetPosition();
 
-		if (playerPos.y < fixedCameraY) {
-			camPos.y = playerPos.y - 200;  // 上に移動したらカメラもスクロール
-		}
-		else {
-			camPos.y = fixedCameraY - 200;  // それ以外はカメラ固定
+			// カメラが追従する目標位置
+			Vector2d cameraTarget = playerPos;
+
+			// プレイヤーを画面中央より少し下に表示
+			cameraTarget.y -= 150.0f;
+
+			// 前期と同じ滑らかな追従
+			m_camera.UpdateFollow(cameraTarget, deltaTime);
+
+			m_camera.SetZoom(1.0f);
 		}
 	}
 
@@ -837,8 +840,15 @@ void PlayScene::RespawnPlayer() {
 
 	// プレイヤーの位置をリスポーン位置に戻す
 	TransformComponent* transform = m_player->GetComponent<TransformComponent>();
+
 	if (transform) {
 		transform->SetPosition(m_playerSpawnPoints[0]);
+
+		// リスポーンした瞬間にカメラも戻す
+		Vector2d cameraPos = m_playerSpawnPoints[0];
+		cameraPos.y -= 150.0f;
+
+		m_camera.SetCenter(cameraPos);
 	}
 
 	// プレイヤーの速度をリセット

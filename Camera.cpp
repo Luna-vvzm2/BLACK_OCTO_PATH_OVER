@@ -17,6 +17,43 @@ void Camera::SetCenter(const Vector2d& center) {
     m_center = ClampCenter(center);
 }
 
+// プレイヤーなどの対象を滑らかに追従する
+void Camera::UpdateFollow(const Vector2d& target, float deltaTime)
+{
+    // 横方向の追従速度
+    const float horizontalSpeed = 0.15f;
+
+    // 縦方向の追従速度
+    float verticalSpeed;
+
+    // プレイヤーがカメラより上にいる場合
+    if (target.y < m_center.y)
+    {
+        // 上方向はかなりゆっくり追従
+        verticalSpeed = 0.001f;
+    }
+    else
+    {
+        // 下方向は速めに追従
+        verticalSpeed = 0.10f;
+    }
+
+    Vector2d nextCenter = m_center;
+
+    // 横方向の滑らかな追従
+    nextCenter.x +=
+        (target.x - m_center.x) *
+        (horizontalSpeed * 60.0f * deltaTime);
+
+    // 縦方向の滑らかな追従
+    nextCenter.y +=
+        (target.y - m_center.y) *
+        (verticalSpeed * 60.0f * deltaTime);
+
+    // マップ外に出ないように制限
+    m_center = ClampCenter(nextCenter);
+}
+
 // クランプ処理：左端・右端・上端・下端をブロック端に合わせる
 Vector2d Camera::ClampCenter(const Vector2d& center) const {
     float halfW = m_screenWidth / 2.0f / m_zoom;
@@ -61,7 +98,3 @@ Vector2d Camera::GetCenter() const {
 void Camera::SetTileHalfSize(const Vector2d& halfSize) {
     m_tileHalfSize = halfSize;
 }
-
-//調整しましたtest
-
-//void----
