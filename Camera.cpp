@@ -61,3 +61,7 @@ Vector2d Camera::GetCenter() const {
 void Camera::SetTileHalfSize(const Vector2d& halfSize) {
     m_tileHalfSize = halfSize;
 }
+
+//í≤êÆÇµÇ‹ÇµÇΩtest
+
+//void----
