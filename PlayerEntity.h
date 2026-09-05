@@ -157,14 +157,14 @@ public:
     std::vector<EnemyEntity*> CollectEnemiesInScreen();
 
     void UpdateScale();
-    void UpdateJump(float deltaTime);
     void UpdateGravity(float deltaTime);
-    void UpdateAttack(float deltaTime);
     void UpdateState(float deltaTime);
+
     void ChangeState(PlayerState newState);
     void UpdateMove();
     void UpdateDir(const Input& input);
     void UpdateDash(float deltaTime);
+    void StartAttack(int attackNum);
     void UpdateDead(float deltaTime); // 死亡時の専用アップデート
 
     ActorType GetType() const override { return ActorType::Player; }
@@ -173,7 +173,7 @@ public:
 
     void AddJutsuGauge() {
         m_jutsuGauge++;
-        if (m_jutsuGauge >=25) {
+        if (m_jutsuGauge >= 25) {
             m_jutsuGauge = 25;
             m_jutsuCharge = true;
         }
@@ -203,14 +203,14 @@ public:
     void HitTrap();
 
     void CheckCanStand();
-    BlockActor* CheckSensor(const Vector2d& offset, const Vector2d& size = {4.0f, 4.0f});
+    BlockActor* CheckSensor(const Vector2d& offset, const Vector2d& size = { 4.0f, 4.0f });
 
     void EnterSquat();
     void ExitSquat();
 
     void SpawnKunai();
 
-    
+
 
     Vector2d GetDrawOffset() const { return m_sprite->GetDrawOffset(); }
     // ★追加: 手裏剣の数を返す関数
@@ -260,7 +260,7 @@ private:
     bool m_isSenten;
 
     // EntityActor.bool m_isGround;          // 接地フラグ
-    int m_jumpCount;
+    bool m_jumpCount;
     float m_jumpTime;
     float m_maxJumpTime;
 
