@@ -13,6 +13,7 @@ class Input;
 class EventBase;
 class EventTexture;
 class Actor;
+class Camera;
 
 class EventManager
 {
@@ -41,6 +42,7 @@ public:
 private:
 	Scene* m_scene{ nullptr }; //イベントを管理するシーン
 	EventTexture* m_eventTexture{ nullptr }; //イベントの画像を管理
+
 	//std::unique_ptr<EventBase> m_currentEvent{ nullptr }; //実行中のイベント
 	std::vector<std::unique_ptr<EventBase>> m_eventQueue; //イベントのキュー
 	size_t m_currentEventIndex{ 0 };
@@ -114,19 +116,24 @@ private:
 	bool m_isTextTimerActive{ false }; //テキスト表示タイマーが有効か
 	float m_textTimer{ 0.0f }; //テキスト表示タイマー
 	ActorPosition m_talkerPosition{ ActorPosition::None };
-	int m_actorTextureId{ -1 }; //立ち絵のid
-	int m_actorW{ 480 };
-	int m_actorH{ 510 };
+	int m_actorRTextureId{ -1 }; //右立ち絵のid
+	int m_actorLTextureId{ -1 }; //左立ち絵のid
 
-	int m_boxX{ 280 };
-	int m_boxY{ 510 };
-	int m_boxW{ 720 };
-	int m_boxH{ 160 };
+	//立ち絵の簡易アニメーション
+	bool m_talkStart{ false };
+	int m_talkStep{ 0 };
+	int m_actorLY{ 0 };
+	int m_actorRY{ 0 };
+
+	Vector2d m_actorSize{ 480.0f, 510.0f };
+
+	Vector2d m_boxPos{ 280.0f, 510.0f };
+	Vector2d m_boxSize{ 720.0f, 160.0f };
 
 	int m_fontSize{ 20 };
 	int m_nameX{ 0 };
-	int m_nameY{ m_boxY - 30 };
-	int m_nameX2{ m_boxW + 230 };
+	int m_nameY{ static_cast<int>(m_boxPos.y) - 30 };
+	int m_nameX2{ static_cast<int>(m_boxSize.x) + 230 };
 
 	Color m_textColor{ 255, 255, 255, 255 };
 	Color m_boxColor{ 0, 0, 0, 180 };
@@ -213,28 +220,20 @@ private:
 
 	int m_bandTextureId{ -1 };
 	int m_bossTextureId{ -1 };
-	int m_musashiTextureId{ -1 };
+	int m_heroTextureId{ -1 };
 
-	int m_bandX{ 0 };
-	int m_bandY{ 0 };
-	int m_bandW{ 1280 };
-	int m_bandH{ 720 };
+	Vector2d m_bandPos{ 0.0f, 0.0f };
+	Vector2d m_bandSize{ 1280.0f, 720.0f };	
 
-	int m_bossX{ 2300 };
-	int m_bossY{ 0 };
-	int m_bossW{ 362 };
-	int m_bossH{ 720 };
+	Vector2d m_bossPos{ 2300.0f, 0.0f };
+	Vector2d m_bossSize{ 362.0f, 720.0f };
 
-	int m_musashiX{ -1400 };
-	int m_musashiY{ 385 };
-	int m_musashiW{ 378 };
-	int m_musashiH{ 335 };
+	Vector2d m_heroPos{ -1400.0f, 385.0f };
+	Vector2d m_heroSize{ 378.0f, 335.0f };
 
-	int m_rBossNameX{ 1280 };
-	int m_rBossNameY{ 320 };
+	Vector2d m_rBossNamePos{ 1280.0f, 320.0f };
 
-	int m_jBossNameX{ 1430 };
-	int m_jBossNameY{ 380 };
+	Vector2d m_jBossNamePos{ 1430.0f, 380.0f };
 
 	int m_rFontSize{ 96 };
 	int m_jFontSize{ 60 };
