@@ -148,6 +148,7 @@
     <ClCompile Include="BackGroundUI.cpp" />
     <ClCompile Include="BlockActor.cpp" />
     <ClCompile Include="BossEntity.cpp" />
+    <ClCompile Include="boss_01.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ClearBlock.cpp" />
     <ClCompile Include="ClearPlatformBlock.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="BackGroundUI.h" />
     <ClInclude Include="BlockActor.h" />
     <ClInclude Include="BossEntity.h" />
+    <ClInclude Include="boss_01.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ClearBlock.h" />
     <ClInclude Include="ClearPlatformBlock.h" />
