@@ -61,18 +61,8 @@ public:
         WEAK_ATTACK2,
         WEAK_ATTACK3,
         ATTACK_END,
-        WEAK_ATTACK4,
 
         WEAK_AIR_ATTACK1,
-        WEAK_AIR_ATTACK2,
-        WEAK_AIR_ATTACK3,
-        HAYABUSA,
-        HAYABUSA_HIT,
-        HAYABUSA_GROUND,
-
-        STRONG_ATTACK1,
-        STRONG_ATTACK_END,
-        STRONG_ATTACK2,
 
         SQUAT_ATTACK,
         WALL_ATTACK,
@@ -92,8 +82,6 @@ public:
         HIEN,
         SENTEN,
         ROLL_LANDING,
-
-        SOU_KUNAI_SENTEN,
 
         WALL_HOLD,
         WALL_JUMP,
@@ -120,20 +108,6 @@ public:
         KARYU_END,
 
         DEAD,
-    };
-
-    enum class AttackType {
-        NONE,
-        WEAK_ATTACK,
-        STRONG_ATTACK,
-        KUNAI,
-        SQUAT_ATTACK,
-        SQUAT_KUNAI,
-        AIR_ATTACK,
-        AIR_KUNAI,
-        WALL_ATTACK,
-        WALL_KUNAI,
-        HAYABUSA,
     };
 
     explicit PlayerEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 32,32 });
@@ -267,12 +241,9 @@ private:
     bool m_attack;
     bool m_hit;           // é©êgÇÃçUåÇÇ™ìñÇΩÇ¡ÇΩÇ©Ç«Ç§Ç©
     bool m_HayabusaHit;
-    AttackType m_attackType;
     CollisionComponent* m_attackCol;
 
     int m_weakAttackIdx;
-    int m_strongAttackIdx;
-    int m_airAttackIdx;
 
     float m_attackTimer;
 

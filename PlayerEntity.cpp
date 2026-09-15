@@ -21,14 +21,8 @@
 #define weak1Num 0
 #define weak2Num 1
 #define weak3Num 2
-#define weak4Num 3
-#define strong1Num 4
-#define strong2Num 5
-#define airWeak1Num 6
-#define airWeak2Num 7
-#define airWeak3Num 8
-#define HayabusaNum 9
-#define squatAttackNum 10
+#define airWeak1Num 3
+#define squatAttackNum 4
 
 //                       offset, width, height, damage, metsu
 //AttackHitbox weak1{ Vector2d(100,0), 300, 200, 70, 15 };
@@ -47,20 +41,14 @@ AttackHitbox AttackHitboxes[] = {
     { Vector2d(100,0), 300, 200, 70, 15 },
     { Vector2d(100,0), 300, 200, 70, 15 },
     { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,-50), 400, 300, 150, 60 },
-    { Vector2d(100,-50), 400, 300, 170, 60 },
     { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(50,100), 100, 100, 150, 60 },
     { Vector2d(0,0), 450, 100, 70, 15 }
 };
 
-float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 1.0f, 1.5f, 1.3f, 0.3f, 0.3f, 0.8f, 0.9f, 0.4f };
-float playerAttackLockTimer[] = { 0.13f, 0.2f, 0.25f, 1.3f, 0.4f, 1.0f, 0.2f, 0.2f, 1.3f, 0.9f, 0.2f };
-Vector2d playerEffectPos[] = { {100.0f, 50.0f}, {30.0f, 50.0f}, {0.0f, 50.0f}, {100.0f, 50.0f}, {70.0f, 50.0f}, {70.0f, 60.0f}, {70.0f, 30.0f}, {70.0f, 0.0f}, {70.0f, 30.0f}, {70.0f, 100.0f}, {90.0f, 50.0f} };
-EffectType playerEffectType[] = { EffectType::WeakAttack1, EffectType::WeakAttack2, EffectType::WeakAttack3, EffectType::WeakAttack4, EffectType::StrongAttack1, EffectType::StrongAttack2, EffectType::WeakAirAttack1, EffectType::WeakAirAttack2, EffectType::WeakAirAttack3, EffectType::Hayabusa, EffectType::SquatAttack };
+float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
+float playerAttackLockTimer[] = { 0.13f, 0.2f, 0.25f, 0.2f, 0.2f };
+Vector2d playerEffectPos[] = { {100.0f, 50.0f}, {30.0f, 50.0f}, {0.0f, 50.0f}, {70.0f, 30.0f}, {90.0f, 50.0f} };
+EffectType playerEffectType[] = { EffectType::WeakAttack1, EffectType::WeakAttack2, EffectType::WeakAttack3, EffectType::WeakAirAttack1, EffectType::SquatAttack };
 
 PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& size)
     : EntityActor(scene, pos, size)
@@ -93,11 +81,8 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_attack(false)
     , m_hit(false)
     , m_HayabusaHit(false)
-    , m_attackType()
     , m_attackCol(nullptr)
     , m_weakAttackIdx(0)
-    , m_strongAttackIdx(0)
-    , m_airAttackIdx(0)
     , m_attackTimer(0.0f)
 
     , m_canAttack(true)
@@ -1280,8 +1265,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_attack = false;
             m_canMove = true;
             m_weakAttackIdx = 0;
-            m_strongAttackIdx = 0;
-            m_airAttackIdx = 0;
         }
     }
 
@@ -1364,98 +1347,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
-        if (m_state == PlayerState::WEAK_ATTACK4) {
-            if (!m_anim->IsFinished()) {
-                return;
-            }
-        }
-
-        if (m_state == PlayerState::WEAK_AIR_ATTACK1 || m_state == PlayerState::WEAK_AIR_ATTACK2) {
-            if (!m_anim->IsFinished()) {
+        if (m_state == PlayerState::WEAK_AIR_ATTACK1) {
+            if (m_attackTimer > 0) {
                 return;
             }
             ChangeState(PlayerState::FALL);
             return;
         }
-
-        if (m_state == PlayerState::WEAK_AIR_ATTACK3) {
-            if (!m_anim->IsFinished()) {
-                Vector2d vel = { 0.0f, 0.0f };
-                vel.y = -m_gravity->GetGravity() * 0.5f * deltaTime;
-                m_velocity->Set(vel);
-                return;
-            }
-            m_airAttackIdx = 0;
-            ChangeState(PlayerState::FALL);
-            return;
-        }
-
-        if (m_state == PlayerState::STRONG_ATTACK1) {
-            if (m_anim->IsFinished())
-            {
-                m_attack = false;
-                m_canMove = true;
-                ChangeState(PlayerState::STRONG_ATTACK_END);
-                return;
-            }
-            return;
-        }
-
-        if (m_state == PlayerState::STRONG_ATTACK2) {
-            if (m_anim->IsFinished())
-            {
-                m_attack = false;
-                m_canMove = true;
-                ChangeState(PlayerState::IDLE);
-                return;
-            }
-            return;
-        }
-
-        if (m_state == PlayerState::HAYABUSA) {
-            CheckAttackHit(AttackHitboxes[HayabusaNum]);
-            if (m_hit) {
-                Vector2d vel;
-                vel.x = m_dir ? -600.0f : 600.0f;
-                vel.y = -m_gravity->GetGravity() * 5.0f * deltaTime;
-                m_velocity->Set(vel);
-                ChangeState(PlayerState::HAYABUSA_HIT);
-                return;
-            }
-            if (m_isGround) {
-                ChangeState(PlayerState::HAYABUSA_GROUND);
-                return;
-            }
-            m_velocity->SetX(m_dir ? m_moveSpeed : -m_moveSpeed);
-            return;
-
-
-        }
-
-        if (m_state == PlayerState::HAYABUSA_HIT) {
-            if (m_anim->IsFinished())
-            {
-                m_attack = false;
-                m_canMove = true;
-                ChangeState(PlayerState::FALL);
-            }
-            return;
-        }
-
-        if (m_state == PlayerState::HAYABUSA_GROUND) {
-            if (m_anim->IsFinished())
-            {
-                m_attack = false;
-                m_canMove = true;
-                ChangeState(PlayerState::JUMP_LANDING);
-            }
-            return;
-        }
-    }
-
-    if (m_state == PlayerState::HAYABUSA) {
-        ChangeState(PlayerState::FALL);
-        return;
     }
 
     if (input.IsTrigger(Action::KUNAI)) {
@@ -1481,20 +1379,8 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_canAttack = false;
         m_canMove = false;
         if (!m_isGround) {
-            switch (m_airAttackIdx) {
-            case 0:
-                ChangeState(PlayerState::WEAK_AIR_ATTACK1);
-                return;
-            case 1:
-                ChangeState(PlayerState::WEAK_AIR_ATTACK2);
-                return;
-            case 2:
-                ChangeState(PlayerState::WEAK_AIR_ATTACK3);
-                Vector2d vel = { 0.0f, 0.0f };
-                vel.y = -m_gravity->GetGravity() * deltaTime;
-                m_velocity->Set(vel);
-                return;
-            }
+            ChangeState(PlayerState::WEAK_AIR_ATTACK1);
+            return;
         }
 
         if (m_squat) {
@@ -1514,32 +1400,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
         case 2:
             m_weakAttackIdx++;
             ChangeState(PlayerState::WEAK_ATTACK3);
-            return;
-        case 3:
-            m_weakAttackIdx++;
-            ChangeState(PlayerState::WEAK_ATTACK4);
-            return;
-        }
-    }
-
-
-    if (input.IsTrigger(Action::STRONG_ATTACK)) {
-        m_attack = true;
-        m_canAttack = false;
-        m_canMove = false;
-        if (!m_isGround) {
-            ChangeState(PlayerState::HAYABUSA);
-            return;
-        }
-
-        switch (m_strongAttackIdx) {
-        case 0:
-            m_strongAttackIdx++;
-            ChangeState(PlayerState::STRONG_ATTACK1);
-            return;
-        case 1:
-            m_strongAttackIdx++;
-            ChangeState(PlayerState::STRONG_ATTACK2);
             return;
         }
     }
@@ -1625,10 +1485,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
             ChangeState(PlayerState::JUMP_START);
             return;
         }
+        /*
         if (!m_isGround && !m_jumpCount) {
             ChangeState(PlayerState::JUMP_SECOND);
             return;
-        }
+        }*/
     }
 
     if (m_state == PlayerState::JUMP_START) {
@@ -1889,17 +1750,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
         m_weakAttackIdx = 0;
-        m_strongAttackIdx = 0;
-        m_airAttackIdx = 0;
-    }
-
-    if (m_state == PlayerState::STRONG_ATTACK_END) {
-        if (!m_anim->IsFinished()) {
-            return;
-        }
-        m_weakAttackIdx = 0;
-        m_strongAttackIdx = 0;
-        m_airAttackIdx = 0;
     }
 
     ChangeState(PlayerState::IDLE);
@@ -2096,10 +1946,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("rollLanding");
         break;
 
-    case PlayerState::SOU_KUNAI_SENTEN:
-        m_anim->Play("SouKunaiSenten");
-        break;
-
     case PlayerState::WALL_HOLD:
         m_anim->Play("wallHold");
         break;
@@ -2161,17 +2007,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("attackEnd");
         break;
 
-    case PlayerState::WEAK_ATTACK4:
-        StartAttack(weak4Num);
-        m_anim->Play("weakAttack4");
-        if (m_weakAttackSound4 != nullptr && m_hit) {
-            m_weakAttackSound4->Play();
-        }
-        else {
-            m_karaburiSound->Play();
-        }
-        break;
-
     case PlayerState::WEAK_AIR_ATTACK1:
     {
         StartAttack(airWeak1Num);
@@ -2184,75 +2019,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
             m_karaburiSound->Play();
         }
     }   break;
-
-    case PlayerState::WEAK_AIR_ATTACK2:
-    {
-        StartAttack(airWeak2Num);
-
-        m_anim->Play("weakAirAttack2", true);
-        if (m_weakAttackSound2 != nullptr && m_hit) {
-            m_weakAttackSound2->Play();
-        }
-        else {
-            m_karaburiSound->Play();
-        }
-    }   break;
-
-    case PlayerState::WEAK_AIR_ATTACK3:
-    {
-        StartAttack(airWeak3Num);
-
-        m_anim->Play("weakAirAttack3", true);
-        if (m_weakAttackSound3 != nullptr && m_hit) {
-            m_weakAttackSound3->Play();
-        }
-        else {
-            m_karaburiSound->Play();
-        }
-    }break;
-
-    case PlayerState::STRONG_ATTACK1:
-        StartAttack(strong1Num);
-        m_anim->Play("strongAttack1");
-        if (m_strongAttackSound1 != nullptr && m_hit) {
-            m_strongAttackSound1->Play();
-        }
-        else {
-            m_karaburiSound->Play();
-        }
-        break;
-
-    case PlayerState::STRONG_ATTACK_END:
-        m_anim->Play("strongAttackEnd");
-        break;
-
-    case PlayerState::STRONG_ATTACK2:
-        StartAttack(strong2Num);
-        m_anim->Play("strongAttack2");
-        if (m_strongAttackSound2 != nullptr && m_hit) {
-            m_strongAttackSound2->Play();
-        }
-        else {
-            m_karaburiSound->Play();
-        }
-        break;
-
-    case PlayerState::HAYABUSA:
-        StartAttack(HayabusaNum);
-        m_anim->Play("Hayabusa");
-        m_karaburiSound->Play();
-        break;
-
-    case PlayerState::HAYABUSA_HIT:
-        m_anim->Play("HayabusaHit");
-        if (m_hayabusaAttackSound != nullptr) {
-            m_hayabusaAttackSound->Play();
-        }
-        break;
-
-    case PlayerState::HAYABUSA_GROUND:
-        m_anim->Play("HayabusaGround");
-        break;
 
     case PlayerState::KUNAI:
         m_attackTimer = 0.3f;
@@ -2435,9 +2201,6 @@ void PlayerEntity::StartAttack(int attackNum) {
     case weak1Num:
     case weak2Num:
     case weak3Num:
-    case weak4Num:
-    case strong1Num:
-    case strong2Num:
     case squatAttackNum:
     {
         Vector2d pPos = m_transform->GetPosition();
@@ -2455,28 +2218,16 @@ void PlayerEntity::StartAttack(int attackNum) {
         m_velocity->Set(vel);
     }   break;
     case airWeak1Num:
-    case airWeak2Num:
-    case airWeak3Num:
     {
         m_attackTimer = playerAttackTimer[attackNum];
         m_attackLockTimer = playerAttackLockTimer[attackNum];
         CheckAttackHit(AttackHitboxes[attackNum]);
-        if (m_hit) m_airAttackIdx++;
         auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[attackNum], !m_dir);
         effect->SetFollowTarget(this, { m_dir ? playerEffectPos[attackNum].x : -playerEffectPos[attackNum].x, -playerEffectPos[attackNum].y });
 
         SpawnEffect(effect);
     }   break;
-    case HayabusaNum:
-    {
-        m_HayabusaHit = false;
-        m_attackTimer = playerAttackTimer[attackNum];
-        m_attackLockTimer = playerAttackLockTimer[attackNum];
-        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[attackNum], !m_dir);
-        effect->SetFollowTarget(this, { m_dir ? playerEffectPos[attackNum].x : -playerEffectPos[attackNum].x, playerEffectPos[attackNum].y });
-
-        SpawnEffect(effect);
-    }   break;
+    
     }
 
 }
