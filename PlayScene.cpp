@@ -47,6 +47,7 @@
 #include "JutsuChargeUI.h"
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
+#include "SpiritEnemyEntity.h"
 
 //イベントのため変更
 #include "EventManager.h"
@@ -372,6 +373,12 @@ bool PlayScene::StageInit(int stageNo) {
 				auto* sekienkiBoss = EnemySpawner::SpawnEnemy<SekienkiBossEntity>(this, pos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
 			} break;
 
+
+			case 209:
+			{
+				auto* spiritEnemy = EnemySpawner::SpawnEnemy<SpiritEnemyEntity>(this, pos);
+			}
+			break;
 			default:
 				if (objID >= 100)
 				{

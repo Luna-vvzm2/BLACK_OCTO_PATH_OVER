@@ -190,6 +190,8 @@
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
+    <ClCompile Include="SpiritBulletEntity.cpp" />
+    <ClCompile Include="SpiritEnemyEntity.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
@@ -289,6 +291,8 @@
     <ClInclude Include="SkillData.h" />
     <ClInclude Include="SkillMenu.h" />
     <ClInclude Include="SoundComponent.h" />
+    <ClInclude Include="SpiritBulletEntity.h" />
+    <ClInclude Include="SpiritEnemyEntity.h" />
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
     <ClInclude Include="StoneLBlock.h" />
