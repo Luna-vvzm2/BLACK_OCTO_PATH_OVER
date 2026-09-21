@@ -4,15 +4,15 @@
 #include <functional>
 #include <vector>
 
-// 洲条櫻：ステータス、待機、後退、やられのみを担当する。
+// 洲条櫻：ステータス、移動、攻撃、やられを担当する。
 // 既存ファイルへの登録・生成処理の追加は、このファイルでは行わない。
 // 接続時は Scene::AddActor(new Boss_01(scene, position)) を使用する。
-// 描画素材は Init 後に SetAnimationFrames で設定する（未設定時は描画なし）。
+// 描画素材は Init 後に SetAnimationFrames で設定する（仮描画は画像なしでも表示）。
 // シーン側は IsBattleFinished() または OnBattleFinished で戦闘終了を受け取る。
 class Boss_01 : public BossEntity
 {
 public:
-    enum class Behavior { Idle, Move, Defeated };
+    enum class Behavior { Idle, Move, Jump, Shuriken, Fall, Melee, PoisonTrap, Recovery, Defeated };
 
     struct Parameters
     {
@@ -23,13 +23,34 @@ public:
         // 距離は仕様書に数値がないため仮設定。開始と停止を分けて振動を防ぐ。
         float retreatStartDistance = 300.0f;
         float retreatStopDistance = 500.0f;
+        float jumpSpeed = 600.0f;
+        float jumpHeight = 500.0f;
+        float shurikenSpeed = 1000.0f;
+        int shurikenDamage = 19;
+        int meleeDamage = 20;
+        Vector2d shurikenSize = { 45.0f, 15.0f }; // エディタ導入までの仮判定
+        Vector2d meleeSize = { 60.0f, 60.0f };
+        Vector2d trapSize = { 80.0f, 0.5f };
+        float trapLifetime = 45.0f; // 敵仕様書を採用（別資料では20秒）
+        float poisonDuration = 10.0f;
+        float poisonDamagePerSecond = 1.5f;
+        float poisonMoveScale = 0.85f;
+        float recoverySeconds = 0.8f;
+        float actionInterval = 1.0f; // 行動選択間隔は調整用の仮値
+        float meleeRange = 60.0f; // 体の端からの距離。近接判定の幅を上限にする。
+        bool showDebugShapes = true; // 仮の四角・状態名を表示。素材導入後はfalse。
     };
 
     explicit Boss_01(Scene* scene, const Vector2d& pos = Vector2d::Zero());
     Boss_01(Scene* scene, const Vector2d& pos, const Parameters& parameters);
 
+    // シーンの初期化時、地形とプレイヤーの生成後に一度呼び出す。
+    // scene側が初期化・更新・描画・破棄を担当。Update内では呼ばない。
+    static void SpawnForTest(Scene* scene, const Vector2d& pos);
+
     bool Init() override;
     void Update(float deltaTime) override;
+    void Draw() override;
     int GetMaxHP() const override { return m_parameters.maxHP; }
     void TakeDamage(int damage, const Vector2d& knockback) override;
     void TakeMetsu(int metsu) override;
@@ -51,14 +72,58 @@ public:
     // コールバック内でこのActorを即時deleteせず、シーン変更は予約すること。
     std::function<void()> OnBattleFinished;
 
+    // 既存PlayerEntityに減速APIがないため、メインプログラマーとの接続用通知。
+    // (対象, 効果時間, 移動/回避倍率)。未接続時は毒ダメージのみ有効。
+    // 接続先で時間管理・解除を行い、再接触時は重複乗算せず時間を更新する。
+    std::function<void(class PlayerEntity*, float, float)> OnPoisonSlowRequested;
+
+    // 外部AIや動作確認からも開始可能。接地中かつ待機/移動中のみ成功する。
+    bool StartJumpAttack();
+    bool StartMeleeAttack();
+    bool StartPoisonTrap();
+    // 各素材は再生順。Jump=6枚、Shuriken=12枚、Melee=3枚、PoisonTrap=10枚。
+    bool SetAttackAnimationFrames(Behavior behavior, const std::vector<int>& frames);
+
 protected:
     void UpdateAI(float deltaTime) override;
-    void UpdateAttack(float deltaTime) override; // 今回は攻撃を実装しない。
+    void UpdateAttack(float deltaTime) override;
 
 private:
     void ChangeBehavior(Behavior behavior);
     void EnterDefeated();
     void PlayBehaviorAnimation();
+
+    class PlayerEntity* FindPlayer() const;
+    bool CanStartAttack() const;
+    void BeginAttack(Behavior behavior);
+    void SpawnShuriken();
+    void PlacePoisonTrap();
+    void UpdateHazards(float deltaTime);
+    bool IsVisible(const Vector2d& position, const Vector2d& size) const;
+
+    struct ShurikenData
+    {
+        Vector2d position = Vector2d::Zero();
+        Vector2d velocity = Vector2d::Zero();
+    };
+    struct TrapData
+    {
+        Vector2d position = Vector2d::Zero();
+        float remaining = 0.0f;
+    };
+    std::vector<ShurikenData> m_shuriken;
+    std::vector<TrapData> m_traps;
+    std::vector<int> m_baseFrames;
+    std::vector<int> m_jumpFrames, m_throwFrames, m_meleeFrames, m_trapFrames;
+    float m_behaviorTime = 0.0f;
+    float m_nextAction = 1.0f;
+    float m_jumpStartY = 0.0f;
+    float m_attackDirection = 1.0f;
+    bool m_attackTriggered = false;
+    bool m_meleeHit = false;
+    float m_poisonRemaining = 0.0f;
+    double m_poisonFraction = 0.0;
+    class PlayerEntity* m_poisonTarget = nullptr; // 毎更新、Sceneの現プレイヤーと照合
 
     Parameters m_parameters;
     Behavior m_behavior = Behavior::Idle;
