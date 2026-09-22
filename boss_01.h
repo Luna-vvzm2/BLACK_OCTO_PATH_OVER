@@ -23,7 +23,12 @@ public:
         // 距離は仕様書に数値がないため仮設定。開始と停止を分けて振動を防ぐ。
         float retreatStartDistance = 300.0f;
         float retreatStopDistance = 500.0f;
-        float jumpSpeed = 600.0f;
+        float approachStartDistance = 700.0f; // これ以上離れたら接近
+        float approachStopDistance = 550.0f;
+        float knockbackSeconds = 0.4f;
+        float knockbackHorizontalScale = 3.0f; // 通常被弾150 → 450px/s
+        float knockbackVerticalScale = 1.0f; // 通常被弾-300px/sのまま
+        float jumpSpeed = 600.0f; // 最低初速度。高さに必要な初速度は重力から算出
         float jumpHeight = 500.0f;
         float shurikenSpeed = 1000.0f;
         int shurikenDamage = 19;
@@ -117,7 +122,12 @@ private:
     std::vector<int> m_jumpFrames, m_throwFrames, m_meleeFrames, m_trapFrames;
     float m_behaviorTime = 0.0f;
     float m_nextAction = 1.0f;
-    float m_jumpStartY = 0.0f;
+    bool m_approaching = false;
+    float m_knockbackRemaining = 0.0f;
+    int m_attacksWithoutTrap = 0;
+    Behavior m_lastAttack = Behavior::Idle;
+    Vector2d m_previousPlayerCenter = Vector2d::Zero();
+    class PlayerEntity* m_previousPlayer = nullptr;
     float m_attackDirection = 1.0f;
     bool m_attackTriggered = false;
     bool m_meleeHit = false;

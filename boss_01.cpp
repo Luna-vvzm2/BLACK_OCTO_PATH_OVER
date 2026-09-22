@@ -91,6 +91,8 @@ bool Boss_01::Init()
         return false;
 
     const float positiveValues[] = {m_parameters.jumpSpeed, m_parameters.jumpHeight,
+        m_parameters.approachStartDistance, m_parameters.approachStopDistance, m_parameters.knockbackSeconds,
+        m_parameters.knockbackHorizontalScale, m_parameters.knockbackVerticalScale,
         m_parameters.shurikenSpeed, m_parameters.shurikenSize.x, m_parameters.shurikenSize.y,
         m_parameters.meleeSize.x, m_parameters.meleeSize.y, m_parameters.trapSize.x,
         m_parameters.trapSize.y, m_parameters.trapLifetime, m_parameters.poisonDuration,
@@ -99,7 +101,8 @@ bool Boss_01::Init()
     for (float value : positiveValues)
         if (!std::isfinite(value) || value <= 0.0f) return false;
     if (m_parameters.shurikenDamage <= 0 || m_parameters.meleeDamage <= 0 ||
-        m_parameters.poisonMoveScale > 1.0f) return false;
+        m_parameters.poisonMoveScale > 1.0f ||
+        m_parameters.approachStartDistance <= m_parameters.approachStopDistance) return false;
     m_nextAction = m_parameters.actionInterval;
 
     // BossEntity::Init は重力を追加で登録するため、共通の敵初期化を一度だけ行う。
@@ -135,18 +138,36 @@ void Boss_01::Update(float deltaTime)
 
     if (m_hp->GetHP() <= GetDefeatHP()) EnterDefeated();
     UpdateHazards(deltaTime);
-    UpdateAI(deltaTime);
-    UpdateAttack(deltaTime);
+    if (m_knockbackRemaining > 0.0f)
+    {
+        m_knockbackRemaining = (std::max)(0.0f, m_knockbackRemaining - deltaTime);
+        if (m_knockbackRemaining <= 0.0f) SetVel({0.0f, GetVel().y});
+    }
+    else
+    {
+        UpdateAI(deltaTime);
+        UpdateAttack(deltaTime);
+    }
 
     // 速度コンポーネントによる直接移動とMoveAndCollideの二重移動を避ける。
-    // 重力もEnemyEntity::UpdateGravityだけで処理する。
+    // 重力は既存GravityComponentを一度だけ更新する。
     for (auto* component : m_components)
     {
         if (component == m_velocity || component == m_gravity) continue;
         component->Update(deltaTime);
     }
-    if (!IsBattleFinished() && m_behavior != Behavior::Jump && m_behavior != Behavior::Shuriken)
-        UpdateGravity(deltaTime);
+    if (!IsBattleFinished())
+    {
+        m_gravity->Update(deltaTime);
+        MoveAndCollide(deltaTime);
+        if (m_isGround) SetVel({GetVel().x, 0.0f});
+        // 着地したフレームから硬直を開始する。投擲中も重力を止めない。
+        if (m_isGround && (m_behavior == Behavior::Shuriken || m_behavior == Behavior::Fall))
+        {
+            SetVel(Vector2d::Zero());
+            ChangeBehavior(Behavior::Recovery);
+        }
+    }
     else SetVel(Vector2d::Zero());
 }
 
@@ -177,18 +198,46 @@ void Boss_01::UpdateAI(float deltaTime)
         distance - m_parameters.hitboxSize.x * 0.5f - playerHalfWidth);
     const bool nearPlayer = edgeDistance <= (std::min)(m_parameters.meleeRange, m_parameters.meleeSize.x);
 
-    if (nearPlayer)
+    if (distance >= m_parameters.approachStartDistance) m_approaching = true;
+    if (distance <= m_parameters.approachStopDistance) m_approaching = false;
+    if (m_approaching)
     {
-        // 攻撃待ちの間にも逃げない。硬直・行動間隔は従来どおり守る。
-        ChangeBehavior(Behavior::Idle);
-        SetVel({0.0f, GetVel().y});
-        if (m_nextAction <= 0.0f && m_isGround) StartMeleeAttack();
+        ChangeBehavior(Behavior::Move);
+        const float speed = (std::min)(m_moveSpeed,
+            (distance - m_parameters.approachStopDistance) / deltaTime);
+        SetVel({(m_dir ? 1.0f : -1.0f) * speed, GetVel().y});
         return;
     }
 
     if (m_nextAction <= 0.0f && m_isGround)
     {
-        StartJumpAttack();
+        // 近接は届くときだけ候補にする。近距離でも手裏剣・罠を混ぜる。
+        const int roll = std::rand() % 100;
+        Behavior choice = nearPlayer
+            ? (roll < 60 ? Behavior::Melee : (roll < 80 ? Behavior::Jump : Behavior::PoisonTrap))
+            : (roll < 70 ? Behavior::Jump : Behavior::PoisonTrap);
+        if (m_attacksWithoutTrap >= 2) choice = Behavior::PoisonTrap;
+        else if (choice == m_lastAttack && std::rand() % 100 < 50)
+            choice = choice == Behavior::PoisonTrap ? (nearPlayer ? Behavior::Melee : Behavior::Jump)
+                : Behavior::PoisonTrap;
+        bool started = false;
+        switch (choice)
+        {
+        case Behavior::Melee: started = StartMeleeAttack(); break;
+        case Behavior::PoisonTrap: started = StartPoisonTrap(); break;
+        default: started = StartJumpAttack(); break;
+        }
+        if (started)
+        {
+            m_lastAttack = choice;
+            m_attacksWithoutTrap = choice == Behavior::PoisonTrap ? 0 : m_attacksWithoutTrap + 1;
+        }
+        return;
+    }
+    if (nearPlayer)
+    {
+        ChangeBehavior(Behavior::Idle);
+        SetVel({0.0f, GetVel().y});
         return;
     }
 
@@ -214,17 +263,14 @@ void Boss_01::UpdateAttack(float deltaTime)
     switch (m_behavior)
     {
     case Behavior::Jump:
-    {
-        const float before = GetPos().y;
-        const float top = m_jumpStartY - m_parameters.jumpHeight;
-        const float travel = (std::min)(m_parameters.jumpSpeed * deltaTime, (std::max)(0.0f, before - top));
-        SetVel({0.0f, -travel / deltaTime});
-        MoveAndCollide(deltaTime);
-        SetVel(Vector2d::Zero());
-        if (GetPos().y <= top + 0.01f || before - GetPos().y < travel - 0.01f)
+        // 頂点（または天井に接触して上昇が止まった時）で投擲する。
+        if (GetVel().y >= 0.0f)
+        {
             ChangeBehavior(Behavior::Shuriken);
+            SpawnShuriken();
+            m_attackTriggered = true;
+        }
         break;
-    }
     case Behavior::Shuriken:
         if (!m_attackTriggered)
         {
@@ -271,13 +317,23 @@ void Boss_01::UpdateAttack(float deltaTime)
     }
 }
 
-void Boss_01::TakeDamage(int damage, const Vector2d&)
+void Boss_01::TakeDamage(int damage, const Vector2d& knockback)
 {
     if (!m_initialized || IsBattleFinished() || damage <= 0 || m_hp->IsInvincible()) return;
     // 強い一撃でもHP600で踏みとどまり、通常敵の死亡・消去へ進ませない。
     const int remaining = m_hp->GetHP() - GetDefeatHP();
     if (remaining <= 0) { EnterDefeated(); return; }
     m_hp->Damage((std::min)(damage, remaining));
+    if (!IsBattleFinished() && std::isfinite(knockback.x) && std::isfinite(knockback.y))
+    {
+        ChangeBehavior(Behavior::Recovery);
+        m_knockbackRemaining = m_parameters.knockbackSeconds;
+        // 攻撃側から渡された向きを維持し、後方への移動と浮き上がりを強める。
+        const Vector2d launch{knockback.x * m_parameters.knockbackHorizontalScale,
+            knockback.y * m_parameters.knockbackVerticalScale};
+        SetVel(launch);
+        if (launch.y < 0.0f) m_isGround = false;
+    }
 }
 
 void Boss_01::TakeMetsu(int)
@@ -420,8 +476,12 @@ void Boss_01::BeginAttack(Behavior behavior)
 bool Boss_01::StartJumpAttack()
 {
     if (!CanStartAttack()) return false;
-    m_jumpStartY = GetPos().y;
     BeginAttack(Behavior::Jump);
+    // v^2 = 2gh。600px/sだけでは重力2800で約64pxしか跳べないため高さを優先。
+    const float initialSpeed = (std::max)(m_parameters.jumpSpeed,
+        std::sqrt(2.0f * m_gravity->GetGravity() * m_parameters.jumpHeight));
+    SetVel({0.0f, -initialSpeed});
+    m_isGround = false;
     return true;
 }
 
@@ -506,6 +566,11 @@ void Boss_01::UpdateHazards(float deltaTime)
     auto* player = FindPlayer();
     if (player != m_poisonTarget || !player)
     {
+        // 【死亡・ステージ変更時の解除：プレイヤー側のリセット処理に追加】
+        // SetMovementMultiplier(1.0f); // 正式な関数名へ置換する。
+        // この位置のm_poisonTargetは既に破棄済みの場合があるため、呼び出し禁止。
+        // プレイヤーの死亡/ResetStageState/再生成時に1.0fへ戻すよう依頼する。
+        // ボスだけを破棄する場合も、生存中のプレイヤーへ安全に解除する接続が必要。
         m_poisonRemaining = 0.0f;
         m_poisonFraction = 0.0;
         m_poisonTarget = nullptr;
@@ -522,6 +587,14 @@ void Boss_01::UpdateHazards(float deltaTime)
             player->GetHP()->Damage(damage);
             m_poisonFraction = (std::max)(0.0, m_poisonFraction - damage);
         }
+        // 【10秒経過で解除：下のifの中に倍率変更関数を追加】
+        // 接続時には下の1行ifを波括弧付きにして、次の形にする（関数名は仮）：
+        // if (m_poisonRemaining <= 0.0f)
+        // {
+        //     player->SetMovementMultiplier(1.0f);
+        //     m_poisonFraction = 0.0;
+        // }
+        // ifの外に解除を置くと、毎フレーム減速が消えるので注意。
         if (m_poisonRemaining <= 0.0f) m_poisonFraction = 0.0;
         if (player->GetHP()->IsDead()) player = nullptr;
     }
@@ -552,112 +625,35 @@ void Boss_01::UpdateHazards(float deltaTime)
             it = m_shuriken.erase(it);
         else ++it;
     }
+    const auto* playerCol = player ? player->GetCollision() : nullptr;
+    const Vector2d playerCenter = playerCol ? player->GetPos() + playerCol->GetOffset() : Vector2d::Zero();
     for (auto it = m_traps.begin(); it != m_traps.end();)
     {
         it->remaining -= deltaTime;
         if (it->remaining <= 0.0f) { it = m_traps.erase(it); continue; }
-        if (player && !IsBattleFinished() && Overlaps(it->position, m_parameters.trapSize, player))
+        const bool crossed = playerCol && m_previousPlayer == player &&
+            playerCol->GetShape() != CollisionShape::None &&
+            Sweep(m_previousPlayerCenter, playerCenter, {playerCol->GetWidth(), playerCol->GetHeight()},
+                it->position, m_parameters.trapSize) <= 1.0f;
+        if (player && !IsBattleFinished() &&
+            (crossed || Overlaps(it->position, m_parameters.trapSize, player)))
         {
             m_poisonTarget = player;
             m_poisonRemaining = m_parameters.poisonDuration;
             // 毒は重複させず残り時間だけ更新。接触した罠は消費する。
             it = m_traps.erase(it);
-            /*
-            【プレイヤー側の減速処理案／未実装・メインプログラマー確認用】
-            このブロックは説明用。ここでコメントを外すのではなく、各ファイルの
-            指定位置へ組み込む。既存Componentの引数・実装は変更しない。
-            毒ダメージは上のUpdateHazardsで処理済みなので、ここでは追加しない。
-
-            1. PlayerEntity.h の public に追加する宣言：
-                void ApplyPoisonSlow(float seconds, float scale);
-                void UpdatePoisonSlow(float deltaTime);
-                void ClearPoisonSlow();
-
-            2. PlayerEntity.h の private に追加するメンバと補助関数：
-                float m_poisonSlowRemaining = 0.0f;
-                float m_poisonSlowScale = 1.0f;
-                float GetPoisonSlowScale() const
-                {
-                    return m_poisonSlowRemaining > 0.0f ? m_poisonSlowScale : 1.0f;
-                }
-                float GetEffectiveMoveSpeed() const
-                {
-                    return m_moveSpeed * GetPoisonSlowScale();
-                }
-                float GetEffectiveDashSpeed() const
-                {
-                    return m_dashSpeed * GetPoisonSlowScale();
-                }
-                float GetEffectiveAirDashSpeed() const
-                {
-                    return m_dashAirSpeed * GetPoisonSlowScale();
-                }
-
-            3. PlayerEntity.cpp に追加する定義（#include <cmath> も必要）：
-                void PlayerEntity::ApplyPoisonSlow(float seconds, float scale)
-                {
-                    if (!std::isfinite(seconds) || seconds <= 0.0f ||
-                        !std::isfinite(scale) || scale <= 0.0f || scale > 1.0f)
-                        return;
-                    // 同じ罠への再接触では倍率を重ね掛けせず、時間を更新する。
-                    m_poisonSlowRemaining = seconds;
-                    m_poisonSlowScale = scale;
-                }
-
-                void PlayerEntity::UpdatePoisonSlow(float deltaTime)
-                {
-                    if (!std::isfinite(deltaTime) || deltaTime <= 0.0f) return;
-                    if (m_poisonSlowRemaining <= 0.0f) return;
-                    m_poisonSlowRemaining -= deltaTime;
-                    if (m_poisonSlowRemaining <= 0.0f) ClearPoisonSlow();
-                }
-
-                void PlayerEntity::ClearPoisonSlow()
-                {
-                    m_poisonSlowRemaining = 0.0f;
-                    m_poisonSlowScale = 1.0f;
-                }
-
-            4. PlayerEntity::Update の通常更新の先頭に追加：
-                UpdatePoisonSlow(deltaTime);
-                // ポーズ中はタイマーを進めないこと。
-                // 死亡・リスポーン・ResetStageStateではClearPoisonSlow()を呼ぶ。
-
-            5. プレイヤーの「移動速度を決める式」を変更する例：
-                // 変更前：vel.x = m_dir ? m_moveSpeed : -m_moveSpeed;
-                const float speed = GetEffectiveMoveSpeed();
-                vel.x = m_dir ? speed : -speed;
-
-                // 地上回避の例（dir、moveは元の処理の変数）：
-                move.x = dir * GetEffectiveDashSpeed();
-                // 空中回避の例：
-                move.x = dir * GetEffectiveAirDashSpeed();
-
-                // 移動・しゃがみ・空中横移動などのm_moveSpeed参照と、
-                // ROLL/HIEN/SENTEN等の回避速度参照に倍率を適用する。
-                // 初期値や元の速度変数そのものは書き換えない。
-                // UpdateExecutionにもm_dashSpeedの参照があるが、処刑移動は
-                // 回避ではないので、この効果を適用するかは仕様確認が必要。
-                // 固定値で決めている移動も確認し、一律置換では済ませない。
-                // 回避時間は変更せず、横方向の速度だけを0.85倍にする。
-                // 重力・ジャンプの縦速度・被弾ノックバックには掛けない。
-                // 現在速度に毎フレーム0.85を掛け続ける方法は使わない。
-
-            6. 上記API実装後、Boss_01::Initの初期化成功後に通知先を登録：
-                OnPoisonSlowRequested = [](PlayerEntity* target, float seconds, float scale)
-                {
-                    if (target) target->ApplyPoisonSlow(seconds, scale);
-                };
-
-            現在は登録していないため、下の通知による減速は発生しない。
-            組み込み後は再接触・10秒後の解除・死亡/再開・回避途中の接触を確認する。
-            速度変更が進行中の回避にも反映されるかは、プレイヤー更新順で確認する。
-            */
+            // 【減速開始・再接触：ここに倍率変更関数を追加】
+            // 正式な関数名が決まったら、下の仮名を置き換えて有効にする。
+            // player->SetMovementMultiplier(m_parameters.poisonMoveScale); // 0.85f
+            // 移動・回避に同じ倍率を設定。重ね掛けしない。10秒はボス側で管理する。
+            // 下の旧通知方式と直接呼び出し方式は併用せず、接続時に一本化する。
             if (OnPoisonSlowRequested)
                 OnPoisonSlowRequested(player, m_parameters.poisonDuration, m_parameters.poisonMoveScale);
         }
         else ++it;
     }
+    m_previousPlayer = player;
+    m_previousPlayerCenter = playerCenter;
 }
 
 void Boss_01::Draw()
