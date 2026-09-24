@@ -206,6 +206,7 @@
     <ClCompile Include="WhiteEnemyEntity.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="KooniEnemyEntity.cpp" />
     <ClCompile Include="EntityActor.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GravityComponent.cpp" />
@@ -310,6 +311,7 @@
     <ClInclude Include="WhiteEnemyEntity.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="KooniEnemyEntity.h" />
     <ClInclude Include="EntityActor.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GravityComponent.h" />
