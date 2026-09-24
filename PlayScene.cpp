@@ -11,6 +11,8 @@
 #include "Input.h"
 #include "PlayerEntity.h"
 #include "ScarecrowEnemyEntity.h"
+#include "EnemyEntity.h"
+#include "DropItemEntity.h"
 #include "WhiteEnemyEntity.h"
 #include "YellowEnemyEntity.h"
 #include "ArrowEnemyEntity.h"
@@ -678,121 +680,419 @@ void PlayScene::Update(float deltaTime) {
 	std::cout << "canMove: " << m_player->GetCanMove() << std::endl;
 }
 		
-void PlayScene::Draw() {
+void PlayScene::Draw()
+{
 	Renderer* renderer = m_game->GetRenderer();
 	if (!renderer) return;
+
 	Vector2d cam = m_camera.GetCenter();
 
+	// =====================================================
+	// ï`âÊëŒè€ÇèåèÇ≈ï™ÇØÇÈÇΩÇﬂÇÃã§í ä÷êî
+	// =====================================================
+	auto drawActorIf = [&](auto predicate)
+		{
+			for (Actor* actor : m_actors)
+			{
+				if (actor == nullptr || actor->IsDead())
+					continue;
+
+				if (predicate(actor))
+				{
+					actor->Draw();
+				}
+			}
+		};
+
+
+	// =====================================================
+	// á@ îwåi
+	// =====================================================
+
 	// âºîwåi
-	DrawBox(0, 0, 1280, 720, GetColor(200, 200, 200), 1);
+	DrawBox(
+		0,
+		0,
+		1280,
+		720,
+		GetColor(200, 200, 200),
+		1
+	);
 
-	// îwåi
-	switch (m_stageIndex) {
-	case 0:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1130.0f), 1.6f, 1.6f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 1:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1760.0f), 1.45f, 1.45f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 2:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1600.0f), 1.5f, 1.5f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	}
-	
-	drawActors(m_backactors);
-	drawActors(m_actors);
-
-	// ëOåi
-	switch (m_stageIndex) {
-	case 0:
-		for (int i = 0; i < 19; i++) {
-			renderer->DrawSpriteEx(Vector2d(-1290.0f + i * 1600.0f - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 680.0f), 0.8f, 0.8f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		}
-		break;
-	case 1:
-		renderer->DrawSpriteEx(Vector2d(0 - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 4960.0f), 4.3f, 4.3f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 2:
-		for (int i = 0; i < 19; i++) {
-			renderer->DrawSpriteEx(Vector2d(-1290.0f + i * 1600.0f - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 870.0f), 0.8f, 0.8f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		}
-		break;
-	}
-	
-	if (m_player->GetIsKaryu()) {
-		float timer = m_player->GetKaryuTimer();
-		if (timer > 4.9f) {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, (int)((5.0f - timer) / 0.1f * 180)); // 0Å`255
-		}
-		else if (timer < 0.5f) {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, (int)(timer / 0.5f * 180)); // 0Å`255
-		}
-		else {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 180); // 0Å`255
-		}
-		DrawBox(0, 0, 1280, 720, GetColor(150, 20, 20), 1);
-
-		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-	}
-
-	// ÉRÉìÉ{ï\é¶Åim_comboCount Ç™ 1 à»è„Ç»ÇÁï\é¶Åj
-	if (m_player->GetCombo() > 0) {
-		const std::string& debugFont = m_game->GatDebugFont();
-		// Ç±Ç±Ç≈ÇÕÉtÉHÉìÉgÉTÉCÉYÇëÂÇ´ÇﬂÅió· 48ÅjÇ≈ê^ÇÒíÜè„Ç…ï\é¶
-		std::string comboText = std::to_string(m_player->GetCombo()) + " Hits";
-		renderer->DrawTextL(Vector2d(20.0f, 120.0f), comboText, Color(0, 0, 0), debugFont, 60, false);
-	}
-
-	drawActors(m_UIactors);
-
-	if (m_menu.IsOpen())
+	// ÉXÉeÅ[ÉWîwåi
+	switch (m_stageIndex)
 	{
-		m_menu.Draw();
+	case 0:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1130.0f
+			),
+			1.6f,
+			1.6f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 1:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1760.0f
+			),
+			1.45f,
+			1.45f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 2:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1600.0f
+			),
+			1.5f,
+			1.5f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
 	}
 
-	if (m_eventManager->IsRunning()) {
-		m_eventManager->Draw();
+
+	// m_backactors ÇÕîwåiånÇ»ÇÃÇ≈Ç±Ç±Ç≈ï`âÊ
+	drawActors(m_backactors);
+
+
+	// =====================================================
+	// áA ï«ÅEè∞ÅEè·äQï®
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			ActorType type = actor->GetType();
+
+			return
+				type == ActorType::Block ||
+				type == ActorType::Trap ||
+				type == ActorType::StageExit ||
+				type == ActorType::StageBack ||
+				dynamic_cast<DropItemEntity*>(actor) != nullptr;
+		});
+
+
+	// =====================================================
+	// áB TreasureBox
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			return actor->GetType() == ActorType::TreasureBox;
+		});
+
+
+	// =====================================================
+	// áC Enemy Back Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Back)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			if (target->GetType() == ActorType::TreasureBox)
+				return false;
+
+			return dynamic_cast<EnemyEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// áD Enemy
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			if (actor->GetType() == ActorType::TreasureBox)
+				return false;
+
+			// Enemyñ{ëÃ
+			if (dynamic_cast<EnemyEntity*>(actor) != nullptr)
+				return true;
+
+			// ìGÇÃíe
+			if (actor->GetType() == ActorType::Ball)
+				return true;
+
+			return false;
+		});
+
+
+	// =====================================================
+	// áE Enemy Front Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Front)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			if (target->GetType() == ActorType::TreasureBox)
+				return false;
+
+			return dynamic_cast<EnemyEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// áF Player Back Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Back)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// áG Player
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			return dynamic_cast<PlayerEntity*>(actor) != nullptr;
+		});
+
+
+	// =====================================================
+	// áH Player Front Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Front)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// áI ëOåi
+	// =====================================================
+
+	switch (m_stageIndex)
+	{
+	case 0:
+		for (int i = 0; i < 19; i++)
+		{
+			renderer->DrawSpriteEx(
+				Vector2d(
+					-1290.0f +
+					i * 1600.0f -
+					(cam.x * 0.5f),
+
+					m_mapData.stages[m_stageIndex].height *
+					m_mapData.tileSize - 680.0f
+				),
+				0.8f,
+				0.8f,
+				0.0f,
+				m_fgHandle,
+				true,
+				Vector2d(0, 0),
+				255,
+				false,
+				false,
+				true
+			);
+		}
+		break;
+
+	case 1:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				0 - (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 4960.0f
+			),
+			4.3f,
+			4.3f,
+			0.0f,
+			m_fgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 2:
+		for (int i = 0; i < 19; i++)
+		{
+			renderer->DrawSpriteEx(
+				Vector2d(
+					-1290.0f +
+					i * 1600.0f -
+					(cam.x * 0.5f),
+
+					m_mapData.stages[m_stageIndex].height *
+					m_mapData.tileSize - 870.0f
+				),
+				0.8f,
+				0.8f,
+				0.0f,
+				m_fgHandle,
+				true,
+				Vector2d(0, 0),
+				255,
+				false,
+				false,
+				true
+			);
+		}
+		break;
 	}
 
 
-	// çUåÇîÕàÕï`âÊ --------------------------
-	/*Vector2d Pos = m_player->GetPos();
-	AttackHitbox Weak1{ Vector2d(50,100), 100, 100, 30 };
-	if (m_player->GetDir()) {
-		Pos.x += Weak1.offset.x;
-		Pos.y += Weak1.offset.y;
-	} 
-	else{
-		Pos.x -= Weak1.offset.x;
-		Pos.y += Weak1.offset.y;
+	// =====================================================
+	// áJ UI
+	// =====================================================
+
+	// í èÌUI
+	for (Actor* actor : m_UIactors)
+	{
+		if (actor == nullptr || actor->IsDead())
+			continue;
+
+		// GameOverMenuUIÇÕç≈å„Ç…ï`Ç≠
+		if (actor == m_gameOverMenu)
+			continue;
+
+		actor->Draw();
 	}
-	renderer->DrawRectCenter(Pos, Weak1.width, Weak1.height, GetColor(0,255,0),false, true);*/
-	//------------------------------------------
-#ifdef _DEBUG
-	// sensorï`âÊ
-	Vector2d Pos = m_player->GetPos();
-	Vector2d offset = { 0.0f, 50.0f };
-	if (m_player->GetDir()) {
-		Pos.x += offset.x;
-		Pos.y += offset.y;
+
+	// ÉRÉìÉ{ï\é¶
+	if (m_player && m_player->GetCombo() > 0)
+	{
+		const std::string& debugFont =
+			m_game->GatDebugFont();
+
+		std::string comboText =
+			std::to_string(m_player->GetCombo()) +
+			" Hits";
+
+		renderer->DrawTextL(
+			Vector2d(20.0f, 120.0f),
+			comboText,
+			Color(0, 0, 0),
+			debugFont,
+			60,
+			false
+		);
 	}
-	else {
-		Pos.x -= offset.x;
-		Pos.y += offset.y;
-	}
-	renderer->DrawRectCenter(Pos, 4.0f, 4.0f, GetColor(0, 255, 0), false, true);
-#endif
-	std::vector<NumberInfo> comboInfo = {
+
+	// åãâ ï\é¶
+	std::vector<NumberInfo> comboInfo =
+	{
 		{ (float)m_player->GetCombo(), 0 }
 	};
 
-
-	if (m_resultShown) {
-		const std::string& debugFont = m_game->GatDebugFont();
+	if (m_resultShown)
+	{
+		const std::string& debugFont =
+			m_game->GatDebugFont();
 
 		renderer->DrawNumberFormatW(
-			Vector2d(m_game->GetWidth() / 2.4f,
-				m_game->GetHeight() / 2.2f),
+			Vector2d(
+				m_game->GetWidth() / 2.4f,
+				m_game->GetHeight() / 2.2f
+			),
 			Color(0, 0, 0),
 			debugFont,
 			32,
@@ -802,11 +1102,141 @@ void PlayScene::Draw() {
 		);
 	}
 
-	// Å©Ç±Ç±Çí«â¡
+
+	// =====================================================
+	// áK ÉCÉxÉìÉg
+	// =====================================================
+
+	if (m_eventManager->IsRunning())
+	{
+		m_eventManager->Draw();
+	}
+
+
+	// =====================================================
+	// áL ÉÅÉjÉÖÅ[
+	// =====================================================
+
+	if (m_menu.IsOpen())
+	{
+		m_menu.Draw();
+	}
+
+
+	// =====================================================
+	// áM ëSëÃÉGÉtÉFÉNÉg
+	// =====================================================
+
+	// KaryuíÜÇÃâÊñ ëSëÃÉGÉtÉFÉNÉg
+	if (m_player && m_player->GetIsKaryu())
+	{
+		float timer = m_player->GetKaryuTimer();
+
+		if (timer > 4.9f)
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				(int)((5.0f - timer) / 0.1f * 180)
+			);
+		}
+		else if (timer < 0.5f)
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				(int)(timer / 0.5f * 180)
+			);
+		}
+		else
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				180
+			);
+		}
+
+		DrawBox(
+			0,
+			0,
+			1280,
+			720,
+			GetColor(150, 20, 20),
+			1
+		);
+
+		SetDrawBlendMode(
+			DX_BLENDMODE_NOBLEND,
+			0
+		);
+	}
+
+	// ActorÇ∆ÇµÇƒìoò^Ç≥ÇÍÇƒÇ¢ÇÈëSëÃÉGÉtÉFÉNÉg
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			return effect->GetRenderLayer() ==
+				EffectActor::RenderLayer::Global;
+		});
+
+
+	// =====================================================
+	// áN ÉQÅ[ÉÄÉIÅ[ÉoÅ[âÊñ 
+	// =====================================================
+
+	if (m_gameOverMenu &&
+		m_gameOverMenu->IsActive())
+	{
+		m_gameOverMenu->Draw();
+	}
+
+
+	// =====================================================
+	// ÉtÉFÅ[Éh
+	// =====================================================
+
 	DrawFadeOverlay();
 
+
+	// =====================================================
+	// ÉfÉoÉbÉO
+	// =====================================================
+
 #ifdef _DEBUG
-	const std::string& debugFont = m_game->GatDebugFont();
+
+	// sensorï`âÊ
+	if (m_player)
+	{
+		Vector2d Pos = m_player->GetPos();
+		Vector2d offset = { 0.0f, 50.0f };
+
+		if (m_player->GetDir())
+		{
+			Pos.x += offset.x;
+			Pos.y += offset.y;
+		}
+		else
+		{
+			Pos.x -= offset.x;
+			Pos.y += offset.y;
+		}
+
+		renderer->DrawRectCenter(
+			Pos,
+			4.0f,
+			4.0f,
+			GetColor(0, 255, 0),
+			false,
+			true
+		);
+	}
+
+	const std::string& debugFont =
+		m_game->GatDebugFont();
+
 	renderer->DrawTextL(
 		Vector2d(m_game->GetWidth() - 150.0f, 0),
 		"PlayScene",
@@ -815,6 +1245,7 @@ void PlayScene::Draw() {
 		24,
 		false
 	);
+
 #endif
 }
 

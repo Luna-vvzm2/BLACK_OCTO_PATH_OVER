@@ -61,6 +61,28 @@ public:
 	static const EffectData* GetEffectData(EffectType type);
 	void SetFollowTarget(Actor* target, const Vector2d& offset);
 
+	enum class RenderLayer
+	{
+		Back,
+		Front,
+		Global
+	};
+
+	void SetRenderLayer(RenderLayer layer)
+	{
+		m_renderLayer = layer;
+	}
+
+	RenderLayer GetRenderLayer() const
+	{
+		return m_renderLayer;
+	}
+
+	Actor* GetFollowTarget() const
+	{
+		return m_followTarget;
+	}
+
 protected:
 
 	TransformComponent* m_transform;
@@ -70,6 +92,8 @@ protected:
 
 	Actor* m_followTarget = nullptr;
 	Vector2d m_followOffset;
+
+	RenderLayer m_renderLayer = RenderLayer::Front;
 
 	bool m_flipX;
 

@@ -1184,9 +1184,19 @@ void PlayerEntity::UpdateAttack(float deltaTime) {
                 m_attackTimer = 0.4f;
                 m_attackLockTimer = 0.2f;
                 CheckAttackHit(squatAttack);
-                pPos.x += (m_dir ? 90.0f : -90.0f);
-                pPos.y -= 50.0f;
-                SpawnEffect(new EffectActor(m_scene, pPos, EffectType::SquatAttack, !m_dir));
+                auto effect = new EffectActor(
+                    m_scene,
+                    GetPos(),
+                    EffectType::SquatAttack,
+                    !m_dir
+                );
+
+                effect->SetFollowTarget(
+                    this,
+                    { m_dir ? 90.0f : -90.0f, -50.0f }
+                );
+
+                SpawnEffect(effect);
                 m_anim->Play("squatAttack", true);
             }
             else if (!m_isGround) {
@@ -1233,42 +1243,99 @@ void PlayerEntity::UpdateAttack(float deltaTime) {
             }
             else {
                 m_attackType = AttackType::WEAK_ATTACK;
-                switch (m_weakAttackIdx) {
+                switch (m_weakAttackIdx)
+                {
                 case 0:
+                {
                     m_attackTimer = 0.5f;
                     m_attackLockTimer = 0.13f;
                     CheckAttackHit(weak1);
-                    pPos.x += (m_dir ? 100.0f : -100.0f);
-                    pPos.y -= 50.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::WeakAttack1, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::WeakAttack1,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { m_dir ? 100.0f : -100.0f, -50.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("weakAttack1", true);
                     break;
+                }
+
                 case 1:
+                {
                     m_attackTimer = 0.4f;
                     m_attackLockTimer = 0.2f;
                     CheckAttackHit(weak2);
-                    pPos.x += (m_dir ? 30.0f : -30.0f);
-                    pPos.y -= 50.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::WeakAttack2, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::WeakAttack2,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { m_dir ? 30.0f : -30.0f, -50.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("weakAttack2", true);
                     break;
+                }
+
                 case 2:
+                {
                     m_attackTimer = 0.5f;
                     m_attackLockTimer = 0.25f;
                     CheckAttackHit(weak3);
-                    pPos.y -= 50.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::WeakAttack3, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::WeakAttack3,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { 0.0f, -50.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("weakAttack3", true);
                     break;
+                }
+
                 case 3:
+                {
                     m_attackTimer = 1.0f;
                     m_attackLockTimer = 1.3f;
                     CheckAttackHit(weak4);
-                    pPos.x += (m_dir ? 100.0f : -100.0f);
-                    pPos.y -= 50.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::WeakAttack4, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::WeakAttack4,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { m_dir ? 100.0f : -100.0f, -50.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("weakAttack4", true);
                     break;
+                }
                 }
                 m_weakAttackIdx++;
 
@@ -1308,25 +1375,53 @@ void PlayerEntity::UpdateAttack(float deltaTime) {
             else {
                 m_attackType = AttackType::STRONG_ATTACK;
 
-                switch (m_strongAttackIdx) {
+                switch (m_strongAttackIdx)
+                {
                 case 0:
+                {
                     m_attackTimer = 0.9f;
                     m_attackLockTimer = 0.4f;
                     CheckAttackHit(strong1);
-                    pPos.x += (m_dir ? 70.0f : -70.0f);
-                    pPos.y -= 50.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::StrongAttack1, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::StrongAttack1,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { m_dir ? 70.0f : -70.0f, -50.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("strongAttack1", true);
                     break;
+                }
+
                 case 1:
+                {
                     m_attackTimer = 1.0f;
                     m_attackLockTimer = 1.0f;
                     CheckAttackHit(strong2);
-                    pPos.x += (m_dir ? 70.0f : -70.0f);
-                    pPos.y -= 60.0f;
-                    SpawnEffect(new EffectActor(m_scene, pPos, EffectType::StrongAttack2, !m_dir));
+
+                    auto effect = new EffectActor(
+                        m_scene,
+                        GetPos(),
+                        EffectType::StrongAttack2,
+                        !m_dir
+                    );
+
+                    effect->SetFollowTarget(
+                        this,
+                        { m_dir ? 70.0f : -70.0f, -60.0f }
+                    );
+
+                    SpawnEffect(effect);
                     m_anim->Play("strongAttack2", true);
                     break;
+                }
                 }
 
                 m_strongAttackIdx++;
