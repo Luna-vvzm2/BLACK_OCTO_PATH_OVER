@@ -149,6 +149,10 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 			{
 				m_eventQueue.push_back(std::make_unique<ClearEvent>(m_scene, eventTexts, this));
 			}
+			else if (eventType == "TUTORIAL")
+			{
+				m_eventQueue.push_back(std::make_unique<TutorialEvent>(m_scene, eventTexts, this));
+			}
 			eventTexts.clear();
 		};
 
@@ -163,7 +167,7 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 		if (tokens[0] == "type" || tokens[0] == "enemyType") continue;
 
 		const std::string& typeToken = tokens[0];
-		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR")
+		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL")
 		{
 			pushEvent();
 			eventType = typeToken;
@@ -525,6 +529,199 @@ void TalkEvent::Draw()
 	DrawString(m_nameX, m_nameY, m_talkerName.c_str(), m_nameColor.ToDxColor());
 }
 
+TutorialEvent::TutorialEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	LoadTexts(filePath);
+}
+
+TutorialEvent::TutorialEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	m_texts = texts;
+}
+
+TutorialEvent::~TutorialEvent() = default;
+
+void TutorialEvent::Init()
+{
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Paused);
+	}
+
+	if (m_eventManager)
+	{
+		EventTexture* texManager = m_eventManager->GetEventTexture();
+
+		if (texManager)
+		{
+			for (const std::string& text : m_texts)
+			{
+				auto tokens = SplitCSV(text);
+				if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+				{
+					texManager->LoadTexture(tokens[3]);
+				}
+			}
+		}
+
+		m_currentPage = 0;
+		m_isEnd = false;
+		ShowText();
+	}
+}
+
+void TutorialEvent::Update(float deltaTime)
+{
+	const Input& input = m_scene->GetGame()->GetInput();
+	if (input.IsTrigger(Action::ENTER))
+	{
+		m_currentPage++;
+		if (m_currentPage >= static_cast<int>(m_texts.size()))
+		{
+			m_isEnd = true;
+		}
+		else
+		{
+			ShowText();
+		}
+	}
+	else if (input.IsTrigger(Action::RIGHT))
+	{
+		if (m_currentPage < static_cast<int>(m_texts.size() - 1))
+		{
+			m_currentPage++;
+			ShowText();
+		}
+	}
+	else if (input.IsTrigger(Action::LEFT))
+	{
+		if (m_currentPage > 0)
+		{
+			m_currentPage--;
+			ShowText();
+		}
+	}
+}
+
+void TutorialEvent::End()
+{
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Active);
+	}
+
+	if (m_eventManager)
+	{
+		EventTexture* texManager = m_eventManager->GetEventTexture();
+		if (texManager)
+		{
+			texManager->Clear();
+		}
+	}
+	DeleteTexts();
+}
+
+bool TutorialEvent::IsEnd() const
+{
+	return m_isEnd;
+}
+
+void TutorialEvent::ShowText()
+{
+	if (m_currentPage < 0 || m_currentPage >= static_cast<int>(m_texts.size())) return;
+
+	const std::string& text = m_texts[m_currentPage];
+	auto tokens = SplitCSV(text);
+
+	if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+	{
+		m_headerText = tokens[1];
+	}
+
+	if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+	{
+		m_bodyText = tokens[2];
+	}
+
+	if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+	{
+		if (m_eventManager && m_eventManager->GetEventTexture())
+		{
+			m_explanationImageId = m_eventManager->GetEventTexture()->LoadTexture(tokens[3]);
+		}
+	}
+
+	//â¸çsèàóù
+	std::string target = "<br>";
+	size_t pos = m_bodyText.find(target);
+	while (pos != std::string::npos)
+	{
+		m_bodyText.replace(pos, target.length(), "\n");
+		pos = m_bodyText.find(target, pos + 1);
+	}
+}
+
+void TutorialEvent::Draw()
+{
+	//É{ÉbÉNÉXï`âÊ
+	SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
+	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+	//É{ÉbÉNÉXÇÃògê¸ï`âÊ
+	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxBorderColor.ToDxColor(), FALSE, 5);
+	
+
+	//óßÇøäGÇÃï`âÊ
+	static int imgPosX = static_cast<int>((1280.0f - m_imageSize.x) * 0.5f);
+	static int imgPosY = static_cast<int>(m_boxPos.y + 100.0f);
+
+	if (m_explanationImageId != -1)
+	{
+		DrawExtendGraph(imgPosX, imgPosY, static_cast<int>(imgPosX + m_imageSize.x), static_cast<int>(imgPosY + m_imageSize.y), m_explanationImageId, TRUE);
+	}
+
+	int textSizeX = 0;
+	int textSizeY = 0;
+	int lineCount = 0;
+
+	//å©èoÇµÇÃï`âÊ
+	//ChangeFont("HGP ñæí© E");
+	SetFontSize(m_headerFontSize);
+	GetDrawStringSize(&textSizeX, &textSizeY, &lineCount, m_headerText.c_str(), static_cast<int>(m_headerText.length()));
+
+	static int headerTextX = static_cast<int>((1280.0f - textSizeX) * 0.5f);
+	static int headerTextY = static_cast<int>((m_boxPos.y + 30.0f));
+	DrawString(headerTextX, headerTextY, m_headerText.c_str(), m_textColor.ToDxColor());
+
+	//ê‡ñæï∂ÇÃï`âÊ
+	SetFontSize(m_bodyFontSize);
+	static int bodyTextX = imgPosX;
+	static int bodyTextY = static_cast<int>(imgPosY + m_imageSize.y + 30.0f);
+	DrawString(bodyTextX, bodyTextY, m_bodyText.c_str(), m_textColor.ToDxColor());
+
+	//åªç›ÉyÅ[ÉWÇï\Ç∑â~ÇÃï`âÊ
+	int n = static_cast<int>(m_texts.size());
+	int width = (n * 10) + ((n - 1) * 50);
+	int startX = static_cast<int>((1280.0f - width) * 0.5f);
+	int circleY = static_cast<int>(m_boxPos.y + m_boxSize.y + 30);
+	for (int i = 0; i < n; ++i)
+	{
+		int circleX = startX + i * 60;
+
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+		DrawCircle(circleX, circleY, 10, m_boxColor.ToDxColor());
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		if (i == m_currentPage)
+		{
+			DrawCircle(circleX, circleY, 6, m_textColor.ToDxColor());
+		}
+	}
+}
 
 BattleEvent::BattleEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
 	: m_scene(scene)

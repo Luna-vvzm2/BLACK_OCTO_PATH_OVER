@@ -55,6 +55,7 @@ enum class EventType
 {
 	Talk,
 	Battle,
+	Tutorial,
 	CutIn,
 	Clear
 };
@@ -188,6 +189,48 @@ private:
 	void Draw() override;
 };
 
+class TutorialEvent : public EventBase
+{
+	public:
+	TutorialEvent(Scene* scene, const std::string& filePath, EventManager* eventManager); //コンストラクタ
+	TutorialEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager);
+	~TutorialEvent() override;
+
+	EventType GetType() const override { return EventType::Tutorial; }
+
+	void Init() override;
+	void Update(float deltaTime) override;
+	void End() override;
+
+	bool IsEnd() const override;
+
+private:
+	Scene* m_scene{ nullptr };
+	EventManager* m_eventManager{ nullptr };
+
+	int m_currentPage{ 0 }; //表示中のテキストインデックス
+	bool m_isEnd{ false }; //イベント終了確認
+
+	std::string m_bodyText{ "" }; //説明文
+	std::string m_headerText{ "" }; //見出し文
+	int m_explanationImageId{ -1 }; //表示画像
+
+	Vector2d m_imageSize{ 480.0f, 270.0f }; //16:9
+
+	Vector2d m_boxSize{ 720.0f, 500.0f };
+	Vector2d m_boxPos{ (1280.0f - m_boxSize.x) * 0.5f, (720.0f - m_boxSize.y) * 0.5f };
+
+	int m_bodyFontSize{ 20 };
+	int m_headerFontSize{ 40 };
+
+	Color m_textColor{ 255, 255, 255, 255 };
+	Color m_boxColor{ 0, 0, 0, 180 };
+	Color m_boxBorderColor{ 100, 80, 10, 180 };
+
+	void ShowText(); //テキストを描画
+
+	void Draw() override;
+};
 
 class CutInEvent : public EventBase
 {
