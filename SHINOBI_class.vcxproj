@@ -190,6 +190,7 @@
     <ClCompile Include="PlatformOboroLBlock.cpp" />
     <ClCompile Include="PlatformOboroMBlock.cpp" />
     <ClCompile Include="PlatformOboroSBlock.cpp" />
+    <ClCompile Include="PlayerStatusUI.cpp" />
     <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="ScarecrowEnemyEntity.cpp" />
     <ClCompile Include="SekienkiBossEntity.cpp" />
@@ -294,6 +295,7 @@
     <ClInclude Include="PlatformOboroLBlock.h" />
     <ClInclude Include="PlatformOboroMBlock.h" />
     <ClInclude Include="PlatformOboroSBLock.h" />
+    <ClInclude Include="PlayerStatusUI.h" />
     <ClInclude Include="SaveData.h" />
     <ClInclude Include="SaveManager.h" />
     <ClInclude Include="ScarecrowEnemyEntity.h" />

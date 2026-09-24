@@ -1494,11 +1494,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
             ChangeState(PlayerState::JUMP_START);
             return;
         }
-        /*
+        
         if (!m_isGround && !m_jumpCount) {
             ChangeState(PlayerState::JUMP_SECOND);
             return;
-        }*/
+        }
     }
 
     if (m_state == PlayerState::JUMP_START) {

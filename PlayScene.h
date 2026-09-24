@@ -21,6 +21,7 @@ class EnemyHPBar;
 class SoundComponent;
 class GameOverMenuUI;
 class JutsuChargeUI;
+class PlayerStatusUI;
 
 //ƒCƒxƒ“ƒg‚Ì‚½‚ß’Ç‰Á
 class EventTexture;
@@ -106,6 +107,8 @@ private:
 	MoneyUI* m_moneyUI = nullptr;
 
 	JutsuChargeUI* m_jutsuChargeUI = nullptr;
+
+	PlayerStatusUI* m_playerStatusUI = nullptr;
 
 	std::unordered_map<EnemyEntity*, EnemyHPBar*> m_enemyToHPBarMap;
 	

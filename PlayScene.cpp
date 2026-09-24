@@ -50,7 +50,7 @@
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
 #include "SaveManager.h"
-
+#include "PlayerStatusUI.h"
 
 //イベントのため変更
 #include "EventManager.h"
@@ -121,7 +121,6 @@ bool PlayScene::Init() {
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
 
-	m_player->SetKunai(m_saveData.kunaiCount);
 
 	// ゲーム開始時のカメラ位置をプレイヤーに合わせる
 	Vector2d initialCameraPos = m_playerSpawnPoints[0];
@@ -139,6 +138,16 @@ bool PlayScene::Init() {
 	ShurikenUI* shuriken = new ShurikenUI(this, 18, 60);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
+
+	// プレイヤー状態UI
+	m_playerStatusUI = new PlayerStatusUI(
+		this,
+		m_player,
+		20.0f,
+		160.0f
+	);
+
+	AddUIActor(m_playerStatusUI);
 
 	// プレイヤー所持金 UI（左上に表示）
 	m_moneyUI = new MoneyUI(this, m_player, "assets/images/uies/money.png");
@@ -981,7 +990,7 @@ void PlayScene::Draw()
 			Actor* target = effect->GetFollowTarget();
 
 			if (!target)
-				return false;
+				return true;
 
 			return dynamic_cast<PlayerEntity*>(target) != nullptr;
 		});
