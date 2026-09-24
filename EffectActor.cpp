@@ -6,7 +6,7 @@
 std::unordered_map<EffectType, EffectData> EffectActor::s_effects;
 
 EffectActor::EffectActor(Scene* scene, const Vector2d& pos, EffectType effectType, bool flipX)
-	: Actor(scene)
+    : Actor(scene)
     , m_effectType(effectType)
     , m_transform(nullptr)
     , m_sprite(nullptr)
@@ -18,12 +18,12 @@ EffectActor::EffectActor(Scene* scene, const Vector2d& pos, EffectType effectTyp
 
 bool EffectActor::Init() {
 
-	m_transform = AddComponent<TransformComponent>();
-	m_sprite = AddComponent<SpriteComponent>();
+    m_transform = AddComponent<TransformComponent>();
+    m_sprite = AddComponent<SpriteComponent>();
     m_anim = AddComponent<AnimationComponent>();
 
-	m_transform->SetPosition(m_initialPos);
-	m_sprite->SetSize(m_initialSize.x, m_initialSize.y);
+    m_transform->SetPosition(m_initialPos);
+    m_sprite->SetSize(m_initialSize.x, m_initialSize.y);
     m_anim->SetSprite(m_sprite);
 
     const auto& data = s_effects[m_effectType];
@@ -35,7 +35,7 @@ bool EffectActor::Init() {
     m_anim->AddClip("effect", data.clip);
     m_anim->Play("effect");
 
-	return true;
+    return true;
 }
 
 void EffectActor::Update(float deltaTime) {
@@ -64,19 +64,19 @@ void EffectActor::Update(float deltaTime) {
 }
 
 void EffectActor::SetPos(const Vector2d& pos) {
-	if (m_transform) m_transform->SetPosition(pos);
+    if (m_transform) m_transform->SetPosition(pos);
 }
 
 Vector2d EffectActor::GetPos() const {
-	return m_transform ? m_transform->GetPosition() : Vector2d::Zero();
+    return m_transform ? m_transform->GetPosition() : Vector2d::Zero();
 }
 
 void EffectActor::SetSize(const Vector2d& size) {
-	if (m_sprite) m_sprite->SetSize(size.x, size.y);
+    if (m_sprite) m_sprite->SetSize(size.x, size.y);
 }
 
 Vector2d EffectActor::GetSize() const {
-	return m_sprite ? Vector2d(m_sprite->GetWidth(), m_sprite->GetHeight()) : Vector2d::Zero();
+    return m_sprite ? Vector2d(m_sprite->GetWidth(), m_sprite->GetHeight()) : Vector2d::Zero();
 }
 
 static bool LoadEffectTexture(const std::string& path, int xNum, int yNum, std::vector<int>& outHandles)
@@ -93,7 +93,7 @@ static bool LoadEffectTexture(const std::string& path, int xNum, int yNum, std::
     int texW;
     int texH;
 
-    GetGraphSize( tempHandle, &texW, &texH );
+    GetGraphSize(tempHandle, &texW, &texH);
 
     DeleteGraph(tempHandle);
 
@@ -116,7 +116,7 @@ bool EffectActor::LoadEffects()
     weak1.clip.frames = { -1, -1, -1, 0, 1 };
     weak1.clip.speed = 0.1f;
     weak1.clip.loop = false;
-    weak1.size = {64,64};
+    weak1.size = { 64,64 };
     s_effects[EffectType::WeakAttack1] = weak1;
 
     EffectData weak2;
@@ -175,7 +175,7 @@ bool EffectActor::LoadEffects()
 
     EffectData weakAir2;
     weakAir2.handles = attackHandles;
-    weakAir2.clip.frames = { -1, -1, 3, 4, 5 };
+    weakAir2.clip.frames = { 3, 4, 5 };
     weakAir2.clip.speed = 0.1f;
     weakAir2.clip.loop = false;
     weakAir2.size = { 64,64 };
@@ -183,7 +183,7 @@ bool EffectActor::LoadEffects()
 
     EffectData weakAir3;
     weakAir3.handles = attackHandles;
-    weakAir3.clip.frames = { 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    weakAir3.clip.frames = { -1, -1, -1, -1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     weakAir3.clip.speed = 0.1f;
     weakAir3.clip.loop = false;
     weakAir3.size = { 64,64 };
@@ -239,7 +239,7 @@ bool EffectActor::LoadEffects()
     return true;
 }
 
-const EffectData* EffectActor::GetEffectData( EffectType type)
+const EffectData* EffectActor::GetEffectData(EffectType type)
 {
     auto it = s_effects.find(type);
 

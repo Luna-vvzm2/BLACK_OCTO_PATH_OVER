@@ -672,7 +672,6 @@ void PlayScene::Update(float deltaTime) {
 	{
 		m_shurikenUI->SetCount(m_player->GetShurikenCount());
 	}
-	std::cout << "canMove: " << m_player->GetCanMove() << std::endl;
 }
 		
 void PlayScene::Draw() {
