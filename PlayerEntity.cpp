@@ -58,7 +58,10 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_anim(nullptr)
 
     , m_combo(0)
-    , m_kunai(10)
+    , m_kunai(3)
+    , m_healItem(0)
+
+    , m_kunaiTimer(0.0f)
 
     , m_state(PlayerState::IDLE)
 
@@ -69,6 +72,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_prevDir(true)
     , m_jumpSpeed(0.0f)
     , m_moveSpeed(290.0f)
+    , m_moveBaseSpeed(290.0f)
     , m_dashSpeed(600.0f)
     , m_dashAirSpeed(800.0f)
     , m_dashTimer(0.0f)
@@ -85,6 +89,8 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_weakAttackIdx(0)
     , m_attackTimer(0.0f)
 
+    , m_IsOcto(false)
+
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
 
@@ -92,10 +98,15 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_getHitTimer(0.0f)
     , m_invincibleTime(0.0f)
 
+    , m_buffRatio(1.0f)
+
     , m_canMove(true)
     , m_squat(false)
     , m_canStand(true)
-    , m_canCharge(true)
+
+    , m_shadowGauge(100)
+    , m_shadowGaugeMax(100)
+    , m_shadowGaugeTimer(0.0f)
 
     , m_jutsuGauge(0)
     , m_jutsuCharge(false)
@@ -625,9 +636,6 @@ void PlayerEntity::Update(float deltaTime) {
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
 
-    UpdateJutsuKamae(deltaTime);
-    UpdateKaryu(deltaTime);
-
     UpdateKamae(deltaTime);
     UpdateExecution(deltaTime);
 
@@ -861,7 +869,6 @@ void PlayerEntity::UpdateExecution(float deltaTime)
             }
 
             m_combo++;
-            AddJutsuGauge();
 
             m_executionTimer = m_invincibleTime = 0.2f;
 
@@ -1123,10 +1130,8 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
                 continue;
             }
             enemy->TakeDamage(hitbox.damage, { m_dir ? 150.0f : -150.0f, -300.0f });
-            enemy->TakeMetsu(hitbox.metsu);
             m_hit = true;
             m_combo++;
-            AddJutsuGauge();
 
             /*SpawnEffect(
                 new EffectActor( m_scene, enemy->GetPos(), EffectType::WeakAttack1, !m_dir )
@@ -1153,6 +1158,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_canMove = false;
         return;
     }
+
+    UpdateShadowGauge(deltaTime);
+    UpdateKunai(deltaTime);
 
     if (m_state == PlayerState::HIT_TRAP) {
 
@@ -1248,6 +1256,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     const Input& input = m_scene->GetGame()->GetInput();
+    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_IsOcto) * m_buffRatio;
 
     if (m_isKamae) {
         if (m_isGround) {
@@ -1973,8 +1982,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::WEAK_ATTACK1:
         StartAttack(weak1Num);
         m_anim->Play("weakAttack1");
-        if (m_weakAttackSound1 != nullptr && m_hit) {
-            m_weakAttackSound1->Play();
+        if (m_hit) {
+            AddShadowGauge(5);
+            if (m_weakAttackSound1 != nullptr) {
+                m_weakAttackSound1->Play();
+            }
         }
         else {
             m_karaburiSound->Play();
@@ -1984,8 +1996,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::WEAK_ATTACK2:
         StartAttack(weak2Num);
         m_anim->Play("weakAttack2");
-        if (m_weakAttackSound2 != nullptr && m_hit) {
-            m_weakAttackSound2->Play();
+        if (m_hit) {
+            AddShadowGauge(6);
+            if (m_weakAttackSound2 != nullptr) {
+                m_weakAttackSound2->Play();
+            }
         }
         else {
             m_karaburiSound->Play();
@@ -1995,8 +2010,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::WEAK_ATTACK3:
         StartAttack(weak3Num);
         m_anim->Play("weakAttack3");
-        if (m_weakAttackSound3 != nullptr && m_hit) {
-            m_weakAttackSound3->Play();
+        if (m_hit) {
+            AddShadowGauge(6);
+            if (m_weakAttackSound3 != nullptr) {
+                m_weakAttackSound3->Play();
+            }
         }
         else {
             m_karaburiSound->Play();
@@ -2012,8 +2030,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         StartAttack(airWeak1Num);
 
         m_anim->Play("weakAirAttack1", true);
-        if (m_weakAttackSound1 != nullptr && m_hit) {
-            m_weakAttackSound1->Play();
+        if (m_hit) {
+            AddShadowGauge(5);
+            if (m_weakAttackSound1 != nullptr) {
+                m_weakAttackSound1->Play();
+            }
         }
         else {
             m_karaburiSound->Play();
@@ -2167,6 +2188,26 @@ void PlayerEntity::UpdateMove() {
     }
 }
 
+void PlayerEntity::UpdateShadowGauge(float deltaTime) {
+    if (m_shadowGauge == m_shadowGaugeMax) return;
+
+    m_shadowGaugeTimer += deltaTime;
+    if (m_shadowGaugeTimer >= 2.0f) {
+        AddShadowGauge(1);
+        m_shadowGaugeTimer -= 2.0f;
+    }
+}
+
+void PlayerEntity::UpdateKunai(float deltaTime) {
+    if (m_kunai >= 3) return;
+
+    m_kunaiTimer += deltaTime;
+    if (m_kunaiTimer >= 20.0f) {
+        m_kunai++;
+        m_kunaiTimer -= 20.0f;
+    }
+}
+
 void PlayerEntity::UpdateDir(const Input& input) {
     if (m_canMove) {
         m_prevDir = m_dir;
@@ -2194,6 +2235,12 @@ void PlayerEntity::UpdateDash(float deltaTime) {
 
         m_velocity->Set(vel);
     }
+}
+
+bool PlayerEntity::GetOwnJutsu(int idx) {
+    if (idx < 0 || idx > 3) return false;
+
+    return m_ownJutsu[idx];
 }
 
 void PlayerEntity::StartAttack(int attackNum) {
@@ -2249,6 +2296,15 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
 void PlayerEntity::HitTrap() {
     ChangeState(PlayerState::HIT_TRAP);
     m_canMove = false;
+}
+
+void PlayerEntity::AddShadowGauge(int amount) {
+    m_shadowGauge = std::clamp(m_shadowGauge + amount, 0, m_shadowGaugeMax);
+}
+
+void PlayerEntity::AddShadowGaugeMax() {
+    m_shadowGaugeMax += 50;
+    AddShadowGauge(50);
 }
 
 void PlayerEntity::SetMoney(int amount)
