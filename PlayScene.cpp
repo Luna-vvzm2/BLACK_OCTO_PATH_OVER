@@ -685,6 +685,10 @@ void PlayScene::Draw()
 	Renderer* renderer = m_game->GetRenderer();
 	if (!renderer) return;
 
+	PlayerEntity* player = m_player;
+	if (!player)
+		return;
+
 	Vector2d cam = m_camera.GetCenter();
 
 	// =====================================================
@@ -851,6 +855,9 @@ void PlayScene::Draw()
 
 	drawActorIf([](Actor* actor)
 		{
+			if (actor == nullptr)
+				return false;
+
 			if (actor->GetType() == ActorType::TreasureBox)
 				return false;
 
@@ -864,7 +871,6 @@ void PlayScene::Draw()
 
 			return false;
 		});
-
 
 	// =====================================================
 	// ‡E Enemy Front Effect
