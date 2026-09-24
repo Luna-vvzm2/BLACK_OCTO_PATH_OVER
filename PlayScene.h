@@ -11,6 +11,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 class PlayerEntity;
 class EnemyEntity;
@@ -127,6 +128,7 @@ private:
 	enum class FadeState {
 		None,       // 通常プレイ中
 		FadeOut,    // 暗転中（次ステージへ）
+		Loading, //ロード中
 		Hold,       // 完全な黒画面のホールド
 		FadeIn      // 明転中（新ステージ開始）
 	};
@@ -140,10 +142,40 @@ private:
 	static constexpr float FADE_HOLD_DURATION = 0.10f;
 	static constexpr float FADE_IN_DURATION = 0.35f;
 
-	// フェード遷移を開始する（次ステージへ）
+	// フェード遷移を開始する（次ステージへ） 
 	void StartFadeToStage(int idx, int spawnIndex);
-	// フェード状態を更新
+
+	// フェード状態を更新 
 	void UpdateFade(float deltaTime);
-	// フェードのオーバーレイを描画
+
+	// フェードのオーバーレイを描画 
 	void DrawFadeOverlay();
+
+	// ====== リソースロード ======
+	struct TextureLoadTask
+	{
+		enum class Type
+		{
+			Graph,
+			Enemy
+		};
+
+		Type type = Type::Graph;
+
+		std::string path;
+		int enemyObjectId = 0;
+	};
+
+	std::vector<TextureLoadTask> m_loadingTasks;
+	int m_loadingStep = 0;
+	int m_loadingTotal = 0;
+
+	// ステージのリソースロードを開始
+	void StartStageLoading(int stageIndex);
+
+	// ロードを1つ進める
+	bool UpdateStageLoading();
+
+	// ロード画面を描画
+	void DrawLoadingScreen();
 };

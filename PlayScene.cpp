@@ -50,12 +50,17 @@
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
 
+
 //イベントのため変更
 #include "EventManager.h"
 #include "EventTexture.h"
 
 #include <DxLib.h>
 #include <algorithm>
+
+#include <unordered_set>
+#include <type_traits>
+
 
 PlayScene::PlayScene(Game* game)
 	: Scene(game),
@@ -66,8 +71,8 @@ PlayScene::PlayScene(Game* game)
 	m_stageIndex(0),
 	m_comboCount(0),
 	m_currentStage(1),
-	m_bgHandle(0),
-	m_fgHandle(0),
+	m_bgHandle(-1),
+	m_fgHandle(-1),
 	m_eventTexture(std::make_unique<EventTexture>()),
 	m_eventManager(std::make_unique<EventManager>(this, m_eventTexture.get())), //イベントのため変更
 	m_respawnPos(200, 800),
@@ -405,27 +410,42 @@ bool PlayScene::StageInit(int stageNo) {
 	float mapH = (float)stage.height * m_mapData.tileSize;
 	m_camera.SetBounds(Vector2d(0, 0), Vector2d(mapW, mapH));
 
-	switch (m_stageIndex) {
+	const char* bgPath = nullptr;
+	const char* fgPath = nullptr;
+
+	switch (m_stageIndex)
+	{
 	case 0:
-		m_bgHandle = LoadGraph("assets/images/uies/bg1.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg1.png");
+		bgPath = "assets/images/uies/bg1.png";
+		fgPath = "assets/images/uies/fg1.png";
 		break;
+
 	case 1:
-		m_bgHandle = LoadGraph("assets/images/uies/bg2.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg2.png");
+		bgPath = "assets/images/uies/bg2.png";
+		fgPath = "assets/images/uies/fg2.png";
 		break;
+
 	case 2:
-		m_bgHandle = LoadGraph("assets/images/uies/bg3.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg3.png");
+		bgPath = "assets/images/uies/bg3.png";
+		fgPath = "assets/images/uies/fg3.png";
 		break;
+	}
+
+	if (m_bgHandle == -1 && bgPath != nullptr)
+	{
+		m_bgHandle = LoadGraph(bgPath);
+	}
+
+	if (m_fgHandle == -1 && fgPath != nullptr)
+	{
+		m_fgHandle = LoadGraph(fgPath);
 	}
 
 	return true;
 }
 
-void PlayScene::ChangeStage(int index, int spawnIndex) {
-	DeleteGraph(m_bgHandle);
-	DeleteGraph(m_fgHandle);
+void PlayScene::ChangeStage(int index, int spawnIndex)
+{
 	m_stageIndex = index;
 
 	ClearStageActors();
@@ -438,20 +458,20 @@ void PlayScene::ChangeStage(int index, int spawnIndex) {
 		m_actors.push_back(m_player);
 	}
 
-	if (spawnIndex >= 0 &&
+	if (m_player &&
+		spawnIndex >= 0 &&
 		spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
 	{
 		m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
-		if (m_player)
-		{
-			Vector2d playerPos = m_player->GetPos();
 
-			Vector2d camPos = playerPos;
-			camPos.y -= 150;
+		Vector2d playerPos = m_player->GetPos();
 
-			m_camera.SetCenter(camPos);
-		}
+		Vector2d camPos = playerPos;
+		camPos.y -= 150.0f;
+
+		m_camera.SetCenter(camPos);
 	}
+
 	if (m_stageBgm != nullptr)
 	{
 		m_stageBgm->Stop();
@@ -1096,8 +1116,8 @@ void PlayScene::Draw()
 
 		renderer->DrawNumberFormatW(
 			Vector2d(
-				m_game->GetWidth() / 2.4f,
-				m_game->GetHeight() / 2.2f
+				static_cast<float>(m_game->GetWidth()) / 2.4f,
+				static_cast<float>(m_game->GetHeight()) / 2.2f
 			),
 			Color(0, 0, 0),
 			debugFont,
@@ -1204,7 +1224,14 @@ void PlayScene::Draw()
 	// フェード
 	// =====================================================
 
-	DrawFadeOverlay();
+	if (m_fadeState == FadeState::Loading)
+	{
+		DrawLoadingScreen();
+	}
+	else
+	{
+		DrawFadeOverlay();
+	}
 
 
 	// =====================================================
@@ -1244,7 +1271,10 @@ void PlayScene::Draw()
 		m_game->GatDebugFont();
 
 	renderer->DrawTextL(
-		Vector2d(m_game->GetWidth() - 150.0f, 0),
+		Vector2d(
+			static_cast<float>(m_game->GetWidth()) - 150.0f,
+			0.0f
+		),
 		"PlayScene",
 		Color(255, 64, 0),
 		debugFont,
@@ -1380,36 +1410,406 @@ void PlayScene::UpdateFade(float deltaTime)
 	switch (m_fadeState)
 	{
 	case FadeState::FadeOut:
-		// 徐々に真っ黒に
-		if (m_fadeTimer >= FADE_OUT_DURATION) {
-			// 真っ黒になった瞬間にステージを構築（見えないので違和感なし）
-			m_stageIndex = m_pendingStageIndex;
-			ChangeStage(m_nextStage, m_nextSpawnIndex);
+	{
+		if (m_fadeTimer >= FADE_OUT_DURATION)
+		{
+			// 現在のステージ背景を解放
+			if (m_bgHandle != -1)
+			{
+				DeleteGraph(m_bgHandle);
+				m_bgHandle = -1;
+			}
+
+			if (m_fgHandle != -1)
+			{
+				DeleteGraph(m_fgHandle);
+				m_fgHandle = -1;
+			}
+
+			// ロード開始
+			StartStageLoading(m_pendingStageIndex);
+
+			m_fadeState = FadeState::Loading;
+			m_fadeTimer = 0.0f;
+		}
+	}
+	break;
+
+	case FadeState::Loading:
+	{
+		if (UpdateStageLoading())
+		{
+			// 全部ロードできたので新ステージ生成
+			ChangeStage(
+				m_pendingStageIndex,
+				m_nextSpawnIndex
+			);
+
 			m_pendingStageIndex = -1;
+
 			m_fadeState = FadeState::Hold;
 			m_fadeTimer = 0.0f;
 		}
-		break;
+	}
+	break;
 
 	case FadeState::Hold:
-		// 黒画面を一定時間ホールド
-		if (m_fadeTimer >= FADE_HOLD_DURATION) {
+	{
+		if (m_fadeTimer >= FADE_HOLD_DURATION)
+		{
 			m_fadeState = FadeState::FadeIn;
 			m_fadeTimer = 0.0f;
 		}
-		break;
+	}
+	break;
 
 	case FadeState::FadeIn:
-		// 徐々に明るく
-		if (m_fadeTimer >= FADE_IN_DURATION) {
+	{
+		if (m_fadeTimer >= FADE_IN_DURATION)
+		{
 			m_fadeState = FadeState::None;
 			m_fadeTimer = 0.0f;
 		}
+	}
+	break;
+
+	default:
+		break;
+	}
+}
+
+void PlayScene::StartStageLoading(int stageIndex)
+{
+	m_loadingTasks.clear();
+	m_loadingStep = 0;
+
+	if (stageIndex < 0 ||
+		stageIndex >= static_cast<int>(m_mapData.stages.size()))
+	{
+		m_loadingTotal = 0;
+		return;
+	}
+
+	TextureLoadTask bgTask;
+	bgTask.type = TextureLoadTask::Type::Graph;
+
+	TextureLoadTask fgTask;
+	fgTask.type = TextureLoadTask::Type::Graph;
+
+	switch (stageIndex)
+	{
+	case 0:
+		bgTask.path = "assets/images/uies/bg1.png";
+		fgTask.path = "assets/images/uies/fg1.png";
+		break;
+
+	case 1:
+		bgTask.path = "assets/images/uies/bg2.png";
+		fgTask.path = "assets/images/uies/fg2.png";
+		break;
+
+	case 2:
+		bgTask.path = "assets/images/uies/bg3.png";
+		fgTask.path = "assets/images/uies/fg3.png";
 		break;
 
 	default:
 		break;
 	}
+
+	m_loadingTasks.push_back(bgTask);
+	m_loadingTasks.push_back(fgTask);
+
+	// このステージに存在する敵種類を調べる
+	const StageData& stage = m_mapData.stages[stageIndex];
+	const Layer& objLayer = stage.layers[1];
+
+	std::unordered_set<int> enemyTypes;
+
+	for (int y = 0; y < stage.height; ++y)
+	{
+		for (int x = 0; x < stage.width; ++x)
+		{
+			int objID =
+				objLayer.tiles[
+					static_cast<std::vector<int, std::allocator<int>>::size_type>(
+						y * stage.width + x
+						)
+				];
+
+			switch (objID)
+			{
+			case 201:
+			case 202:
+			case 203:
+			case 204:
+			case 205:
+			case 206:
+			case 207:
+			case 208:
+			case 210:
+				enemyTypes.insert(objID);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	for (int enemyType : enemyTypes)
+	{
+		TextureLoadTask task;
+		task.type = TextureLoadTask::Type::Enemy;
+		task.enemyObjectId = enemyType;
+
+		m_loadingTasks.push_back(task);
+	}
+
+	m_loadingTotal =
+		static_cast<int>(m_loadingTasks.size());
+
+	std::cout
+		<< "Stage Loading Start : "
+		<< stageIndex
+		<< " tasks="
+		<< m_loadingTotal
+		<< std::endl;
+}
+
+namespace
+{
+	template <typename EnemyType>
+	bool PreloadEnemy(Scene* scene)
+	{
+		if (scene == nullptr)
+		{
+			return false;
+		}
+
+		Vector2d preloadPos(-10000.0f, -10000.0f);
+
+		EnemyType* enemy = nullptr;
+
+		if constexpr (
+			std::is_constructible_v<
+			EnemyType,
+			Scene*,
+			Vector2d,
+			Vector2d
+			>)
+		{
+			enemy = new EnemyType(
+				scene,
+				preloadPos,
+				Vector2d(192.0f, 192.0f)
+			);
+		}
+		else
+		{
+			enemy = new EnemyType(
+				scene,
+				preloadPos
+			);
+		}
+
+		if (enemy == nullptr)
+		{
+			return false;
+		}
+
+		bool result = enemy->Init();
+
+		delete enemy;
+
+		return result;
+	}
+}
+
+bool PlayScene::UpdateStageLoading()
+{
+	if (m_loadingStep >= m_loadingTotal)
+	{
+		return true;
+	}
+
+	TextureLoadTask& task =
+		m_loadingTasks[m_loadingStep];
+
+	bool success = true;
+
+	// 画像1枚
+	if (task.type == TextureLoadTask::Type::Graph)
+	{
+		int handle = LoadGraph(task.path.c_str());
+
+		if (handle == -1)
+		{
+			std::cerr
+				<< "[ERROR] LoadGraph failed: "
+				<< task.path
+				<< std::endl;
+
+			success = false;
+		}
+		else if (
+			task.path == "assets/images/uies/bg1.png" ||
+			task.path == "assets/images/uies/bg2.png" ||
+			task.path == "assets/images/uies/bg3.png")
+		{
+			m_bgHandle = handle;
+		}
+		else
+		{
+			m_fgHandle = handle;
+		}
+	}
+
+	// 敵
+	else if (task.type == TextureLoadTask::Type::Enemy)
+	{
+		switch (task.enemyObjectId)
+		{
+		case 201:
+			success =
+				PreloadEnemy<ScarecrowEnemyEntity>(this);
+			break;
+
+		case 202:
+			success =
+				PreloadEnemy<WhiteEnemyEntity>(this);
+			break;
+
+		case 203:
+			success =
+				PreloadEnemy<YellowEnemyEntity>(this);
+			break;
+
+		case 204:
+			success =
+				PreloadEnemy<ArrowEnemyEntity>(this);
+			break;
+
+		case 205:
+			success =
+				PreloadEnemy<YoroiBossEntity>(this);
+			break;
+
+		case 206:
+			success =
+				PreloadEnemy<ArmorEnemyEntity>(this);
+			break;
+
+		case 207:
+			success =
+				PreloadEnemy<GunnerEnemyEntity>(this);
+			break;
+
+		case 208:
+			success =
+				PreloadEnemy<HealerEnemyEntity>(this);
+			break;
+
+		case 210:
+			success =
+				PreloadEnemy<SekienkiBossEntity>(this);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	if (!success)
+	{
+		std::cerr
+			<< "[ERROR] Stage loading task failed. step="
+			<< m_loadingStep
+			<< std::endl;
+	}
+
+	++m_loadingStep;
+
+	return m_loadingStep >= m_loadingTotal;
+}
+
+void PlayScene::DrawLoadingScreen()
+{
+	const int width = static_cast<int>(m_game->GetWidth());
+	const int height = static_cast<int>(m_game->GetHeight());
+
+	// 背景を真っ黒にする
+	DrawBox(
+		0,
+		0,
+		width,
+		height,
+		GetColor(0, 0, 0),
+		TRUE
+	);
+
+	// Loading文字
+	DrawString(
+		width / 2 - 50,
+		height / 2 - 40,
+		"Loading...",
+		GetColor(255, 255, 255)
+	);
+
+	// プログレスバー
+	const int barWidth = 500;
+	const int barHeight = 30;
+
+	const int barX = width / 2 - barWidth / 2;
+	const int barY = height / 2 + 20;
+
+	DrawBox(
+		barX,
+		barY,
+		barX + barWidth,
+		barY + barHeight,
+		GetColor(80, 80, 80),
+		TRUE
+	);
+
+	float progress = 0.0f;
+
+	if (m_loadingTotal > 0)
+	{
+		progress =
+			static_cast<float>(m_loadingStep) /
+			static_cast<float>(m_loadingTotal);
+	}
+
+	if (progress < 0.0f)
+	{
+		progress = 0.0f;
+	}
+
+	if (progress > 1.0f)
+	{
+		progress = 1.0f;
+	}
+
+	int progressWidth =
+		static_cast<int>(barWidth * progress);
+
+	DrawBox(
+		barX,
+		barY,
+		barX + progressWidth,
+		barY + barHeight,
+		GetColor(255, 255, 255),
+		TRUE
+	);
+
+	DrawFormatString(
+		barX + barWidth / 2 - 20,
+		barY + barHeight + 15,
+		GetColor(255, 255, 255),
+		"%d%%",
+		static_cast<int>(progress * 100.0f)
+	);
 }
 
 void PlayScene::DrawFadeOverlay()
