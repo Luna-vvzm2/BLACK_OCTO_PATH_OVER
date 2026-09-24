@@ -7,6 +7,7 @@
 #include "MoneyUI.h"
 
 #include "Menu.h"
+#include "SaveData.h"
 
 #include <memory>
 #include <unordered_map>
@@ -112,6 +113,14 @@ private:
 	std::unique_ptr<EventTexture> m_eventTexture;
 	std::unique_ptr<EventManager> m_eventManager;
 	float m_playTimer{ 0.0f }; //クリアタイムのためのカウンタ変数
+
+	// セーブデータ
+	SaveData m_saveData;
+
+	// 自動セーブ用タイマー
+	float m_autoSaveTimer{ 0.0f };
+
+	void AutoSave();
 
 	// リスポーン位置（初期位置）
 	Vector2d m_respawnPos;

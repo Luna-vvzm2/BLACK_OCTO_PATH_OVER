@@ -49,6 +49,7 @@
 #include "JutsuChargeUI.h"
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
+#include "SaveManager.h"
 
 
 //イベントのため変更
@@ -87,6 +88,15 @@ bool PlayScene::Init() {
 	m_isRunning = true;
 	m_type = Type::Play;
 	m_stageIndex = 0;
+	m_playTimer = 0.0f;
+
+	// セーブデータ読み込み
+	if (SaveManager::Load(m_saveData))
+	{
+		m_stageIndex = m_saveData.currentStage;
+		m_playTimer = m_saveData.playTime;
+	}
+
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
 	
@@ -110,6 +120,8 @@ bool PlayScene::Init() {
 
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
+
+	m_player->SetKunai(m_saveData.kunaiCount);
 
 	// ゲーム開始時のカメラ位置をプレイヤーに合わせる
 	Vector2d initialCameraPos = m_playerSpawnPoints[0];
@@ -446,6 +458,16 @@ bool PlayScene::StageInit(int stageNo) {
 
 void PlayScene::ChangeStage(int index, int spawnIndex)
 {
+	// ステージを進んだ場合、前のステージをクリア済みにする
+	int previousStage = m_stageIndex;
+
+	if (index > previousStage &&
+		previousStage >= 0 &&
+		previousStage < static_cast<int>(m_saveData.stageClear.size()))
+	{
+		m_saveData.stageClear[previousStage] = true;
+	}
+
 	m_stageIndex = index;
 
 	ClearStageActors();
@@ -472,11 +494,14 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 		m_camera.SetCenter(camPos);
 	}
 
-	if (m_stageBgm != nullptr)
+		if (m_stageBgm != nullptr)
 	{
 		m_stageBgm->Stop();
 		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
 	}
+
+	// ステージ進行を自動保存
+	AutoSave();
 }
 
 void PlayScene::ClearStageActors()
@@ -548,6 +573,16 @@ void PlayScene::Update(float deltaTime) {
 
 	//イベントのため変更
 	m_playTimer += deltaTime; //クリアシーンのために追加
+
+	// 自動セーブ
+	m_autoSaveTimer += deltaTime;
+
+	if (m_autoSaveTimer >= 10.0f)
+	{
+		AutoSave();
+		m_autoSaveTimer = 0.0f;
+	}
+
 	if (m_eventManager->IsRunning())
 	{
 		m_eventManager->Update(deltaTime);
@@ -887,6 +922,10 @@ void PlayScene::Draw()
 
 			// 敵の弾
 			if (actor->GetType() == ActorType::Ball)
+				return true;
+
+			// 手裏剣
+			if (actor->GetType() == ActorType::Kunai)
 				return true;
 
 			return false;
@@ -1847,4 +1886,17 @@ void PlayScene::DrawFadeOverlay()
 
 	int alpha = static_cast<int>(t * 255.0f);
 	renderer->DrawFullScreenFill(Color(0, 0, 0), alpha);
+}
+
+void PlayScene::AutoSave()
+{
+	m_saveData.currentStage = m_stageIndex;
+	m_saveData.playTime = m_playTimer;
+
+	if (m_player)
+	{
+		m_saveData.kunaiCount = m_player->GetKunai();
+	}
+
+	SaveManager::Save(m_saveData);
 }

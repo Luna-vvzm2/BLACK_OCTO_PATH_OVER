@@ -231,6 +231,7 @@ public:
 
     int GetCoin() const { return m_coin; }
     int GetKunai() const { return m_kunai; }
+    void SetKunai(int count) { m_kunai = count; }
     int GetHaku() const { return m_haku; }
     int GetMaxHaku() const { return m_maxHaku; }
 
