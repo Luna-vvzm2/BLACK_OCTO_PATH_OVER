@@ -7,10 +7,12 @@
 #include "MoneyUI.h"
 
 #include "Menu.h"
+#include "SaveData.h"
 
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 class PlayerEntity;
 class EnemyEntity;
@@ -19,6 +21,7 @@ class EnemyHPBar;
 class SoundComponent;
 class GameOverMenuUI;
 class JutsuChargeUI;
+class PlayerStatusUI;
 
 //イベントのため追加
 class EventTexture;
@@ -105,12 +108,22 @@ private:
 
 	JutsuChargeUI* m_jutsuChargeUI = nullptr;
 
+	PlayerStatusUI* m_playerStatusUI = nullptr;
+
 	std::unordered_map<EnemyEntity*, EnemyHPBar*> m_enemyToHPBarMap;
 	
 	//イベントのため変更
 	std::unique_ptr<EventTexture> m_eventTexture;
 	std::unique_ptr<EventManager> m_eventManager;
 	float m_playTimer{ 0.0f }; //クリアタイムのためのカウンタ変数
+
+	// セーブデータ
+	SaveData m_saveData;
+
+	// 自動セーブ用タイマー
+	float m_autoSaveTimer{ 0.0f };
+
+	void AutoSave();
 
 	// リスポーン位置（初期位置）
 	Vector2d m_respawnPos;
@@ -127,6 +140,7 @@ private:
 	enum class FadeState {
 		None,       // 通常プレイ中
 		FadeOut,    // 暗転中（次ステージへ）
+		Loading, //ロード中
 		Hold,       // 完全な黒画面のホールド
 		FadeIn      // 明転中（新ステージ開始）
 	};
@@ -140,10 +154,40 @@ private:
 	static constexpr float FADE_HOLD_DURATION = 0.10f;
 	static constexpr float FADE_IN_DURATION = 0.35f;
 
-	// フェード遷移を開始する（次ステージへ）
+	// フェード遷移を開始する（次ステージへ） 
 	void StartFadeToStage(int idx, int spawnIndex);
-	// フェード状態を更新
+
+	// フェード状態を更新 
 	void UpdateFade(float deltaTime);
-	// フェードのオーバーレイを描画
+
+	// フェードのオーバーレイを描画 
 	void DrawFadeOverlay();
+
+	// ====== リソースロード ======
+	struct TextureLoadTask
+	{
+		enum class Type
+		{
+			Graph,
+			Enemy
+		};
+
+		Type type = Type::Graph;
+
+		std::string path;
+		int enemyObjectId = 0;
+	};
+
+	std::vector<TextureLoadTask> m_loadingTasks;
+	int m_loadingStep = 0;
+	int m_loadingTotal = 0;
+
+	// ステージのリソースロードを開始
+	void StartStageLoading(int stageIndex);
+
+	// ロードを1つ進める
+	bool UpdateStageLoading();
+
+	// ロード画面を描画
+	void DrawLoadingScreen();
 };

@@ -11,6 +11,8 @@
 #include "Input.h"
 #include "PlayerEntity.h"
 #include "ScarecrowEnemyEntity.h"
+#include "EnemyEntity.h"
+#include "DropItemEntity.h"
 #include "WhiteEnemyEntity.h"
 #include "YellowEnemyEntity.h"
 #include "ArrowEnemyEntity.h"
@@ -47,6 +49,8 @@
 #include "JutsuChargeUI.h"
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
+#include "SaveManager.h"
+#include "PlayerStatusUI.h"
 
 //イベントのため変更
 #include "EventManager.h"
@@ -54,6 +58,10 @@
 
 #include <DxLib.h>
 #include <algorithm>
+
+#include <unordered_set>
+#include <type_traits>
+
 
 PlayScene::PlayScene(Game* game)
 	: Scene(game),
@@ -64,8 +72,8 @@ PlayScene::PlayScene(Game* game)
 	m_stageIndex(0),
 	m_comboCount(0),
 	m_currentStage(1),
-	m_bgHandle(0),
-	m_fgHandle(0),
+	m_bgHandle(-1),
+	m_fgHandle(-1),
 	m_eventTexture(std::make_unique<EventTexture>()),
 	m_eventManager(std::make_unique<EventManager>(this, m_eventTexture.get())), //イベントのため変更
 	m_respawnPos(200, 800),
@@ -80,6 +88,15 @@ bool PlayScene::Init() {
 	m_isRunning = true;
 	m_type = Type::Play;
 	m_stageIndex = 0;
+	m_playTimer = 0.0f;
+
+	// セーブデータ読み込み
+	if (SaveManager::Load(m_saveData))
+	{
+		m_stageIndex = m_saveData.currentStage;
+		m_playTimer = m_saveData.playTime;
+	}
+
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
 	
@@ -104,6 +121,12 @@ bool PlayScene::Init() {
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
 
+
+	// ゲーム開始時のカメラ位置をプレイヤーに合わせる
+	Vector2d initialCameraPos = m_playerSpawnPoints[0];
+	initialCameraPos.y -= 150.0f;
+	m_camera.SetCenter(initialCameraPos);
+
 	// ---- HP UI 作成 ----
 	HPBarUI* hpBar = new HPBarUI(
 		this,
@@ -115,6 +138,16 @@ bool PlayScene::Init() {
 	ShurikenUI* shuriken = new ShurikenUI(this, 18, 60);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
+
+	// プレイヤー状態UI
+	m_playerStatusUI = new PlayerStatusUI(
+		this,
+		m_player,
+		20.0f,
+		160.0f
+	);
+
+	AddUIActor(m_playerStatusUI);
 
 	// プレイヤー所持金 UI（左上に表示）
 	m_moneyUI = new MoneyUI(this, m_player, "assets/images/uies/money.png");
@@ -398,27 +431,52 @@ bool PlayScene::StageInit(int stageNo) {
 	float mapH = (float)stage.height * m_mapData.tileSize;
 	m_camera.SetBounds(Vector2d(0, 0), Vector2d(mapW, mapH));
 
-	switch (m_stageIndex) {
+	const char* bgPath = nullptr;
+	const char* fgPath = nullptr;
+
+	switch (m_stageIndex)
+	{
 	case 0:
-		m_bgHandle = LoadGraph("assets/images/uies/bg1.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg1.png");
+		bgPath = "assets/images/uies/bg1.png";
+		fgPath = "assets/images/uies/fg1.png";
 		break;
+
 	case 1:
-		m_bgHandle = LoadGraph("assets/images/uies/bg2.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg2.png");
+		bgPath = "assets/images/uies/bg2.png";
+		fgPath = "assets/images/uies/fg2.png";
 		break;
+
 	case 2:
-		m_bgHandle = LoadGraph("assets/images/uies/bg3.png");
-		m_fgHandle = LoadGraph("assets/images/uies/fg3.png");
+		bgPath = "assets/images/uies/bg3.png";
+		fgPath = "assets/images/uies/fg3.png";
 		break;
+	}
+
+	if (m_bgHandle == -1 && bgPath != nullptr)
+	{
+		m_bgHandle = LoadGraph(bgPath);
+	}
+
+	if (m_fgHandle == -1 && fgPath != nullptr)
+	{
+		m_fgHandle = LoadGraph(fgPath);
 	}
 
 	return true;
 }
 
-void PlayScene::ChangeStage(int index, int spawnIndex) {
-	DeleteGraph(m_bgHandle);
-	DeleteGraph(m_fgHandle);
+void PlayScene::ChangeStage(int index, int spawnIndex)
+{
+	// ステージを進んだ場合、前のステージをクリア済みにする
+	int previousStage = m_stageIndex;
+
+	if (index > previousStage &&
+		previousStage >= 0 &&
+		previousStage < static_cast<int>(m_saveData.stageClear.size()))
+	{
+		m_saveData.stageClear[previousStage] = true;
+	}
+
 	m_stageIndex = index;
 
 	ClearStageActors();
@@ -431,25 +489,28 @@ void PlayScene::ChangeStage(int index, int spawnIndex) {
 		m_actors.push_back(m_player);
 	}
 
-	if (spawnIndex >= 0 &&
+	if (m_player &&
+		spawnIndex >= 0 &&
 		spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
 	{
 		m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
-		if (m_player)
-		{
-			Vector2d playerPos = m_player->GetPos();
 
-			Vector2d camPos = playerPos;
-			camPos.y -= 150;
+		Vector2d playerPos = m_player->GetPos();
 
-			m_camera.SetCenter(camPos);
-		}
+		Vector2d camPos = playerPos;
+		camPos.y -= 150.0f;
+
+		m_camera.SetCenter(camPos);
 	}
-	if (m_stageBgm != nullptr)
+
+		if (m_stageBgm != nullptr)
 	{
 		m_stageBgm->Stop();
 		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
 	}
+
+	// ステージ進行を自動保存
+	AutoSave();
 }
 
 void PlayScene::ClearStageActors()
@@ -521,6 +582,16 @@ void PlayScene::Update(float deltaTime) {
 
 	//イベントのため変更
 	m_playTimer += deltaTime; //クリアシーンのために追加
+
+	// 自動セーブ
+	m_autoSaveTimer += deltaTime;
+
+	if (m_autoSaveTimer >= 10.0f)
+	{
+		AutoSave();
+		m_autoSaveTimer = 0.0f;
+	}
+
 	if (m_eventManager->IsRunning())
 	{
 		m_eventManager->Update(deltaTime);
@@ -601,28 +672,26 @@ void PlayScene::Update(float deltaTime) {
 			}
 		}
 	}
-	if (m_player) {
-		Vector2d playerPos = m_player->GetComponent<TransformComponent>()->GetPosition();
 
-		// 中間点をカメラ位置に
-		Vector2d camPos = playerPos;
-		camPos.y -= 150;
-		m_camera.SetCenter(camPos);
-		m_camera.SetZoom(1.0f);
-		/*
-		// 線形補間で徐々にズーム変更
-		float currentZoom = m_camera.GetZoom();
-		float zoomSpeed = 5.0f;
-		float newZoom = currentZoom + (targetZoom - currentZoom) * std::min(zoomSpeed * deltaTime, 1.0f);
-		*/
+	if (m_player)
+	{
+		TransformComponent* transform =
+			m_player->GetComponent<TransformComponent>();
 
-		float fixedCameraY = 400.0f;  // スクロール開始位置の上限
+		if (transform)
+		{
+			Vector2d playerPos = transform->GetPosition();
 
-		if (playerPos.y < fixedCameraY) {
-			camPos.y = playerPos.y - 200;  // 上に移動したらカメラもスクロール
-		}
-		else {
-			camPos.y = fixedCameraY - 200;  // それ以外はカメラ固定
+			// カメラが追従する目標位置
+			Vector2d cameraTarget = playerPos;
+
+			// プレイヤーを画面中央より少し下に表示
+			cameraTarget.y -= 150.0f;
+
+			// 前期と同じ滑らかな追従
+			m_camera.UpdateFollow(cameraTarget, deltaTime);
+
+			m_camera.SetZoom(1.0f);
 		}
 	}
 
@@ -672,124 +741,431 @@ void PlayScene::Update(float deltaTime) {
 	{
 		m_shurikenUI->SetCount(m_player->GetShurikenCount());
 	}
-	std::cout << "canMove: " << m_player->GetCanMove() << std::endl;
 }
 		
-void PlayScene::Draw() {
+void PlayScene::Draw()
+{
 	Renderer* renderer = m_game->GetRenderer();
 	if (!renderer) return;
+
+	PlayerEntity* player = m_player;
+	if (!player)
+		return;
+
 	Vector2d cam = m_camera.GetCenter();
 
+	// =====================================================
+	// 描画対象を条件で分けるための共通関数
+	// =====================================================
+	auto drawActorIf = [&](auto predicate)
+		{
+			for (Actor* actor : m_actors)
+			{
+				if (actor == nullptr || actor->IsDead())
+					continue;
+
+				if (predicate(actor))
+				{
+					actor->Draw();
+				}
+			}
+		};
+
+
+	// =====================================================
+	// ① 背景
+	// =====================================================
+
 	// 仮背景
-	DrawBox(0, 0, 1280, 720, GetColor(200, 200, 200), 1);
+	DrawBox(
+		0,
+		0,
+		1280,
+		720,
+		GetColor(200, 200, 200),
+		1
+	);
 
-	// 背景
-	switch (m_stageIndex) {
-	case 0:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1130.0f), 1.6f, 1.6f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 1:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1760.0f), 1.45f, 1.45f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 2:
-		renderer->DrawSpriteEx(Vector2d(-350.0f + (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 1600.0f), 1.5f, 1.5f, 0.0f, m_bgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	}
-	
-	drawActors(m_backactors);
-	drawActors(m_actors);
-
-	// 前景
-	switch (m_stageIndex) {
-	case 0:
-		for (int i = 0; i < 19; i++) {
-			renderer->DrawSpriteEx(Vector2d(-1290.0f + i * 1600.0f - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 680.0f), 0.8f, 0.8f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		}
-		break;
-	case 1:
-		renderer->DrawSpriteEx(Vector2d(0 - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 4960.0f), 4.3f, 4.3f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		break;
-	case 2:
-		for (int i = 0; i < 19; i++) {
-			renderer->DrawSpriteEx(Vector2d(-1290.0f + i * 1600.0f - (cam.x * 0.5f), m_mapData.stages[m_stageIndex].height * m_mapData.tileSize - 870.0f), 0.8f, 0.8f, 0.0f, m_fgHandle, true, Vector2d(0, 0), 255, false, false, true);
-		}
-		break;
-	}
-	
-	if (m_player->GetIsKaryu()) {
-		float timer = m_player->GetKaryuTimer();
-		if (timer > 4.9f) {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, (int)((5.0f - timer) / 0.1f * 180)); // 0～255
-		}
-		else if (timer < 0.5f) {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, (int)(timer / 0.5f * 180)); // 0～255
-		}
-		else {
-			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 180); // 0～255
-		}
-		DrawBox(0, 0, 1280, 720, GetColor(150, 20, 20), 1);
-
-		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-	}
-
-	// コンボ表示（m_comboCount が 1 以上なら表示）
-	if (m_player->GetCombo() > 0) {
-		const std::string& debugFont = m_game->GatDebugFont();
-		// ここではフォントサイズを大きめ（例 48）で真ん中上に表示
-		std::string comboText = std::to_string(m_player->GetCombo()) + " Hits";
-		renderer->DrawTextL(Vector2d(20.0f, 120.0f), comboText, Color(0, 0, 0), debugFont, 60, false);
-	}
-
-	drawActors(m_UIactors);
-
-	if (m_menu.IsOpen())
+	// ステージ背景
+	switch (m_stageIndex)
 	{
-		m_menu.Draw();
+	case 0:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1130.0f
+			),
+			1.6f,
+			1.6f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 1:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1760.0f
+			),
+			1.45f,
+			1.45f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 2:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-350.0f + (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1600.0f
+			),
+			1.5f,
+			1.5f,
+			0.0f,
+			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
 	}
 
-	if (m_eventManager->IsRunning()) {
-		m_eventManager->Draw();
+
+	// m_backactors は背景系なのでここで描画
+	drawActors(m_backactors);
+
+
+	// =====================================================
+	// ② 壁・床・障害物
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			ActorType type = actor->GetType();
+
+			return
+				type == ActorType::Block ||
+				type == ActorType::Trap ||
+				type == ActorType::StageExit ||
+				type == ActorType::StageBack ||
+				dynamic_cast<DropItemEntity*>(actor) != nullptr;
+		});
+
+
+	// =====================================================
+	// ③ TreasureBox
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			return actor->GetType() == ActorType::TreasureBox;
+		});
+
+
+	// =====================================================
+	// ④ Enemy Back Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Back)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			if (target->GetType() == ActorType::TreasureBox)
+				return false;
+
+			return dynamic_cast<EnemyEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// ⑤ Enemy
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			if (actor == nullptr)
+				return false;
+
+			if (actor->GetType() == ActorType::TreasureBox)
+				return false;
+
+			// Enemy本体
+			if (dynamic_cast<EnemyEntity*>(actor) != nullptr)
+				return true;
+
+			// 敵の弾
+			if (actor->GetType() == ActorType::Ball)
+				return true;
+
+			// 手裏剣
+			if (actor->GetType() == ActorType::Kunai)
+				return true;
+
+			return false;
+		});
+
+	// =====================================================
+	// ⑥ Enemy Front Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Front)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			if (target->GetType() == ActorType::TreasureBox)
+				return false;
+
+			return dynamic_cast<EnemyEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// ⑦ Player Back Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Back)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return true;
+
+			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// ⑧ Player
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			return dynamic_cast<PlayerEntity*>(actor) != nullptr;
+		});
+
+
+	// =====================================================
+	// ⑨ Player Front Effect
+	// =====================================================
+
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			if (effect->GetRenderLayer() !=
+				EffectActor::RenderLayer::Front)
+			{
+				return false;
+			}
+
+			Actor* target = effect->GetFollowTarget();
+
+			if (!target)
+				return false;
+
+			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+		});
+
+
+	// =====================================================
+	// ⑩ 前景
+	// =====================================================
+
+	switch (m_stageIndex)
+	{
+	case 0:
+		for (int i = 0; i < 19; i++)
+		{
+			renderer->DrawSpriteEx(
+				Vector2d(
+					-1290.0f +
+					i * 1600.0f -
+					(cam.x * 0.5f),
+
+					m_mapData.stages[m_stageIndex].height *
+					m_mapData.tileSize - 680.0f
+				),
+				0.8f,
+				0.8f,
+				0.0f,
+				m_fgHandle,
+				true,
+				Vector2d(0, 0),
+				255,
+				false,
+				false,
+				true
+			);
+		}
+		break;
+
+	case 1:
+		renderer->DrawSpriteEx(
+			Vector2d(
+				0 - (cam.x * 0.5f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 4960.0f
+			),
+			4.3f,
+			4.3f,
+			0.0f,
+			m_fgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		break;
+
+	case 2:
+		for (int i = 0; i < 19; i++)
+		{
+			renderer->DrawSpriteEx(
+				Vector2d(
+					-1290.0f +
+					i * 1600.0f -
+					(cam.x * 0.5f),
+
+					m_mapData.stages[m_stageIndex].height *
+					m_mapData.tileSize - 870.0f
+				),
+				0.8f,
+				0.8f,
+				0.0f,
+				m_fgHandle,
+				true,
+				Vector2d(0, 0),
+				255,
+				false,
+				false,
+				true
+			);
+		}
+		break;
 	}
 
 
-	// 攻撃範囲描画 --------------------------
-	/*Vector2d Pos = m_player->GetPos();
-	AttackHitbox Weak1{ Vector2d(50,100), 100, 100, 30 };
-	if (m_player->GetDir()) {
-		Pos.x += Weak1.offset.x;
-		Pos.y += Weak1.offset.y;
-	} 
-	else{
-		Pos.x -= Weak1.offset.x;
-		Pos.y += Weak1.offset.y;
+	// =====================================================
+	// ⑪ UI
+	// =====================================================
+
+	// 通常UI
+	for (Actor* actor : m_UIactors)
+	{
+		if (actor == nullptr || actor->IsDead())
+			continue;
+
+		// GameOverMenuUIは最後に描く
+		if (actor == m_gameOverMenu)
+			continue;
+
+		actor->Draw();
 	}
-	renderer->DrawRectCenter(Pos, Weak1.width, Weak1.height, GetColor(0,255,0),false, true);*/
-	//------------------------------------------
-#ifdef _DEBUG
-	// sensor描画
-	Vector2d Pos = m_player->GetPos();
-	Vector2d offset = { 0.0f, 50.0f };
-	if (m_player->GetDir()) {
-		Pos.x += offset.x;
-		Pos.y += offset.y;
+
+	// コンボ表示
+	if (m_player && m_player->GetCombo() > 0)
+	{
+		const std::string& debugFont =
+			m_game->GatDebugFont();
+
+		std::string comboText =
+			std::to_string(m_player->GetCombo()) +
+			" Hits";
+
+		renderer->DrawTextL(
+			Vector2d(20.0f, 120.0f),
+			comboText,
+			Color(0, 0, 0),
+			debugFont,
+			60,
+			false
+		);
 	}
-	else {
-		Pos.x -= offset.x;
-		Pos.y += offset.y;
-	}
-	renderer->DrawRectCenter(Pos, 4.0f, 4.0f, GetColor(0, 255, 0), false, true);
-#endif
-	std::vector<NumberInfo> comboInfo = {
+
+	// 結果表示
+	std::vector<NumberInfo> comboInfo =
+	{
 		{ (float)m_player->GetCombo(), 0 }
 	};
 
-
-	if (m_resultShown) {
-		const std::string& debugFont = m_game->GatDebugFont();
+	if (m_resultShown)
+	{
+		const std::string& debugFont =
+			m_game->GatDebugFont();
 
 		renderer->DrawNumberFormatW(
-			Vector2d(m_game->GetWidth() / 2.4f,
-				m_game->GetHeight() / 2.2f),
+			Vector2d(
+				static_cast<float>(m_game->GetWidth()) / 2.4f,
+				static_cast<float>(m_game->GetHeight()) / 2.2f
+			),
 			Color(0, 0, 0),
 			debugFont,
 			32,
@@ -799,19 +1175,160 @@ void PlayScene::Draw() {
 		);
 	}
 
-	// ←ここを追加
-	DrawFadeOverlay();
+
+	// =====================================================
+	// ⑫ イベント
+	// =====================================================
+
+	if (m_eventManager->IsRunning())
+	{
+		m_eventManager->Draw();
+	}
+
+
+	// =====================================================
+	// ⑬ メニュー
+	// =====================================================
+
+	if (m_menu.IsOpen())
+	{
+		m_menu.Draw();
+	}
+
+
+	// =====================================================
+	// ⑭ 全体エフェクト
+	// =====================================================
+
+	// Karyu中の画面全体エフェクト
+	if (m_player && m_player->GetIsKaryu())
+	{
+		float timer = m_player->GetKaryuTimer();
+
+		if (timer > 4.9f)
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				(int)((5.0f - timer) / 0.1f * 180)
+			);
+		}
+		else if (timer < 0.5f)
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				(int)(timer / 0.5f * 180)
+			);
+		}
+		else
+		{
+			SetDrawBlendMode(
+				DX_BLENDMODE_ALPHA,
+				180
+			);
+		}
+
+		DrawBox(
+			0,
+			0,
+			1280,
+			720,
+			GetColor(150, 20, 20),
+			1
+		);
+
+		SetDrawBlendMode(
+			DX_BLENDMODE_NOBLEND,
+			0
+		);
+	}
+
+	// Actorとして登録されている全体エフェクト
+	drawActorIf([](Actor* actor)
+		{
+			EffectActor* effect =
+				dynamic_cast<EffectActor*>(actor);
+
+			if (!effect)
+				return false;
+
+			return effect->GetRenderLayer() ==
+				EffectActor::RenderLayer::Global;
+		});
+
+
+	// =====================================================
+	// ⑮ ゲームオーバー画面
+	// =====================================================
+
+	if (m_gameOverMenu &&
+		m_gameOverMenu->IsActive())
+	{
+		m_gameOverMenu->Draw();
+	}
+
+
+	// =====================================================
+	// フェード
+	// =====================================================
+
+	if (m_fadeState == FadeState::Loading)
+	{
+		DrawLoadingScreen();
+	}
+	else
+	{
+		DrawFadeOverlay();
+	}
+
+
+	// =====================================================
+	// デバッグ
+	// =====================================================
 
 #ifdef _DEBUG
-	const std::string& debugFont = m_game->GatDebugFont();
+
+	// sensor描画
+	if (m_player)
+	{
+		Vector2d Pos = m_player->GetPos();
+		Vector2d offset = { 0.0f, 50.0f };
+
+		if (m_player->GetDir())
+		{
+			Pos.x += offset.x;
+			Pos.y += offset.y;
+		}
+		else
+		{
+			Pos.x -= offset.x;
+			Pos.y += offset.y;
+		}
+
+		renderer->DrawRectCenter(
+			Pos,
+			4.0f,
+			4.0f,
+			GetColor(0, 255, 0),
+			false,
+			true
+		);
+	}
+
+	const std::string& debugFont =
+		m_game->GatDebugFont();
+
 	renderer->DrawTextL(
-		Vector2d(m_game->GetWidth() - 150.0f, 0),
+		Vector2d(
+			static_cast<float>(m_game->GetWidth()) - 150.0f,
+			0.0f
+		),
 		"PlayScene",
 		Color(255, 64, 0),
 		debugFont,
 		24,
 		false
 	);
+
 #endif
 }
 
@@ -837,8 +1354,15 @@ void PlayScene::RespawnPlayer() {
 
 	// プレイヤーの位置をリスポーン位置に戻す
 	TransformComponent* transform = m_player->GetComponent<TransformComponent>();
+
 	if (transform) {
 		transform->SetPosition(m_playerSpawnPoints[0]);
+
+		// リスポーンした瞬間にカメラも戻す
+		Vector2d cameraPos = m_playerSpawnPoints[0];
+		cameraPos.y -= 150.0f;
+
+		m_camera.SetCenter(cameraPos);
 	}
 
 	// プレイヤーの速度をリセット
@@ -933,36 +1457,406 @@ void PlayScene::UpdateFade(float deltaTime)
 	switch (m_fadeState)
 	{
 	case FadeState::FadeOut:
-		// 徐々に真っ黒に
-		if (m_fadeTimer >= FADE_OUT_DURATION) {
-			// 真っ黒になった瞬間にステージを構築（見えないので違和感なし）
-			m_stageIndex = m_pendingStageIndex;
-			ChangeStage(m_nextStage, m_nextSpawnIndex);
+	{
+		if (m_fadeTimer >= FADE_OUT_DURATION)
+		{
+			// 現在のステージ背景を解放
+			if (m_bgHandle != -1)
+			{
+				DeleteGraph(m_bgHandle);
+				m_bgHandle = -1;
+			}
+
+			if (m_fgHandle != -1)
+			{
+				DeleteGraph(m_fgHandle);
+				m_fgHandle = -1;
+			}
+
+			// ロード開始
+			StartStageLoading(m_pendingStageIndex);
+
+			m_fadeState = FadeState::Loading;
+			m_fadeTimer = 0.0f;
+		}
+	}
+	break;
+
+	case FadeState::Loading:
+	{
+		if (UpdateStageLoading())
+		{
+			// 全部ロードできたので新ステージ生成
+			ChangeStage(
+				m_pendingStageIndex,
+				m_nextSpawnIndex
+			);
+
 			m_pendingStageIndex = -1;
+
 			m_fadeState = FadeState::Hold;
 			m_fadeTimer = 0.0f;
 		}
-		break;
+	}
+	break;
 
 	case FadeState::Hold:
-		// 黒画面を一定時間ホールド
-		if (m_fadeTimer >= FADE_HOLD_DURATION) {
+	{
+		if (m_fadeTimer >= FADE_HOLD_DURATION)
+		{
 			m_fadeState = FadeState::FadeIn;
 			m_fadeTimer = 0.0f;
 		}
-		break;
+	}
+	break;
 
 	case FadeState::FadeIn:
-		// 徐々に明るく
-		if (m_fadeTimer >= FADE_IN_DURATION) {
+	{
+		if (m_fadeTimer >= FADE_IN_DURATION)
+		{
 			m_fadeState = FadeState::None;
 			m_fadeTimer = 0.0f;
 		}
+	}
+	break;
+
+	default:
+		break;
+	}
+}
+
+void PlayScene::StartStageLoading(int stageIndex)
+{
+	m_loadingTasks.clear();
+	m_loadingStep = 0;
+
+	if (stageIndex < 0 ||
+		stageIndex >= static_cast<int>(m_mapData.stages.size()))
+	{
+		m_loadingTotal = 0;
+		return;
+	}
+
+	TextureLoadTask bgTask;
+	bgTask.type = TextureLoadTask::Type::Graph;
+
+	TextureLoadTask fgTask;
+	fgTask.type = TextureLoadTask::Type::Graph;
+
+	switch (stageIndex)
+	{
+	case 0:
+		bgTask.path = "assets/images/uies/bg1.png";
+		fgTask.path = "assets/images/uies/fg1.png";
+		break;
+
+	case 1:
+		bgTask.path = "assets/images/uies/bg2.png";
+		fgTask.path = "assets/images/uies/fg2.png";
+		break;
+
+	case 2:
+		bgTask.path = "assets/images/uies/bg3.png";
+		fgTask.path = "assets/images/uies/fg3.png";
 		break;
 
 	default:
 		break;
 	}
+
+	m_loadingTasks.push_back(bgTask);
+	m_loadingTasks.push_back(fgTask);
+
+	// このステージに存在する敵種類を調べる
+	const StageData& stage = m_mapData.stages[stageIndex];
+	const Layer& objLayer = stage.layers[1];
+
+	std::unordered_set<int> enemyTypes;
+
+	for (int y = 0; y < stage.height; ++y)
+	{
+		for (int x = 0; x < stage.width; ++x)
+		{
+			int objID =
+				objLayer.tiles[
+					static_cast<std::vector<int, std::allocator<int>>::size_type>(
+						y * stage.width + x
+						)
+				];
+
+			switch (objID)
+			{
+			case 201:
+			case 202:
+			case 203:
+			case 204:
+			case 205:
+			case 206:
+			case 207:
+			case 208:
+			case 210:
+				enemyTypes.insert(objID);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
+	for (int enemyType : enemyTypes)
+	{
+		TextureLoadTask task;
+		task.type = TextureLoadTask::Type::Enemy;
+		task.enemyObjectId = enemyType;
+
+		m_loadingTasks.push_back(task);
+	}
+
+	m_loadingTotal =
+		static_cast<int>(m_loadingTasks.size());
+
+	std::cout
+		<< "Stage Loading Start : "
+		<< stageIndex
+		<< " tasks="
+		<< m_loadingTotal
+		<< std::endl;
+}
+
+namespace
+{
+	template <typename EnemyType>
+	bool PreloadEnemy(Scene* scene)
+	{
+		if (scene == nullptr)
+		{
+			return false;
+		}
+
+		Vector2d preloadPos(-10000.0f, -10000.0f);
+
+		EnemyType* enemy = nullptr;
+
+		if constexpr (
+			std::is_constructible_v<
+			EnemyType,
+			Scene*,
+			Vector2d,
+			Vector2d
+			>)
+		{
+			enemy = new EnemyType(
+				scene,
+				preloadPos,
+				Vector2d(192.0f, 192.0f)
+			);
+		}
+		else
+		{
+			enemy = new EnemyType(
+				scene,
+				preloadPos
+			);
+		}
+
+		if (enemy == nullptr)
+		{
+			return false;
+		}
+
+		bool result = enemy->Init();
+
+		delete enemy;
+
+		return result;
+	}
+}
+
+bool PlayScene::UpdateStageLoading()
+{
+	if (m_loadingStep >= m_loadingTotal)
+	{
+		return true;
+	}
+
+	TextureLoadTask& task =
+		m_loadingTasks[m_loadingStep];
+
+	bool success = true;
+
+	// 画像1枚
+	if (task.type == TextureLoadTask::Type::Graph)
+	{
+		int handle = LoadGraph(task.path.c_str());
+
+		if (handle == -1)
+		{
+			std::cerr
+				<< "[ERROR] LoadGraph failed: "
+				<< task.path
+				<< std::endl;
+
+			success = false;
+		}
+		else if (
+			task.path == "assets/images/uies/bg1.png" ||
+			task.path == "assets/images/uies/bg2.png" ||
+			task.path == "assets/images/uies/bg3.png")
+		{
+			m_bgHandle = handle;
+		}
+		else
+		{
+			m_fgHandle = handle;
+		}
+	}
+
+	// 敵
+	else if (task.type == TextureLoadTask::Type::Enemy)
+	{
+		switch (task.enemyObjectId)
+		{
+		case 201:
+			success =
+				PreloadEnemy<ScarecrowEnemyEntity>(this);
+			break;
+
+		case 202:
+			success =
+				PreloadEnemy<WhiteEnemyEntity>(this);
+			break;
+
+		case 203:
+			success =
+				PreloadEnemy<YellowEnemyEntity>(this);
+			break;
+
+		case 204:
+			success =
+				PreloadEnemy<ArrowEnemyEntity>(this);
+			break;
+
+		case 205:
+			success =
+				PreloadEnemy<YoroiBossEntity>(this);
+			break;
+
+		case 206:
+			success =
+				PreloadEnemy<ArmorEnemyEntity>(this);
+			break;
+
+		case 207:
+			success =
+				PreloadEnemy<GunnerEnemyEntity>(this);
+			break;
+
+		case 208:
+			success =
+				PreloadEnemy<HealerEnemyEntity>(this);
+			break;
+
+		case 210:
+			success =
+				PreloadEnemy<SekienkiBossEntity>(this);
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	if (!success)
+	{
+		std::cerr
+			<< "[ERROR] Stage loading task failed. step="
+			<< m_loadingStep
+			<< std::endl;
+	}
+
+	++m_loadingStep;
+
+	return m_loadingStep >= m_loadingTotal;
+}
+
+void PlayScene::DrawLoadingScreen()
+{
+	const int width = static_cast<int>(m_game->GetWidth());
+	const int height = static_cast<int>(m_game->GetHeight());
+
+	// 背景を真っ黒にする
+	DrawBox(
+		0,
+		0,
+		width,
+		height,
+		GetColor(0, 0, 0),
+		TRUE
+	);
+
+	// Loading文字
+	DrawString(
+		width / 2 - 50,
+		height / 2 - 40,
+		"Loading...",
+		GetColor(255, 255, 255)
+	);
+
+	// プログレスバー
+	const int barWidth = 500;
+	const int barHeight = 30;
+
+	const int barX = width / 2 - barWidth / 2;
+	const int barY = height / 2 + 20;
+
+	DrawBox(
+		barX,
+		barY,
+		barX + barWidth,
+		barY + barHeight,
+		GetColor(80, 80, 80),
+		TRUE
+	);
+
+	float progress = 0.0f;
+
+	if (m_loadingTotal > 0)
+	{
+		progress =
+			static_cast<float>(m_loadingStep) /
+			static_cast<float>(m_loadingTotal);
+	}
+
+	if (progress < 0.0f)
+	{
+		progress = 0.0f;
+	}
+
+	if (progress > 1.0f)
+	{
+		progress = 1.0f;
+	}
+
+	int progressWidth =
+		static_cast<int>(barWidth * progress);
+
+	DrawBox(
+		barX,
+		barY,
+		barX + progressWidth,
+		barY + barHeight,
+		GetColor(255, 255, 255),
+		TRUE
+	);
+
+	DrawFormatString(
+		barX + barWidth / 2 - 20,
+		barY + barHeight + 15,
+		GetColor(255, 255, 255),
+		"%d%%",
+		static_cast<int>(progress * 100.0f)
+	);
 }
 
 void PlayScene::DrawFadeOverlay()
@@ -1000,4 +1894,17 @@ void PlayScene::DrawFadeOverlay()
 
 	int alpha = static_cast<int>(t * 255.0f);
 	renderer->DrawFullScreenFill(Color(0, 0, 0), alpha);
+}
+
+void PlayScene::AutoSave()
+{
+	m_saveData.currentStage = m_stageIndex;
+	m_saveData.playTime = m_playTimer;
+
+	if (m_player)
+	{
+		m_saveData.kunaiCount = m_player->GetKunai();
+	}
+
+	SaveManager::Save(m_saveData);
 }

@@ -172,7 +172,12 @@
     <ClCompile Include="GameOverMenuUI.cpp" />
     <ClCompile Include="GunnerEnemyEntity.cpp" />
     <ClCompile Include="HealerEnemyEntity.cpp" />
-    <ClCompile Include="HitboxData.cpp" />
+    <ClCompile Include="HitboxData.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="HouseBlock.cpp" />
     <ClCompile Include="JutsuChargeUI.cpp" />
     <ClCompile Include="KaryuTextUI.cpp" />
@@ -186,6 +191,8 @@
     <ClCompile Include="PlatformOboroLBlock.cpp" />
     <ClCompile Include="PlatformOboroMBlock.cpp" />
     <ClCompile Include="PlatformOboroSBlock.cpp" />
+    <ClCompile Include="PlayerStatusUI.cpp" />
+    <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="ScarecrowEnemyEntity.cpp" />
     <ClCompile Include="SekienkiBossEntity.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
@@ -271,7 +278,12 @@
     <ClInclude Include="GameOverMenuUI.h" />
     <ClInclude Include="GunnerEnemyEntity.h" />
     <ClInclude Include="HealerEnemyEntity.h" />
-    <ClInclude Include="HitboxData.h" />
+    <ClInclude Include="HitboxData.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="HouseBlock.h" />
     <ClInclude Include="JutsuChargeUI.h" />
     <ClInclude Include="KaryuTextUI.h" />
@@ -285,6 +297,9 @@
     <ClInclude Include="PlatformOboroLBlock.h" />
     <ClInclude Include="PlatformOboroMBlock.h" />
     <ClInclude Include="PlatformOboroSBLock.h" />
+    <ClInclude Include="PlayerStatusUI.h" />
+    <ClInclude Include="SaveData.h" />
+    <ClInclude Include="SaveManager.h" />
     <ClInclude Include="ScarecrowEnemyEntity.h" />
     <ClInclude Include="SekienkiBossEntity.h" />
     <ClInclude Include="ShurikenUI.h" />
