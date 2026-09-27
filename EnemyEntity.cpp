@@ -7,16 +7,20 @@
 #include "CollisionComponent.h"
 #include "SpriteComponent.h"
 #include "AnimationComponent.h"
+#include "AlertGaugeComponent.h"
 #include "Game.h"
 #include "PlayScene.h"
 #include "DropData.h"
 #include "DropItemEntity.h"
+#include "PlayerEntity.h"
 #include <cstdlib>
+#include <iostream>
 
 EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size)
     : EntityActor(scene, pos, size)
     , m_hp(nullptr)
     , m_hpMax(100)
+    , m_alertGauge(nullptr)
     , m_gravity(nullptr)
     , m_anim(nullptr)
 
@@ -45,6 +49,7 @@ EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size
     , m_actionLock(false)
 
     , m_canMove(true)
+    ,m_alertGaugeTimer(0.0f)
 {
 }
 
@@ -54,6 +59,7 @@ bool EnemyEntity::Init() {
 
     m_hp = AddComponent<HPComponent>(GetMaxHP());
     m_gravity = AddComponent<GravityComponent>(2800.0f);
+    m_alertGauge = AddComponent<AlertGaugeComponent>();
 
     // テスト用：必ずコインを1つ落とす
     m_dropTable.clear();
@@ -61,6 +67,7 @@ bool EnemyEntity::Init() {
     m_dropTable.push_back({ ItemType::Kunai,0.9f });
     m_dropTable.push_back({ ItemType::Heal,0.9f });
     return true;
+
 }
 
 void EnemyEntity::Update(float deltaTime) {
@@ -225,4 +232,60 @@ void EnemyEntity::UpdateAttack(float deltaTime)
 
 void EnemyEntity::UpdateState()
 {
+}
+
+bool EnemyEntity::IsPlayerInSearchRange() const
+{
+    PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+    if (playScene == nullptr)
+    {
+        return false;
+    }
+
+    PlayerEntity* player = playScene->GetPlayer();
+
+    if (player == nullptr || player->IsDead())
+    {
+        return false;
+    }
+
+    Vector2d enemyPos = GetPos();
+    Vector2d playerPos = player->GetPos();
+
+    float distanceX = std::abs(playerPos.x - enemyPos.x);
+    float distanceY = std::abs(playerPos.y - enemyPos.y);
+
+    return distanceX <= 100.0f &&
+        distanceY <= 250.0f;
+}
+
+void EnemyEntity::UpdateAlertGauge(float deltaTime)
+{
+    if (m_alertGauge == nullptr)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer += deltaTime;
+
+    if (m_alertGaugeTimer < 1.0f)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer = 0.0f;
+
+    if (IsPlayerInSearchRange())
+    {
+        m_alertGauge->AddGauge(4.0f);
+    }
+    else
+    {
+        m_alertGauge->AddGauge(-1.0f);
+    }
+
+    std::cout << "Enemy Alert Gauge = "
+        << m_alertGauge->GetGauge()
+        << std::endl;
 }

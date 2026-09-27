@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="AlertGaugeComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="ArmorEnemyEntity.cpp" />
     <ClCompile Include="ArrowEnemyEntity.cpp" />
@@ -241,6 +242,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="AlertGaugeComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="ArmorEnemyEntity.h" />
     <ClInclude Include="ArrowEnemyEntity.h" />

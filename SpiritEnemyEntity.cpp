@@ -8,6 +8,7 @@
 #include "PlayScene.h"
 #include "PlayerEntity.h"
 #include "SpiritBulletEntity.h"
+#include "AlertGaugeComponent.h"
 #include <cmath>
 
 SpiritEnemyEntity::SpiritEnemyEntity(
@@ -25,6 +26,8 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     , m_moveSpeed(500.0f)
     , m_faceRight(true)
     , m_isDying(false)
+    , m_targetPosition(Vector2d::Zero())
+    , m_hasTargetPosition(false)
 {
 }
 
@@ -51,6 +54,8 @@ bool SpiritEnemyEntity::Init()
 
     m_faceRight = true;
     m_isDying = false;
+    m_targetPosition = Vector2d::Zero();
+    m_hasTargetPosition = false;
 
     return true;
 }
@@ -97,44 +102,112 @@ void SpiritEnemyEntity::UpdateAI()
 
     case Move:
     {
-        // プレイヤーとのX方向の距離
-        float distanceX = player->GetPos().x - GetPos().x;
-        float absDistanceX = std::abs(distanceX);
+        // 警戒中はその場で浮遊するだけ
+        SetVel(Vector2d(
+            0.0f,
+            std::sin(m_floatTimer) * 10.0f
+        ));
 
-        // プレイヤーから遠すぎる場合 → プレイヤーに近づく
-        if (absDistanceX > m_keepDistance + 30.0f)
-        {
-            float direction = (distanceX > 0.0f) ? 1.0f : -1.0f;
-
-            SetVel(Vector2d(
-                direction * m_moveSpeed,
-                std::sin(m_floatTimer) * 10.0f
-            ));
-
-            m_faceRight = (direction > 0.0f);
-        }
-        // プレイヤーに近すぎる場合 → プレイヤーから離れる
-        else if (absDistanceX < m_keepDistance - 30.0f)
-        {
-            float direction = (distanceX > 0.0f) ? -1.0f : 1.0f;
-
-            SetVel(Vector2d(
-                direction * m_moveSpeed,
-                std::sin(m_floatTimer) * 10.0f
-            ));
-
-            m_faceRight = (direction > 0.0f);
-        }
-        // 約500pxの距離になったら停止
-        else
+        // 警戒ゲージが100になったら戦闘開始
+        if (m_alertGauge != nullptr &&
+            m_alertGauge->IsCombat())
         {
             SetVel(Vector2d(
                 0.0f,
                 std::sin(m_floatTimer) * 10.0f
             ));
 
-            m_state = Attack;
+            m_state = CombatMove;
             m_attackTimer = 0.0f;
+        }
+    }
+    break;
+
+    case CombatMove:
+    {
+        float distanceX = playerPos.x - myPos.x;
+        float absDistanceX = std::abs(distanceX);
+
+        const float keepDistance = 500.0f;
+        const float arrivalDistance = 5.0f;
+
+        // まだ目標地点を決めていない
+        if (!m_hasTargetPosition)
+        {
+            // 近すぎる場合
+            if (absDistanceX < keepDistance)
+            {
+                float direction =
+                    (distanceX > 0.0f) ? -1.0f : 1.0f;
+
+                // 現在のプレイヤー位置から500px離れた場所を目標地点にする
+                m_targetPosition = Vector2d(
+                    playerPos.x + direction * keepDistance,
+                    myPos.y
+                );
+
+                m_hasTargetPosition = true;
+            }
+            // 遠すぎる場合
+            else if (absDistanceX > keepDistance)
+            {
+                float direction =
+                    (distanceX > 0.0f) ? 1.0f : -1.0f;
+
+                m_targetPosition = Vector2d(
+                    playerPos.x + direction * keepDistance,
+                    myPos.y
+                );
+
+                m_hasTargetPosition = true;
+            }
+            else
+            {
+                // すでに約500pxなら移動不要
+                SetVel(Vector2d(
+                    0.0f,
+                    std::sin(m_floatTimer) * 10.0f
+                ));
+
+                m_state = Attack;
+                m_attackTimer = 0.0f;
+            }
+        }
+
+        // 目標地点が決まっている
+        if (m_hasTargetPosition)
+        {
+            float targetDistance =
+                m_targetPosition.x - myPos.x;
+
+            float absTargetDistance =
+                std::abs(targetDistance);
+
+            // 目標地点に到着
+            if (absTargetDistance <= arrivalDistance)
+            {
+                SetVel(Vector2d(
+                    0.0f,
+                    std::sin(m_floatTimer) * 10.0f
+                ));
+
+                m_hasTargetPosition = false;
+
+                m_state = Attack;
+                m_attackTimer = 0.0f;
+            }
+            else
+            {
+                float direction =
+                    (targetDistance > 0.0f) ? 1.0f : -1.0f;
+
+                SetVel(Vector2d(
+                    direction * m_moveSpeed,
+                    std::sin(m_floatTimer) * 10.0f
+                ));
+
+                m_faceRight = (direction > 0.0f);
+            }
         }
     }
     break;
@@ -254,6 +327,9 @@ void SpiritEnemyEntity::Update(float deltaTime)
     // AIを更新
     UpdateAI();
 
+    // 怨霊専用の警戒ゲージを更新
+    UpdateSpiritAlertGauge(deltaTime);
+
     // 怨霊は重力を使用しない
     Vector2d pos = GetPos();
     Vector2d vel = GetVel();
@@ -264,6 +340,67 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
     // EnemyEntity::Update() は呼ばない
     // EntityActor::Update() もここでは呼ばない
+}
+
+void SpiritEnemyEntity::UpdateSpiritAlertGauge(float deltaTime)
+{
+    if (m_alertGauge == nullptr)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer += deltaTime;
+
+    if (m_alertGaugeTimer < 1.0f)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer = 0.0f;
+
+    PlayScene* playScene =
+        dynamic_cast<PlayScene*>(m_scene);
+
+    if (playScene == nullptr)
+    {
+        return;
+    }
+
+    PlayerEntity* player = playScene->GetPlayer();
+
+    if (player == nullptr || player->IsDead())
+    {
+        return;
+    }
+
+    Vector2d enemyPos = GetPos();
+    Vector2d playerPos = player->GetPos();
+
+    float distanceX =
+        std::abs(playerPos.x - enemyPos.x);
+
+    float distanceY =
+        std::abs(playerPos.y - enemyPos.y);
+
+    // 怨霊の感知範囲：700px
+    // 上下方向は500pxを基準にする
+    bool inRange =
+        distanceX <= m_detectRange &&
+        distanceY <= 250.0f;
+
+    if (inRange)
+    {
+        m_alertGauge->AddGauge(4.0f);
+    }
+    else
+    {
+        m_alertGauge->AddGauge(-1.0f);
+    }
+
+    std::cout
+        << "Spirit Alert Gauge = "
+        << m_alertGauge->GetGauge()
+        << std::endl;
 }
 
 void SpiritEnemyEntity::Draw()
