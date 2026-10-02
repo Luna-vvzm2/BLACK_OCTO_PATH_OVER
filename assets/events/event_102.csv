@@ -1,3 +1,5 @@
+type,,,,,,
+GETSKILL,,,,,,
 type,name,time,pos,Lpath,Rpath,text
 TALK,トモエ,None,R,,assets\images\events\stand\tomoe\tomoe1.png,師匠！ お迎えに参りました！
 TALK,トモエ,None,R,,assets\images\events\stand\tomoe\tomoe1.png,忙しいところすみませんが、<br>今日の鍛錬、よろしくお願いします。<br>技の習得に苦戦している子も多いですからね。

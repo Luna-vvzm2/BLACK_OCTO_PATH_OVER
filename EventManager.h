@@ -56,6 +56,7 @@ enum class EventType
 	Talk,
 	Battle,
 	Tutorial,
+	GetSkill,
 	CutIn,
 	Clear
 };
@@ -230,6 +231,37 @@ private:
 	void ShowText(); //テキストを描画
 
 	void Draw() override;
+};
+
+class GetSkillEvent : public EventBase
+{
+public:
+	GetSkillEvent(Scene* scene, const std::string& filePath, EventManager* eventManager);
+	GetSkillEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager);
+	~GetSkillEvent() override; //デストラクタ
+
+	EventType GetType() const override { return EventType::GetSkill; }
+
+	void Init() override; //イベント開始時の処理
+	void Update(float deltaTime) override; //更新
+	void End() override; //終了
+
+	bool IsEnd() const override;
+
+	void Draw() override {};
+
+private:
+	Scene* m_scene{ nullptr };
+	EventManager* m_eventManager{ nullptr };
+
+	Vector2d m_initPos{ 0.0f, 0.0f };
+	Vector2d m_targetPos{ 500.0f, 0.0f };
+	float m_moveSpeed{ 500.0f }; // カメラの移動速度
+
+	float m_viewTimer{ 2.0f };
+
+	bool m_isCameraMoving{ false };
+	bool m_isEnd{ false };
 };
 
 class CutInEvent : public EventBase

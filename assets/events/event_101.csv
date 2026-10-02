@@ -1,4 +1,3 @@
+GETSKILL,,,
 type,header,body,path
-TUTORIAL,必殺技・その１,テスト文です。<br>必ず変更、削除すること。（１回目）,assets\images\events\tutorial\image_test.png
-,必殺技・その２,テスト文です。<br>必ず変更、削除すること。（２回目）,assets\images\events\tutorial\image_test.png
-,必殺技・その３,テスト文です。<br>必ず変更、削除すること。（３回目）,assets\images\events\tutorial\image_test.png
+TUTORIAL,スキル・虎,,assets\images\events\tutorial\image_test.png

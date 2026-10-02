@@ -9,6 +9,7 @@
 #include "ClearScene.h"
 #include "PlayerEntity.h"
 #include "Game.h"
+#include "Camera.h"
 #include "Actor.h"
 #include "WhiteEnemyEntity.h"
 #include "YellowEnemyEntity.h"
@@ -153,6 +154,10 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 			{
 				m_eventQueue.push_back(std::make_unique<TutorialEvent>(m_scene, eventTexts, this));
 			}
+			else if (eventType == "GETSKILL")
+			{
+				m_eventQueue.push_back(std::make_unique<GetSkillEvent>(m_scene, eventTexts, this));
+			}
 			eventTexts.clear();
 		};
 
@@ -167,7 +172,7 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 		if (tokens[0] == "type" || tokens[0] == "enemyType") continue;
 
 		const std::string& typeToken = tokens[0];
-		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL")
+		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL" || typeToken == "GETSKILL")
 		{
 			pushEvent();
 			eventType = typeToken;
@@ -1172,6 +1177,123 @@ void CutInEvent::Draw()
 	DrawString(static_cast<int>(m_jBossNamePos.x), static_cast<int>(m_jBossNamePos.y), m_jBossName.c_str(), m_jBossNameColor.ToDxColor());
 }
 
+GetSkillEvent::GetSkillEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	LoadTexts(filePath);
+}
+
+GetSkillEvent::GetSkillEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	m_texts = texts;
+}
+
+GetSkillEvent::~GetSkillEvent() = default;
+
+void GetSkillEvent::Init()
+{
+	if (m_eventManager)
+	{
+		for (const std::string& text : m_texts)
+		{
+			auto tokens = SplitCSV(text);
+
+			if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+			{
+				m_viewTimer = std::stof(tokens[1]);
+			}
+
+			if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+			{
+				m_targetPos.x = std::stof(tokens[2]);
+			}
+
+			if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+			{
+				m_targetPos.y = std::stof(tokens[3]);
+			}
+		}
+
+		auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+		if (playScene)
+		{
+			Camera& camera = playScene->GetCamera();
+
+			m_initPos = camera.GetCenter();
+			m_targetPos += m_initPos; //ターゲット位置を設定（初期値からの相対）
+		}
+
+		m_isCameraMoving = true;
+		m_isEnd = false;
+	}
+
+}
+
+void GetSkillEvent::Update(float deltaTime)
+{
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	//PlayerEntity* player = playScene->GetPlayer();
+
+	//player->SetCanMove(false);
+
+	if(playScene)
+	{
+		Camera& camera = playScene->GetCamera();
+		Vector2d camPos = camera.GetCenter();
+		
+		if(camPos != m_targetPos && m_isCameraMoving)
+		{
+			Vector2d direction = m_targetPos - camPos;
+			float distance = direction.length();
+
+			Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
+			if (moveVector.length() >= distance)
+			{
+				camera.SetCenter(m_targetPos);
+				m_isCameraMoving = false;
+			}
+			else
+			{
+				camera.SetCenter(camPos + moveVector);
+			}
+		}
+		else
+		{
+			m_viewTimer -= deltaTime;
+			if (!m_isCameraMoving && m_viewTimer <= 0.0f)
+			{
+				Vector2d direction = m_initPos - camPos;
+				float distance = direction.length();
+
+				Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
+				if (moveVector.length() >= distance)
+				{
+					camera.SetCenter(m_initPos);
+					m_isEnd = true;
+				}
+				else
+				{
+					camera.SetCenter(camPos + moveVector);
+				}
+			}
+		}
+
+	}
+}
+
+void GetSkillEvent::End()
+{
+	DeleteTexts();
+}
+
+bool GetSkillEvent::IsEnd() const
+{
+	return m_isEnd;
+}
 
 ClearEvent::ClearEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
 	: m_scene(scene)
