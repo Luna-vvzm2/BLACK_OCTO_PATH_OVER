@@ -7,7 +7,6 @@
 GameOverScene::GameOverScene(Game* game)
 	: Scene(game)
 	, m_nextScene(NextScene::Respawn)
-	, m_inextScene(0)
 {
 }
 
@@ -48,19 +47,19 @@ void GameOverScene::Update(float deltaTime)
 
 	else if (input.IsTrigger(Action::UP))
 	{
-		if (static_cast<int>(m_nextScene) > 0)
+		int current = static_cast<int>(m_nextScene);
+		if (current > 0)
 		{
-			m_inextScene--;
-			m_nextScene = static_cast<NextScene>(m_inextScene);
+			m_nextScene = static_cast<NextScene>(current - 1);
 		}
 	}
 
 	else if (input.IsTrigger(Action::DOWN))
 	{
-		if (static_cast<int>(m_nextScene) < 2)
+		int current = static_cast<int>(m_nextScene);
+		if (current < static_cast<int>(NextScene::Count) - 1)
 		{
-			m_inextScene++;
-			m_nextScene = static_cast<NextScene>(m_inextScene);
+			m_nextScene = static_cast<NextScene>(current + 1);
 		}
 	}
 }
@@ -75,7 +74,7 @@ void GameOverScene::Draw()
 
 	const std::string& debugFont = m_game->GatDebugFont();
 
-	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.15f), "GameOver", Color(192, 192, 192), debugFont, 96, false);
+	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.15f), "GameOver", Color(255, 50, 50), debugFont, 96, false);
 	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.6f), "RePlay", Color(192, 192, 192), debugFont, 32, false);
 	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.7f), "Title", Color(192, 192, 192), debugFont, 32, false);
 	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.8f), "Exit", Color(192, 192, 192), debugFont, 32, false);

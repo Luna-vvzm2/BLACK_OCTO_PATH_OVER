@@ -8,7 +8,9 @@ public:
 	{
 		Respawn = 0,
 		Title,
-		Exit
+		Exit,
+
+		Count
 	};
 
 	GameOverScene(Game* game);
@@ -22,5 +24,4 @@ public:
 
 private:
 	NextScene m_nextScene;
-	int m_inextScene;
 };

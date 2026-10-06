@@ -815,7 +815,8 @@ void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
 	}
 }
 
-void PlayScene::ShowGameOverMenu() {
+void PlayScene::ShowGameOverMenu()
+{
 	Game* game = GetGame();
 
 	game->PushScene(std::make_unique<GameOverScene>(game));
