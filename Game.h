@@ -21,6 +21,9 @@ public:
 	//bool tick(float& deltaTime, int targetFPS = 60, float maxDeltaTime = 0.1f);
 
 	bool IsRunning() const { return m_running; }
+	void RequestQuit() { m_running = false; }
+	int GetVolume(int channel) const;
+	void AdjustVolume(int channel, int amount);
 	int GetWidth() const { return m_winWidth; }
 	int GetHeight() const { return m_winHeight; }
 
@@ -52,6 +55,7 @@ private:
 	int m_winColor;
 	std::string m_gameFont;
 	std::string m_debugFont;
+	int m_volumes[3] = { 100, 100, 100 }; // master, effects, BGM
 
 
 	//	FPSŒvŽZ—p

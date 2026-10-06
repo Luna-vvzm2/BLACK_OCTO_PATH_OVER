@@ -9,6 +9,8 @@
 #include "Menu.h"
 #include "SaveData.h"
 
+#include "ScreenMenus.h"
+
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -91,6 +93,7 @@ private:
 	int m_nextSpawnIndex = 0;
 
 	Menu m_menu;
+	PauseMenu m_pauseMenu;
 
 	Camera m_camera;
 	SoundComponent* m_stageBgm;

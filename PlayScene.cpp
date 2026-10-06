@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "PlayScene.h"
 #include "TitleScene.h"
+#include "StageSelectScene.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
 #include "SoundComponent.h"
@@ -66,6 +67,7 @@
 PlayScene::PlayScene(Game* game)
 	: Scene(game),
 	m_menu(this),
+	m_pauseMenu(game, false),
 	m_player(nullptr),
 	m_camera(static_cast<float>(game->GetWidth()), static_cast<float>(game->GetHeight())),
 	m_stageBgm(nullptr),
@@ -187,6 +189,7 @@ bool PlayScene::Init() {
 
 	if (m_stageBgm != nullptr)
 	{
+		m_stageBgm->SetCategory(SoundCategory::Bgm);
 		m_stageBgm->SetVolume(90);
 		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
 	}
@@ -566,6 +569,30 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 }
 
 void PlayScene::Update(float deltaTime) {
+    const Input& menuInput = m_game->GetInput();
+
+    if (m_pauseMenu.IsOpen()) {
+        const PauseMenu::Result result = m_pauseMenu.Update();
+        if (result == PauseMenu::Result::Resume) m_isPaused = false;
+        else if (result == PauseMenu::Result::StageSelect)
+            m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
+        else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
+        return;
+    }
+
+    // Events use a held Escape input to skip dialogue; the pause shortcut
+    // must not consume that input. Game over also owns its own menu.
+    if (!m_isGameOver && m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
+        if (m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
+            m_menu.Toggle();
+            return;
+        }
+        if (!m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
+            m_pauseMenu.Open();
+            m_isPaused = true;
+            return;
+        }
+    }
 	// ====== フェード遷移中はゲームロジックを止める ======
 	if (m_fadeState != FadeState::None) {
 		UpdateFade(deltaTime);
@@ -1280,6 +1307,8 @@ void PlayScene::Draw()
 		DrawFadeOverlay();
 	}
 
+	DrawFadeOverlay();
+	m_pauseMenu.Draw();
 
 	// =====================================================
 	// デバッグ

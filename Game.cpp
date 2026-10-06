@@ -5,6 +5,7 @@
 #include "TitleScene.h"
 #include "PlayScene.h"
 #include "SpriteComponent.h"
+#include "SoundComponent.h"
 
 Game::Game()
 	: m_window(nullptr),
@@ -118,63 +119,20 @@ bool Game::Run() {
 }
 
 void Game::Update(float deltaTime) {
-	//	ESCキーで終了
+    if (m_scene) m_scene->Update(deltaTime);
 
-	if (m_input.IsTrigger(Action::ESCAPE)) {
-		switch (m_scene->GetType())
-		{
-		case Scene::Type::Title:
-			m_running = false;
-			break;
+    if (!m_nextScene && m_scene && m_scene->GetType() == Scene::Type::Play
+        && m_input.IsTrigger(Action::ENTER)) {
+        auto* playScene = static_cast<PlayScene*>(m_scene.get());
+        if (playScene->IsResult()) ChangeScene(std::make_unique<PlayScene>(this));
+    }
 
-		case Scene::Type::Play:
-			m_scene = std::make_unique<TitleScene>(this);
-			m_scene->Init();
-			break;
-		}
-	}
-
-
-	//	シーン遷移
-	if (m_input.IsTrigger(Action::ENTER)) {
-		switch (m_scene->GetType())
-		{
-		case Scene::Type::Title:
-			m_scene = std::make_unique<PlayScene>(this);
-			m_scene->Init();
-			break;
-
-		case Scene::Type::Clear:
-			m_scene = std::make_unique<TitleScene>(this);
-			m_scene->Init();
-			break;
-
-		case Scene::Type::Play:
-			auto playScene = static_cast<PlayScene*>(m_scene.get());
-
-			//	Ball の HP が 0（＝リザルト中）のときだけ反応
-			if (playScene->IsResult()) {
-				m_scene = std::make_unique<PlayScene>(this);
-				m_scene->Init();
-			}
-			break;
-		}
-	}
-
-
-	// シーン更新
-	if (m_scene) { m_scene->Update(deltaTime); }
-
-	//	以後処理を書く
-
-	//クリアシーンのために追加
-	if (m_nextScene)
-	{
-		m_scene = std::move(m_nextScene);
-		m_scene->Init();
-	}
+    // Apply transitions after the current scene has finished updating.
+    if (m_nextScene) {
+        m_scene = std::move(m_nextScene);
+        m_scene->Init();
+    }
 }
-
 void Game::Draw() {
 	ClearDrawScreen();
 	//	以後描画処理を書く
@@ -282,3 +240,14 @@ void Game::ChangeScene(std::unique_ptr<Scene>nextScene)
 //	m_prevTime = currentTime;
 //	return true;
 //}
+int Game::GetVolume(int channel) const
+{
+    return channel >= 0 && channel < 3 ? m_volumes[channel] : 100;
+}
+
+void Game::AdjustVolume(int channel, int amount)
+{
+    if (channel < 0 || channel >= 3) return;
+    m_volumes[channel] = std::clamp(m_volumes[channel] + amount, 0, 100);
+    SoundComponent::RefreshAllVolumes();
+}
