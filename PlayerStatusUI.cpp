@@ -25,6 +25,14 @@ bool PlayerStatusUI::Init()
 		return false;
 	}
 
+	m_jutsuIconHandle =
+		LoadGraph("assets/images/uies/ninjutu_icon_sheet.png");
+
+	if (m_jutsuIconHandle == -1)
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -103,85 +111,93 @@ void PlayerStatusUI::Draw()
 	);
 
 	// =========================
-	// îEèp
-	// =========================
-
-	const char* jutsuNames[4] =
-	{
-		"Tako",
-		"Tora",
-		"Kaeru",
-		"Shachi"
-	};
+// îEèpÉAÉCÉRÉì
+// =========================
 
 	const float slotSize = 62.0f;
 	const float slotGap = 8.0f;
 
 	for (int i = 0; i < 4; ++i)
 	{
-		float slotX =
+		const float slotX =
 			m_x + 8.0f +
 			i * (slotSize + slotGap);
 
-		float slotY =
+		const float slotY =
 			m_y + 42.0f;
 
-		bool own = m_player->GetOwnJutsu(i);
+		const bool own =
+			m_player->GetOwnJutsu(i);
 
-		int fillColor;
+		int srcX = 0;
+		int srcY = 0;
 
-		if (own)
+		switch (i)
 		{
-			fillColor = GetColor(220, 220, 220);
-		}
-		else
-		{
-			fillColor = GetColor(60, 60, 60);
+		case 0: // ë˚
+			if (own)
+			{
+				srcX = 750;
+				srcY = 400;
+			}
+			else
+			{
+				srcX = 400;
+				srcY = 400;
+			}
+			break;
+
+		case 1: // å’
+			if (own)
+			{
+				srcX = 400;
+				srcY = 750;
+			}
+			else
+			{
+				srcX = 50;
+				srcY = 750;
+			}
+			break;
+
+		case 2: // ä^
+			if (own)
+			{
+				srcX = 400;
+				srcY = 50;
+			}
+			else
+			{
+				srcX = 50;
+				srcY = 50;
+			}
+			break;
+
+		case 3: // ÈÕ
+			if (own)
+			{
+				srcX = 50;
+				srcY = 400;
+			}
+			else
+			{
+				srcX = 750;
+				srcY = 50;
+			}
+			break;
 		}
 
-		DrawBox(
+		DrawRectExtendGraph(
 			static_cast<int>(slotX),
 			static_cast<int>(slotY),
 			static_cast<int>(slotX + slotSize),
 			static_cast<int>(slotY + slotSize),
-			fillColor,
+			srcX,
+			srcY,
+			250,
+			250,
+			m_jutsuIconHandle,
 			TRUE
-		);
-
-		DrawBox(
-			static_cast<int>(slotX),
-			static_cast<int>(slotY),
-			static_cast<int>(slotX + slotSize),
-			static_cast<int>(slotY + slotSize),
-			GetColor(255, 255, 255),
-			FALSE
-		);
-
-		int textColor;
-
-		if (own)
-		{
-			textColor = GetColor(0, 0, 0);
-		}
-		else
-		{
-			textColor = GetColor(140, 140, 140);
-		}
-
-		renderer->DrawTextL(
-			Vector2d(
-				slotX + 5.0f,
-				slotY + 19.0f
-			),
-			jutsuNames[i],
-			Color(
-				own ? 0 : 140,
-				own ? 0 : 140,
-				own ? 0 : 140
-			),
-			font,
-			16,
-			false
 		);
 	}
 

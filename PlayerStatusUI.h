@@ -25,4 +25,6 @@ private:
 
 	float m_x = 20.0f;
 	float m_y = 160.0f;
+
+	int m_jutsuIconHandle = -1;
 };
