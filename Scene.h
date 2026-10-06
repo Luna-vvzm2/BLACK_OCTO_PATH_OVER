@@ -23,7 +23,7 @@ public:
 		Title,
 		Play,
 		Clear, //クリアシーンのために追加
-
+		GameOver, // ゲームオーバーのため追加
 	};
 	//addactorを移動
 	void AddActor(Actor* actor);

@@ -28,7 +28,8 @@ void ClearScene::Update(float deltaTime)
 }
 
 
-void ClearScene::Draw() {
+void ClearScene::Draw()
+{
 	Renderer* renderer = m_game->GetRenderer();
 	if (!renderer) return;
 

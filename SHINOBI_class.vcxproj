@@ -151,12 +151,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ClearBlock.cpp" />
     <ClCompile Include="ClearPlatformBlock.cpp" />
-    <ClCompile Include="ClearScene.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="ClearScene.cpp" />
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
@@ -169,6 +164,8 @@
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
     <ClCompile Include="GameOverMenuUI.cpp" />
+    <ClCompile Include="GameOverScene.cpp" />
+    <ClCompile Include="GameOverUI.cpp" />
     <ClCompile Include="GunnerEnemyEntity.cpp" />
     <ClCompile Include="HealerEnemyEntity.cpp" />
     <ClCompile Include="HitboxData.cpp" />
@@ -267,6 +264,13 @@
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="EventTexture.h" />
     <ClInclude Include="GameOverMenuUI.h" />
+    <ClInclude Include="GameOverScene.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GameOverUI.h" />
     <ClInclude Include="GunnerEnemyEntity.h" />
     <ClInclude Include="HealerEnemyEntity.h" />
     <ClInclude Include="HitboxData.h" />

@@ -276,9 +276,6 @@
     <ClCompile Include="KaryuTextUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
-    <ClCompile Include="ClearScene.cpp">
-      <Filter>ソース ファイル\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="ClearUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
@@ -299,6 +296,15 @@
     </ClCompile>
     <ClCompile Include="HitboxData.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="ClearScene.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScene.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverUI.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -566,7 +572,13 @@
     <ClInclude Include="EnemySpawner.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="GameOverScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="HitboxData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
