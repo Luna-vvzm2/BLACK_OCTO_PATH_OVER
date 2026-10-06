@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Vector2d.h"
 #include "Camera.h"
+#include "Checkpoint.h"
 #include "MapData.h"
 #include "ShurikenUI.h"
 #include "MoneyUI.h"
@@ -70,6 +71,8 @@ public:
 
 	// プレイヤーをリスポーン位置に戻す
 	void RespawnPlayer();
+	void SetRespawnPosition(const Vector2d& position) { m_respawnPos = position; }
+	bool IsRespawnPosition(const Vector2d& position) const { return m_respawnPos.x == position.x && m_respawnPos.y == position.y; }
 
 	//敵HPバー処理に使用
 	void AddUIActorFromExternal(UIActor* uiActor) { AddUIActor(uiActor); }
