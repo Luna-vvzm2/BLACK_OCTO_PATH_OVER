@@ -8,8 +8,9 @@ class CollisionComponent;
 
 enum class BlockType {
 	Solid,      // ’ÊíƒuƒƒbƒN
-	Platform,    // ‚·‚è”²‚¯‘«ê
-	StageExit
+	Platform,   // ‚·‚è”²‚¯‘«ê
+	StageExit,
+	Hide		//‰B‚ê‚éáŠQ•¨
 };
 
 class BlockActor : public Actor
