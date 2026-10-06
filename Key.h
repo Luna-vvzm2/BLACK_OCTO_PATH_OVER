@@ -17,12 +17,16 @@ public:
 		O,
 		P,
 		Q,
+		E,
+		F,
 		G,
 		H,
 		M,
 		ESCAPE,
 		SPACE,
 		ENTER,
+		PAGE_UP,
+		PAGE_DOWN,
 		NUM_4,
 		KEY_COUNT
 	};

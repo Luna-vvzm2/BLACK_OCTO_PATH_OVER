@@ -15,12 +15,16 @@ void Key::Init() {
 	m_keyMap[O] = KEY_INPUT_O;
 	m_keyMap[P] = KEY_INPUT_P;
 	m_keyMap[Q] = KEY_INPUT_Q;
+	m_keyMap[E] = KEY_INPUT_E;
+	m_keyMap[F] = KEY_INPUT_F;
 	m_keyMap[G] = KEY_INPUT_G;
 	m_keyMap[H] = KEY_INPUT_H;
 	m_keyMap[M] = KEY_INPUT_M;
 	m_keyMap[ESCAPE] = KEY_INPUT_ESCAPE;
 	m_keyMap[SPACE] = KEY_INPUT_SPACE;
 	m_keyMap[ENTER] = KEY_INPUT_RETURN;
+	m_keyMap[PAGE_UP] = KEY_INPUT_PGUP;
+	m_keyMap[PAGE_DOWN] = KEY_INPUT_PGDN;
 	m_keyMap[NUM_4] = KEY_INPUT_4;  // デバッグ用の4キー
 
 

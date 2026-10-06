@@ -12,15 +12,20 @@ enum class Action {
     RIGHT,
     DASH,
     WEAK_ATTACK,
-    STRONG_ATTACK,
     KUNAI,
+    HEAL,
     KAMAE,
     G,
     JUTSU_KAMAE,
+    OCTO,
+    TIGER,
+    ORCA,
     JUMP,
     ESCAPE,
     ENTER,
     MENU,
+    PAGE_UP,
+    PAGE_DOWN,
     ACTION_COUNT
 };
 

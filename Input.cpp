@@ -13,15 +13,20 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::RIGHT)] = { Key::RIGHT, Key::D };
     m_actionKeyMap[static_cast<size_t>(Action::DASH)] = { Key::U };
     m_actionKeyMap[static_cast<size_t>(Action::WEAK_ATTACK)] = { Key::I };
-    m_actionKeyMap[static_cast<size_t>(Action::STRONG_ATTACK)] = { Key::O };
-    m_actionKeyMap[static_cast<size_t>(Action::KUNAI)] = { Key::P };
+    m_actionKeyMap[static_cast<size_t>(Action::KUNAI)] = { Key::O };
+    m_actionKeyMap[static_cast<size_t>(Action::HEAL)] = { Key::P };
     m_actionKeyMap[static_cast<size_t>(Action::KAMAE)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::G)] = { Key::G };
     m_actionKeyMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Key::H };
+    m_actionKeyMap[static_cast<size_t>(Action::OCTO)] = { Key::Q };
+    m_actionKeyMap[static_cast<size_t>(Action::TIGER)] = { Key::E };
+    m_actionKeyMap[static_cast<size_t>(Action::ORCA)] = { Key::F };
     m_actionKeyMap[static_cast<size_t>(Action::JUMP)] = { Key::SPACE };
     m_actionKeyMap[static_cast<size_t>(Action::ESCAPE)] = { Key::ESCAPE };
     m_actionKeyMap[static_cast<size_t>(Action::ENTER)] = { Key::ENTER };
     m_actionKeyMap[static_cast<size_t>(Action::MENU)] = { Key::M };
+    m_actionKeyMap[static_cast<size_t>(Action::PAGE_UP)] = { Key::PAGE_UP };
+    m_actionKeyMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Key::PAGE_DOWN };
 
     // ジョイパッドも同様に
     m_actionPadMap[static_cast<size_t>(Action::UP)] = { Joypad::UP };
@@ -30,15 +35,20 @@ void Input::Init() {
     m_actionPadMap[static_cast<size_t>(Action::RIGHT)] = { Joypad::RIGHT };
     m_actionPadMap[static_cast<size_t>(Action::DASH)] = { Joypad::RB };
     m_actionPadMap[static_cast<size_t>(Action::WEAK_ATTACK)] = { Joypad::X };
-    m_actionPadMap[static_cast<size_t>(Action::STRONG_ATTACK)] = { Joypad::Y };
     m_actionPadMap[static_cast<size_t>(Action::KUNAI)] = { Joypad::B };
+    m_actionPadMap[static_cast<size_t>(Action::HEAL)] = { Joypad::X };
     m_actionPadMap[static_cast<size_t>(Action::KAMAE)] = { Joypad::LB };
     m_actionPadMap[static_cast<size_t>(Action::G)] = { Joypad::LT };
     m_actionPadMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Joypad::RT };
+    m_actionPadMap[static_cast<size_t>(Action::OCTO)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::TIGER)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::ORCA)] = {};
     m_actionPadMap[static_cast<size_t>(Action::JUMP)] = { Joypad::A };
     m_actionPadMap[static_cast<size_t>(Action::ESCAPE)] = { Joypad::START };
     m_actionPadMap[static_cast<size_t>(Action::ENTER)] = { Joypad::B };
     m_actionPadMap[static_cast<size_t>(Action::MENU)] = { Joypad::BACK };
+    m_actionPadMap[static_cast<size_t>(Action::PAGE_UP)] = { Joypad::LB };
+    m_actionPadMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Joypad::RB };
     m_key.Init();
     m_pad.Init();
 }
@@ -64,6 +74,7 @@ bool Input::IsDown(Action action) const {
 
     return false;
 }
+
 bool Input::IsTrigger(Action action) const {
     auto idx = static_cast<size_t>(action);
 
@@ -75,6 +86,22 @@ bool Input::IsTrigger(Action action) const {
     // パッド側チェック
     for (auto btn : m_actionPadMap[idx]) {
         if (m_pad.IsTrigger(btn)) return true;
+    }
+
+    // LT + 各ボタン
+    if (action == Action::OCTO) {
+        return m_pad.IsDown(Joypad::LT) &&
+            m_pad.IsTrigger(Joypad::X);
+    }
+
+    if (action == Action::TIGER) {
+        return m_pad.IsDown(Joypad::LT) &&
+            m_pad.IsTrigger(Joypad::Y);
+    }
+
+    if (action == Action::ORCA) {
+        return m_pad.IsDown(Joypad::LT) &&
+            m_pad.IsTrigger(Joypad::B);
     }
 
     return false;

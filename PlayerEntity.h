@@ -107,6 +107,12 @@ public:
         KARYU_MID,
         KARYU_END,
 
+        OCTO_START,
+        OCTO_AUTO,
+        OCTO_END,
+        TIGER,
+        ORCA,
+
         DEAD,
     };
 

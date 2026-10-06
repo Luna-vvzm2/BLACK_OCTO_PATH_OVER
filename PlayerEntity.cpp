@@ -70,7 +70,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
 
     , m_dir(true)
     , m_prevDir(true)
-    , m_jumpSpeed(0.0f)
+    , m_jumpSpeed(-620.0f)
     , m_moveSpeed(290.0f)
     , m_moveBaseSpeed(290.0f)
     , m_dashSpeed(600.0f)
@@ -1860,7 +1860,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::JUMP_START:
     {
         Vector2d vel = m_velocity->Get();
-        vel.y = -600.0f;
+        vel.y = -620.0f;
 
         m_isGround = false;
         m_jumpTime = 0.0f;
@@ -1909,7 +1909,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         m_velocity->SetX(move.x);
 
-        m_anim->Play("roll");
+        m_anim->Play("Hien");
     }   break;
 
     case PlayerState::HIEN:
@@ -2170,6 +2170,26 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("KaryuEnd");
         break;
 
+    case PlayerState::OCTO_START:
+        m_anim->Play("OctoStart");
+        break;
+
+    case PlayerState::OCTO_AUTO:
+        m_anim->Play("OctoAuto");
+        break;
+
+    case PlayerState::OCTO_END:
+        m_anim->Play("OctoEnd");
+        break;
+
+    case PlayerState::TIGER:
+        m_anim->Play("Tiger");
+        break;
+
+    case PlayerState::ORCA:
+        m_anim->Play("Orca");
+        break;
+
     case PlayerState::DEAD:
         m_anim->Play("dead");
         break;
@@ -2250,20 +2270,12 @@ void PlayerEntity::StartAttack(int attackNum) {
     case weak3Num:
     case squatAttackNum:
     {
-        Vector2d pPos = m_transform->GetPosition();
-        m_attackTimer = playerAttackTimer[attackNum];
-        m_attackLockTimer = playerAttackLockTimer[attackNum];
-        CheckAttackHit(AttackHitboxes[attackNum]);
-        pPos.x += (m_dir ? playerEffectPos[attackNum].x : -playerEffectPos[attackNum].x);
-        pPos.y -= playerEffectPos[attackNum].y;
-        SpawnEffect(new EffectActor(m_scene, pPos, playerEffectType[attackNum], !m_dir));
-
         Vector2d vel = m_velocity->Get();
         if (m_sensor.frontNearGround != nullptr) {
             vel.x = m_dir ? m_moveSpeed : -m_moveSpeed;
         }
         m_velocity->Set(vel);
-    }   break;
+    }
     case airWeak1Num:
     {
         m_attackTimer = playerAttackTimer[attackNum];
