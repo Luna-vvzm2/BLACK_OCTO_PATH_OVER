@@ -5,6 +5,7 @@
 #include "Game.h"
 
 std::vector<SoundComponent*> SoundComponent::s_components;
+int SoundComponent::s_voiceVolume = 100;
 
 SoundComponent::SoundComponent(
 	Actor* owner,
@@ -106,12 +107,25 @@ void SoundComponent::RefreshVolume()
     if (!IsLoaded() || !m_owner || !m_owner->GetScene()) return;
     Game* game = m_owner->GetScene()->GetGame();
     if (!game) return;
-    const int category = m_category == SoundCategory::Bgm ? 2 : 1;
-    const int effective = m_volume * game->GetVolume(0) * game->GetVolume(category) / 10000;
+    const int categoryVolume = m_category == SoundCategory::Voice
+        ? s_voiceVolume
+        : game->GetVolume(m_category == SoundCategory::Bgm ? 2 : 1);
+    const int effective = m_volume * game->GetVolume(0) * categoryVolume / 10000;
     ChangeVolumeSoundMem(effective, m_handle);
 }
 
 void SoundComponent::RefreshAllVolumes()
 {
     for (SoundComponent* sound : s_components) sound->RefreshVolume();
+}
+
+int SoundComponent::GetVoiceVolume()
+{
+    return s_voiceVolume;
+}
+
+void SoundComponent::AdjustVoiceVolume(int amount)
+{
+    s_voiceVolume = std::clamp(s_voiceVolume + amount, 0, 100);
+    RefreshAllVolumes();
 }

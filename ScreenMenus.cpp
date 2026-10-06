@@ -1,6 +1,7 @@
 #include "ScreenMenus.h"
 
 #include "Game.h"
+#include "SoundComponent.h"
 #include "Input.h"
 #include "Renderer.h"
 #include "Color.h"
@@ -53,14 +54,18 @@ void SettingsMenu::Update()
         return;
     }
 
-    const int count = m_page == Page::Volume ? 4 : (m_page == Page::Root ? 3 : 1);
+    const int count = m_page == Page::Volume ? 5 : (m_page == Page::Root ? 3 : 1);
     if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + count - 1) % count;
     if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % count;
 
-    if (m_page == Page::Volume && m_cursor < 3)
+    if (m_page == Page::Volume && m_cursor < 4)
     {
-        const int step = input.IsTrigger(Action::RIGHT) ? 10 : (input.IsTrigger(Action::LEFT) ? -10 : 0);
-        if (step != 0) m_game->AdjustVolume(m_cursor, step);
+        const int step = input.IsTrigger(Action::RIGHT) ? 5 : (input.IsTrigger(Action::LEFT) ? -5 : 0);
+        if (step != 0)
+        {
+            if (m_cursor == 3) SoundComponent::AdjustVoiceVolume(step);
+            else m_game->AdjustVolume(m_cursor, step);
+        }
     }
 
     if (!input.IsTrigger(Action::ENTER)) return;
@@ -71,7 +76,7 @@ void SettingsMenu::Update()
         else if (m_cursor == 1) { m_page = Page::Controls; m_cursor = 0; }
         else m_open = false;
     }
-    else if (m_page == Page::Volume && m_cursor == 3)
+    else if (m_page == Page::Volume && m_cursor == 4)
     {
         m_page = Page::Root;
         m_cursor = 0;
@@ -103,11 +108,15 @@ void SettingsMenu::Draw() const
     }
     else if (m_page == Page::Volume)
     {
-        const char* labels[] = { "マスター", "効果音", "BGM" };
-        for (int i = 0; i < 3; ++i)
-            DrawItem(m_game, std::string(labels[i]) + "  " + std::to_string(m_game->GetVolume(i)) + "%", i, m_cursor);
-        DrawItem(m_game, "戻る", 3, m_cursor);
-        renderer->DrawTextC(Vector2d(centerX, 650), "左右キー／スティックで10%ずつ変更", Color(185, 185, 185), font, 22, false);
+        const char* labels[] = { "全体音量", "SE", "BGM" };
+        for (int i = 0; i < 4; ++i)
+        {
+            const std::string label = i == 3 ? "ボイス" : labels[i];
+            const int volume = i == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(i);
+            DrawItem(m_game, label + "  " + std::to_string(volume) + "%", i, m_cursor);
+        }
+        DrawItem(m_game, "戻る", 4, m_cursor);
+        renderer->DrawTextC(Vector2d(centerX, 650), "左右キー／スティックで5%ずつ変更", Color(185, 185, 185), font, 22, false);
     }
     else
     {

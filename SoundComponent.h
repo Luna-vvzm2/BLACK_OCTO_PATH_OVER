@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-enum class SoundCategory { Effect, Bgm };
+enum class SoundCategory { Effect, Bgm, Voice };
 
 class SoundComponent : public Component
 {
@@ -32,6 +32,8 @@ public:
 	void SetCategory(SoundCategory category);
 	void RefreshVolume();
 	static void RefreshAllVolumes();
+	static int GetVoiceVolume();
+	static void AdjustVoiceVolume(int amount);
 	void Release();
 	bool IsLoaded() const;
 
@@ -41,4 +43,5 @@ private:
 	int m_volume;
 	SoundCategory m_category = SoundCategory::Effect;
 	static std::vector<SoundComponent*> s_components;
+	static int s_voiceVolume;
 };
