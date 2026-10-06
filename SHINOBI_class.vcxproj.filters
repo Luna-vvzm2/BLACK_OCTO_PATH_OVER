@@ -282,9 +282,6 @@
     <ClCompile Include="DropItemEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity</Filter>
     </ClCompile>
-    <ClCompile Include="GameOverMenuUI.cpp">
-      <Filter>ソース ファイル\Actor\UI</Filter>
-    </ClCompile>
     <ClCompile Include="Mouse.cpp">
       <Filter>ソース ファイル\Input</Filter>
     </ClCompile>
@@ -540,9 +537,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MenuCursor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="GameOverMenuUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Mouse.h">

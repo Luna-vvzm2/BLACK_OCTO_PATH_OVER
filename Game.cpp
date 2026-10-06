@@ -297,7 +297,7 @@ void Game::ProccessPendingActions()
 
 			if (!m_sceneStack.empty())
 			{
-				m_sceneStack.back()->OnResume
+				m_sceneStack.back()->OnResume();
 			}
 		}
 		break;
