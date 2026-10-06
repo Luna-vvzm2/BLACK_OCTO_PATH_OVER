@@ -21,6 +21,6 @@ public:
 private:
     float m_gauge;
 
-    static constexpr float GAUGE_MIN = 0.0f;
+    static constexpr float GAUGE_MIN = -100.0f;
     static constexpr float GAUGE_MAX = 100.0f;
 };

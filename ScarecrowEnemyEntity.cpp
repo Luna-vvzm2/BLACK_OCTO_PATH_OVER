@@ -164,4 +164,8 @@ void ScarecrowEnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
     m_metsuGauge = 0;
 }
 
+bool ScarecrowEnemyEntity::UseAlertGauge() const
+{
+    return false;
+}
 

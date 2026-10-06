@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include <cmath>
 
 AlertGaugeComponent::AlertGaugeComponent(Actor* owner)
     : Component(owner)
@@ -95,19 +96,7 @@ void AlertGaugeComponent::Draw()
         pos.y - 60.0f
     );
 
-    // -100 ～ 100 を 0.0 ～ 1.0 に変換
-    float rate = m_gauge / GAUGE_MAX;
-
-    if (rate < 0.0f)
-    {
-        rate = 0.0f;
-    }
-
-    if (rate > 1.0f)
-    {
-        rate = 1.0f;
-    }
-    // 背景
+    // ゲージの背景
     renderer->DrawRectCenter(
         gaugePos,
         gaugeWidth,
@@ -117,38 +106,45 @@ void AlertGaugeComponent::Draw()
         true
     );
 
+    // -100 ～ 100 の値を
+    // 0 ～ 1 のゲージ割合に変換
+    float rate = std::abs(m_gauge) / GAUGE_MAX;
+
+    if (rate > 1.0f)
+    {
+        rate = 1.0f;
+    }
+
+    // 0の場合はゲージを表示しない
     if (rate <= 0.0f)
     {
         return;
     }
 
-    // ゲージ色
+    // ゲージの色
     Color gaugeColor;
 
-    if (IsDefenseless())
+    if (m_gauge >= 0.0f)
     {
-        // 無防備：青
-        gaugeColor = Color(0, 100, 255);
-    }
-    else if (IsCombat())
-    {
-        // 戦闘：オレンジ
+        // 0以上：オレンジ
         gaugeColor = Color(255, 150, 0);
     }
     else
     {
-        // 警戒：灰色
-        gaugeColor = Color(180, 180, 180);
+        // 0未満：青
+        gaugeColor = Color(0, 100, 255);
     }
 
-    // 左側からゲージを伸ばす
+    // ゲージの表示幅
     float fillWidth = gaugeWidth * rate;
 
+    // 左端をゲージの左端に合わせる
     Vector2d fillPos(
         gaugePos.x - (gaugeWidth - fillWidth) * 0.5f,
         gaugePos.y
     );
 
+    // 左から右へゲージを表示
     renderer->DrawRectCenter(
         fillPos,
         fillWidth,

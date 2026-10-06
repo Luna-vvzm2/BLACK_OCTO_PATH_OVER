@@ -50,6 +50,8 @@ EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size
 
     , m_canMove(true)
     ,m_alertGaugeTimer(0.0f)
+    , m_alertChangeTimer(0.0f)
+    , m_wasPlayerInSearchRange(false)
 {
 }
 
@@ -70,24 +72,24 @@ bool EnemyEntity::Init() {
 
 }
 
-void EnemyEntity::Update(float deltaTime) {
-   
+void EnemyEntity::Update(float deltaTime)
+{
     EntityActor::Update(deltaTime);
 
-   
     if (GetState() == Actor::State::Dead)
+    {
         return;
-
-  
+    }
 
     UpdateAI();
 
+    if (UseAlertGauge())
+    {
+        UpdateAlertGauge(deltaTime);
+    }
+
     UpdateGravity(deltaTime);
-
-
-
 }
-
 void EnemyEntity::UpdateGravity(float deltaTime)
 {
     if (!m_velocity)
@@ -276,16 +278,42 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
 
     m_alertGaugeTimer = 0.0f;
 
-    if (IsPlayerInSearchRange())
+    const bool isPlayerInRange = IsPlayerInSearchRange();
+    // 範囲内・範囲外が切り替わったら増減量をリセット
+    if (isPlayerInRange != m_wasPlayerInSearchRange)
     {
-        m_alertGauge->AddGauge(4.0f);
+        m_alertChangeTimer = 0.0f;
+    }
+
+    m_wasPlayerInSearchRange = isPlayerInRange;
+
+    // 1 → 2 → 3 → ... → 10
+    m_alertChangeTimer += 1.0f;
+
+    float changeAmount = m_alertChangeTimer;
+
+    if (changeAmount > 10.0f)
+    {
+        changeAmount = 10.0f;
+    }
+
+    if (isPlayerInRange)
+    {
+        // +1 → +10
+        m_alertGauge->AddGauge(changeAmount);
     }
     else
     {
-        m_alertGauge->AddGauge(-1.0f);
+        // -1 → -10
+        m_alertGauge->AddGauge(-changeAmount);
     }
 
-    std::cout << "Enemy Alert Gauge = "
+    std::cout
+        << "Enemy Alert Gauge = "
         << m_alertGauge->GetGauge()
         << std::endl;
+}
+bool EnemyEntity::UseAlertGauge() const
+{
+    return true;
 }

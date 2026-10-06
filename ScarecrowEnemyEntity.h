@@ -27,6 +27,6 @@ private:
     VelocityComponent* m_velocity = nullptr;
     void UpdateIdle(float dt);
     bool m_faceRight = true;
-
+    bool UseAlertGauge() const override;
     float m_hitTimer = 0.0f;
 };

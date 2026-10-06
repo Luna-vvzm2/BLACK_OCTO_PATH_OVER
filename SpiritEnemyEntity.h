@@ -45,10 +45,8 @@ private:
 
 	bool m_faceRight = true;
 	bool m_isDying = false;
-	void UpdateSpiritAlertGauge(float deltaTime);
-	float m_alertTimer = 0.0f;
 
 	Vector2d m_targetPosition = Vector2d::Zero();
 	bool m_hasTargetPosition = false;
-
+	bool IsPlayerInSearchRange() const override;
 };

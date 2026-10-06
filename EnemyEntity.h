@@ -29,7 +29,7 @@ public:
 	void UpdateGravity(float deltaTime);
 	void UpdateAttack(float deltaTime);
 	void UpdateState();
-
+    
 
     ActorType GetType() const override { return ActorType::Enemy; }
     CollisionComponent* GetCollision() const { return m_collision; }
@@ -47,9 +47,12 @@ public:
     int GetMetsuGauge() const { return m_metsuGauge; }
     int GetMetsuMax() const { return m_metsuMax; }
 
+
 protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
+
+    virtual bool UseAlertGauge() const;
 
     HPComponent* m_hp;
     int m_hpMax;
@@ -91,10 +94,12 @@ protected:
     
     void UpdateAlertGauge(float deltaTime);
 
-    bool IsPlayerInSearchRange() const;
+    virtual bool IsPlayerInSearchRange() const;
 
     AlertGaugeComponent* m_alertGauge;
     float m_alertGaugeTimer;
+    bool m_wasPlayerInSearchRange = false;
+    float m_alertChangeTimer = 0.0f;
 
 };
 
