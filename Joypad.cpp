@@ -29,6 +29,7 @@ void Joypad::Init(int padNumber) {
 void Joypad::Update() {
 	int state = GetJoypadInputState(DX_INPUT_PAD1 + m_padNumber);
 	for (int i = 0; i < BUTTON_COUNT; i++) {
+		if (i >= LT) continue; // LT, RT, RS_UP, RS_DOWN ÇÕï èàóù
 		m_oldButtons[i] = m_nowButtons[i];
 		m_nowButtons[i] = (state & m_buttonMap[i]) != 0;
 		m_pressFrames[i] = m_nowButtons[i] ? m_pressFrames[i] + 1 : 0;
@@ -76,4 +77,11 @@ void Joypad::Update() {
 	else {
 		m_stickR = m_stickR.normalize() * ((m_stickR.length() - m_deadZone) / (1.0f - m_deadZone));
 	}
+	
+	const float stickThreshold = 0.5f; // ì|ÇµãÔçáÇÃÇµÇ´Ç¢íl
+	m_nowButtons[RS_UP] = m_stickR.y < -stickThreshold;
+	m_nowButtons[RS_DOWN] = m_stickR.y > stickThreshold;
+	m_pressFrames[RS_UP] = m_nowButtons[RS_UP] ? m_pressFrames[RS_UP] + 1 : 0;
+	m_pressFrames[RS_DOWN] = m_nowButtons[RS_DOWN] ? m_pressFrames[RS_DOWN] + 1 : 0;
 }
+

@@ -26,6 +26,8 @@ enum class Action {
     MENU,
     PAGE_UP,
     PAGE_DOWN,
+    ZOOM_IN,
+    ZOOM_OUT,
     ACTION_COUNT
 };
 
