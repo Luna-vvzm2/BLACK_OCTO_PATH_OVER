@@ -17,7 +17,6 @@ class EnemyEntity;
 class HPBarUI;
 class EnemyHPBar;
 class SoundComponent;
-class GameOverMenuUI;
 class JutsuChargeUI;
 
 //イベントのため追加
@@ -114,11 +113,6 @@ private:
 
 	// リスポーン位置（初期位置）
 	Vector2d m_respawnPos;
-
-	// ゲームオーバーメニュー
-	GameOverMenuUI* m_gameOverMenu;
-	bool m_isGameOver;
-	bool m_isPaused;  // ゲームが一時停止中か
 
 	// 最初に配置された地面のY座標
 	float m_initialGroundY = 0.0f;
