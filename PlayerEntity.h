@@ -153,7 +153,10 @@ public:
     CollisionComponent* GetCollision() const { return m_collision; }
     CollisionComponent* GetAttackCol() const { return m_attackCol; }
 
-    int GetShadowGauge() { return m_shadowGauge; }
+
+    // 影ゲージの値取得
+    int GetShadowGauge() { return m_shadowGauge; }     
+    int GetShadowGaugeMax() { return m_shadowGaugeMax; }
 
     bool GetJutsuCharge() { return m_jutsuCharge; }
     int GetJutsuGaugeAmount() const { return m_jutsuGauge; }
@@ -188,7 +191,7 @@ public:
 
     void SpawnKunai();
 
-    bool GetIsOcto() { return m_IsOcto; }
+    bool GetIsOcto() { return m_isOcto; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);
@@ -213,6 +216,7 @@ public:
 
     int GetCoin() const { return m_coin; }
     int GetKunai() const { return m_kunai; }
+    float GetKunaiTimer() const { return m_kunaiTimer; }    // クナイの回復までの時間
     int GetHealItem() const { return m_healItem; }  // 回復アイテム所持数
 
 private:
@@ -262,7 +266,7 @@ private:
     float m_attackLockTimer;
 
     bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
-    bool m_IsOcto;
+    bool m_isOcto;
 
     bool m_getHit;
     float m_getHitTimer;

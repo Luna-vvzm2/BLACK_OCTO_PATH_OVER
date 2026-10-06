@@ -61,7 +61,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_kunai(3)
     , m_healItem(0)
 
-    , m_kunaiTimer(0.0f)
+    , m_kunaiTimer(20.0f)
 
     , m_state(PlayerState::IDLE)
 
@@ -89,7 +89,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_weakAttackIdx(0)
     , m_attackTimer(0.0f)
 
-    , m_IsOcto(false)
+    , m_isOcto(false)
 
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
@@ -1256,7 +1256,12 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     const Input& input = m_scene->GetGame()->GetInput();
-    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_IsOcto) * m_buffRatio;
+    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_isOcto) * m_buffRatio;
+
+    if (input.IsTrigger(Action::OCTO)) {
+        ChangeState(PlayerState::OCTO_START);
+        return;
+    }
 
     if (m_isKamae) {
         if (m_isGround) {
@@ -2221,10 +2226,10 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
 void PlayerEntity::UpdateKunai(float deltaTime) {
     if (m_kunai >= 3) return;
 
-    m_kunaiTimer += deltaTime;
-    if (m_kunaiTimer >= 20.0f) {
+    m_kunaiTimer -= deltaTime;
+    if (m_kunaiTimer <= 0.0f) {
         m_kunai++;
-        m_kunaiTimer -= 20.0f;
+        m_kunaiTimer += 20.0f;
     }
 }
 
@@ -2276,6 +2281,8 @@ void PlayerEntity::StartAttack(int attackNum) {
         }
         m_velocity->Set(vel);
     }
+    [[fallthrough]];
+
     case airWeak1Num:
     {
         m_attackTimer = playerAttackTimer[attackNum];
