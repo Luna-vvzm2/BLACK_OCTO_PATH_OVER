@@ -5,11 +5,9 @@
 #include "PlayerEntity.h"
 #include "Scene.h"
 
-#include <cmath>
-
 namespace
 {
-    // 仮: 隠れブロックの画像
+    // 仮: 隠れブロックの画像。素材が入るまでは既存ブロックの画像パスに差し替えて確認する。
     const char* HIDE_BLOCK_TEXTURE = "assets/images/Block/hideBlock.png";
 }
 
@@ -29,14 +27,38 @@ void HideBlock::Update(float deltaTime)
 {
     BlockActor::Update(deltaTime);
 
-    // 隠れている間にプレイヤーがブロックから外れたら解除する
-    if (m_hiding)
+    // 重なっていて、かつ蛸の発動中のときだけ隠れ状態(外れた・蛸が終わったら自動で解除)
+    PlayerEntity* player = FindPlayer();
+    const bool hiding = player != nullptr
+        && IsHideNinjutsuActive(player)
+        && IsOverlapping(player);
+
+    m_hiding = hiding;
+    m_hidingPlayer = hiding ? player : nullptr;
+}
+
+PlayerEntity* HideBlock::FindPlayer() const
+{
+    if (m_scene == nullptr)
     {
-        if (m_hidingPlayer == nullptr || m_hidingPlayer->IsDead() || !IsOverlapping(m_hidingPlayer))
+        return nullptr;
+    }
+
+    for (Actor* actor : m_scene->GetActors())
+    {
+        if (actor != nullptr && actor->GetType() == ActorType::Player && !actor->IsDead())
         {
-            Release();
+            return static_cast<PlayerEntity*>(actor);
         }
     }
+
+    return nullptr;
+}
+
+bool HideBlock::IsHideNinjutsuActive(PlayerEntity* player)
+{
+    // 蛸の発動中フラグ(違っていたら要変更)
+    return player->GetIsOcto();
 }
 
 bool HideBlock::IsOverlapping(const PlayerEntity* player) const
@@ -46,91 +68,8 @@ bool HideBlock::IsOverlapping(const PlayerEntity* player) const
         return false;
     }
 
-    // GetPos() を中心としたAABBの重なりで判定する
-    const Vector2d difference = player->GetPos() - GetPos();
-    const float combinedHalfWidth =
-        m_collision->GetWidth() * 0.5f + player->GetCollision()->GetWidth() * 0.5f;
-    const float combinedHalfHeight =
-        m_collision->GetHeight() * 0.5f + player->GetCollision()->GetHeight() * 0.5f;
-
-    return std::fabs(difference.x) <= combinedHalfWidth &&
-        std::fabs(difference.y) <= combinedHalfHeight;
-}
-
-void HideBlock::Hide(const PlayerEntity* player)
-{
-    m_hiding = true;
-    m_hidingPlayer = player;
-}
-
-void HideBlock::Release()
-{
-    m_hiding = false;
-    m_hidingPlayer = nullptr;
-}
-
-HideBlock* HideBlock::FindOverlapping(Scene* scene, const PlayerEntity* player)
-{
-    if (scene == nullptr)
-    {
-        return nullptr;
-    }
-
-    for (Actor* actor : scene->GetActors())
-    {
-        if (actor == nullptr || actor->IsDead() || actor->GetType() != ActorType::Block)
-        {
-            continue;
-        }
-
-        BlockActor* block = static_cast<BlockActor*>(actor);
-        if (block->GetBlockType() != BlockType::Hide)
-        {
-            continue;
-        }
-
-        HideBlock* hideBlock = static_cast<HideBlock*>(block);
-        if (hideBlock->IsOverlapping(player))
-        {
-            return hideBlock;
-        }
-    }
-
-    return nullptr;
-}
-
-bool HideBlock::TryHide(Scene* scene, const PlayerEntity* player)
-{
-    HideBlock* block = FindOverlapping(scene, player);
-    if (block == nullptr)
-    {
-        return false;
-    }
-
-    block->Hide(player);
-    return true;
-}
-
-void HideBlock::ReleaseAll(Scene* scene)
-{
-    if (scene == nullptr)
-    {
-        return;
-    }
-
-    for (Actor* actor : scene->GetActors())
-    {
-        if (actor == nullptr || actor->GetType() != ActorType::Block)
-        {
-            continue;
-        }
-
-        BlockActor* block = static_cast<BlockActor*>(actor);
-        if (block->GetBlockType() == BlockType::Hide)
-        {
-            static_cast<HideBlock*>(block)->Release();
-        }
-    }
+    // CollisionComponent の矩形判定(オフセット込み)で重なりを見る
+    return m_collision->CheckCollision(player->GetCollision());
 }
 
 bool HideBlock::IsHidingPlayer(Scene* scene, const PlayerEntity* player)
@@ -154,7 +93,7 @@ bool HideBlock::IsHidingPlayer(Scene* scene, const PlayerEntity* player)
         }
 
         const HideBlock* hideBlock = static_cast<const HideBlock*>(block);
-        if (hideBlock->m_hiding && hideBlock->m_hidingPlayer == player && hideBlock->IsOverlapping(player))
+        if (hideBlock->m_hiding && hideBlock->m_hidingPlayer == player)
         {
             return true;
         }

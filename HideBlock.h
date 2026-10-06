@@ -22,24 +22,16 @@ public:
 
     BlockType GetBlockType() const override { return BlockType::Hide; }
 
-    // ---- 蛸の発動側(プレイヤー)から呼ぶ ----
-    // プレイヤーに重なっている隠れブロックを隠れ状態にする。重なっていなければfalse(発動しても隠れない)。
-    static bool TryHide(Scene* scene, const PlayerEntity* player);
-    // 蛸の終了時に呼ぶ。シーン内の全隠れブロックの隠れ状態を解除する。
-    static void ReleaseAll(Scene* scene);
-
     // ---- 敵側から呼ぶ ----
-    // true のとき、そのプレイヤーは隠れている(索敵フラグ強制OFF)。
+    // true のとき、そのプレイヤーはいずれかの隠れブロックで隠れている(索敵フラグ強制OFF)。
     static bool IsHidingPlayer(Scene* scene, const PlayerEntity* player);
 
-    // ---- 個別操作・取得 ----
     bool IsHiding() const { return m_hiding; }
     bool IsOverlapping(const PlayerEntity* player) const;   // 当たり判定矩形が重なっているか
-    void Hide(const PlayerEntity* player);
-    void Release();
 
 private:
-    static HideBlock* FindOverlapping(Scene* scene, const PlayerEntity* player);
+    PlayerEntity* FindPlayer() const;
+    static bool IsHideNinjutsuActive(PlayerEntity* player);  // 蛸の発動中かどうか(判定はここ1か所)
 
     std::string GetTexturePath() const override;
 
