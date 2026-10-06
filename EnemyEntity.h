@@ -11,6 +11,7 @@ class SpriteComponent;
 class CollisionComponent;
 class AnimationComponent;
 class HPComponent;
+class AlertGaugeComponent;
 
 
 class EnemyEntity : public EntityActor {
@@ -54,6 +55,8 @@ protected:
     int m_hpMax;
     GravityComponent* m_gravity;
     //SpriteComponent* m_sprite;
+
+
     AnimationComponent* m_anim;
 
     bool m_dir;
@@ -85,6 +88,13 @@ protected:
     std::vector<DropData> m_dropTable;
     void SpawnItem(ItemType type);
     virtual std::string GetTexturePath() const override;
+    
+    void UpdateAlertGauge(float deltaTime);
+
+    bool IsPlayerInSearchRange() const;
+
+    AlertGaugeComponent* m_alertGauge;
+    float m_alertGaugeTimer;
 
 };
 
