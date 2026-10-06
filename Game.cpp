@@ -8,6 +8,8 @@
 
 Game::Game()
 	: m_window(nullptr),
+	m_pendingAction(PendingAction::None),
+	m_pendingScene(nullptr),
 	m_winWidth(0),
 	m_winHeight(0),
 	m_winColor(0),
@@ -68,11 +70,8 @@ bool Game::Init(const std::string& title, UINT width, UINT height, UINT color, c
 	m_debugFont = debugfont;
 	m_running = true;
 
-	m_scene = std::make_unique<TitleScene>(this);
-	if (!m_scene->Init()) {
-		std::cerr << "TitleScene 初期化失敗" << std::endl;
-		return false;
-	}
+	ChangeScene(std::make_unique<TitleScene>(this));
+	ProccessPendingActions();
 
 	QueryPerformanceFrequency(&m_freq);
 	QueryPerformanceCounter(&m_prevTime);
@@ -114,22 +113,29 @@ bool Game::Run() {
 			: 0.0f;
 	}
 
-	return m_scene->IsRunning();
+	Scene* currentScene = GetCurrentScene();
+	if (currentScene) return currentScene->IsRunning();
+	return false;
 }
 
 void Game::Update(float deltaTime) {
+	ProccessPendingActions();
+
+	if (m_sceneStack.empty()) return;
+
+	Scene* currentScene = GetCurrentScene();
+
 	//	ESCキーで終了
 
 	if (m_input.IsTrigger(Action::ESCAPE)) {
-		switch (m_scene->GetType())
+		switch (currentScene->GetType())
 		{
 		case Scene::Type::Title:
 			m_running = false;
 			break;
 
 		case Scene::Type::Play:
-			m_scene = std::make_unique<TitleScene>(this);
-			m_scene->Init();
+			ChangeScene(std::make_unique<TitleScene>(this));
 			break;
 		}
 	}
@@ -137,48 +143,34 @@ void Game::Update(float deltaTime) {
 
 	//	シーン遷移
 	if (m_input.IsTrigger(Action::ENTER)) {
-		switch (m_scene->GetType())
+		switch (currentScene->GetType())
 		{
 		case Scene::Type::Title:
-			m_scene = std::make_unique<PlayScene>(this);
-			m_scene->Init();
+			ChangeScene(std::make_unique<PlayScene>(this));
 			break;
 
 		case Scene::Type::Clear:
-			m_scene = std::make_unique<TitleScene>(this);
-			m_scene->Init();
+			ChangeScene(std::make_unique<TitleScene>(this));
 			break;
 
 		case Scene::Type::Play:
-			auto playScene = static_cast<PlayScene*>(m_scene.get());
+			auto playScene = static_cast<PlayScene*>(currentScene);
 
 			//	Ball の HP が 0（＝リザルト中）のときだけ反応
 			if (playScene->IsResult()) {
-				m_scene = std::make_unique<PlayScene>(this);
-				m_scene->Init();
+				ChangeScene(std::make_unique<PlayScene>(this));
 			}
 			break;
 		}
 	}
 
-
-	// シーン更新
-	if (m_scene) { m_scene->Update(deltaTime); }
-
-	//	以後処理を書く
-
-	//クリアシーンのために追加
-	if (m_nextScene)
-	{
-		m_scene = std::move(m_nextScene);
-		m_scene->Init();
-	}
+	m_sceneStack.back()->Update(deltaTime);
 }
 
 void Game::Draw() {
 	ClearDrawScreen();
 	//	以後描画処理を書く
-	if (m_scene) m_scene->Draw();
+	for (const auto& scene : m_sceneStack) scene->Draw(); 
 
 #ifdef _DEBUG
 
@@ -230,9 +222,8 @@ void Game::End() {
 
 	m_ended = true;
 
-	if (m_scene) {
-		m_scene.reset();
-	}
+	m_sceneStack.clear();
+
 	if (m_renderer) {
 		m_renderer.reset();
 	}
@@ -260,12 +251,69 @@ void Game::InitConsole() {
 
 }
 
+void Game::PushScene(std::unique_ptr<Scene> nextScene)
+{
+	m_pendingAction = PendingAction::Push;
+	m_pendingScene = std::move(nextScene);
+}
+
+void Game::PopScene()
+{
+	m_pendingAction = PendingAction::Pop;
+}
+
 //クリアシーンのために追加
 void Game::ChangeScene(std::unique_ptr<Scene>nextScene)
 {
-	if (!nextScene) return;
+	m_pendingAction = PendingAction::Change;
+	m_pendingScene = std::move(nextScene);
+}
 
-	m_nextScene = std::move(nextScene);
+Scene* Game::GetCurrentScene() const
+{
+	if (m_sceneStack.empty()) return nullptr;
+
+	return m_sceneStack.back().get();
+}
+
+void Game::ProccessPendingActions()
+{
+	if (m_pendingAction == PendingAction::None) return;
+
+	switch (m_pendingAction)
+	{
+	case PendingAction::Push:
+		if (m_pendingScene)
+		{
+			m_pendingScene->Init();
+			m_sceneStack.push_back(std::move(m_pendingScene));
+		}
+		break;
+
+	case PendingAction::Pop:
+		if (!m_sceneStack.empty())
+		{
+			m_sceneStack.pop_back();
+
+			if (!m_sceneStack.empty())
+			{
+				m_sceneStack.back()->OnResume
+			}
+		}
+		break;
+
+	case PendingAction::Change:
+		m_sceneStack.clear();
+		if (m_pendingScene)
+		{
+			m_pendingScene->Init();
+			m_sceneStack.push_back(std::move(m_pendingScene));
+		}
+		break;
+	}
+
+	m_pendingAction = PendingAction::None;
+	m_pendingScene = nullptr;
 }
 
 //bool Game::tick(float& deltaTime, int targetFPS, float maxDeltaTime) {

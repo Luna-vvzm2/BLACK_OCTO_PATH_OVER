@@ -35,6 +35,8 @@ public:
 	virtual void Update(float deltaTime) = 0;
 	virtual void Draw() = 0;
 
+	virtual void OnResume() {}
+
 	Game* GetGame() { return m_game; }
 	bool IsRunning() const { return m_isRunning; }
 	Type GetType() const { return m_type; }

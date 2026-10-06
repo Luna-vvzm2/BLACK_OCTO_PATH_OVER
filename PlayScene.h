@@ -73,6 +73,7 @@ public:
 
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
+	void OnResume() override;
 
 	int m_bgHandle;
 	int m_fgHandle;

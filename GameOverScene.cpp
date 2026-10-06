@@ -33,7 +33,8 @@ void GameOverScene::Update(float deltaTime)
 		Game* game = this->GetGame();
 		if (m_nextScene == NextScene::Respawn)
 		{
-			game->ChangeScene(std::make_unique<PlayScene>(game));
+			game->PopScene();
+
 		}
 		else if (m_nextScene == NextScene::Title)
 		{
@@ -41,7 +42,7 @@ void GameOverScene::Update(float deltaTime)
 		}
 		else if (m_nextScene == NextScene::Exit)
 		{
-			
+			game->Quit();
 		}
 	}
 

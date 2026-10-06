@@ -818,7 +818,12 @@ void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
 void PlayScene::ShowGameOverMenu() {
 	Game* game = GetGame();
 
-	game->ChangeScene(std::make_unique<GameOverScene>(game));
+	game->PushScene(std::make_unique<GameOverScene>(game));
+}
+
+void PlayScene::OnResume()
+{
+	RespawnPlayer();
 }
 
 //void PlayScene::SpawnHitEffect(const Vector2d& pos) {
