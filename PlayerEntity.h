@@ -110,6 +110,7 @@ public:
         OCTO_START,
         OCTO_AUTO,
         OCTO_END,
+        OCTO_AUTO_END,
         TIGER,
         ORCA,
 
@@ -143,6 +144,7 @@ public:
     void ChangeState(PlayerState newState);
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
+    void UpdateOcto(float deltaTime);
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
     void UpdateDash(float deltaTime);
@@ -192,9 +194,12 @@ public:
     void SpawnKunai();
 
     bool GetIsOcto() { return m_isOcto; }
+    bool SetIsHide(bool flag) { m_isHide = flag; }
+    bool GetIsHide() { return m_isHide; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);
+    void SubShadowGauge(int amount);
     void AddShadowGaugeMax();   // 忍術を新しく使えるようになった時に1回呼ぶ
 
     Vector2d GetDrawOffset() const { return m_sprite->GetDrawOffset(); }
@@ -261,12 +266,17 @@ private:
     int m_weakAttackIdx;
 
     float m_attackTimer;
+    float m_jutsuTimer;
 
     bool m_canAttack;
     float m_attackLockTimer;
 
     bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
     bool m_isOcto;
+    bool m_isAutoOcto;
+    float m_octoTimer;
+    bool m_endOcto;
+    bool m_isHide;
 
     bool m_getHit;
     float m_getHitTimer;
