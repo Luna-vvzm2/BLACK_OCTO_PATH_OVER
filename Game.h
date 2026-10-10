@@ -21,6 +21,9 @@ public:
 	//bool tick(float& deltaTime, int targetFPS = 60, float maxDeltaTime = 0.1f);
 
 	bool IsRunning() const { return m_running; }
+	void RequestQuit() { m_running = false; }
+	int GetVolume(int channel) const;
+	void AdjustVolume(int channel, int amount);
 	int GetWidth() const { return m_winWidth; }
 	int GetHeight() const { return m_winHeight; }
 
@@ -32,6 +35,7 @@ public:
 
 	void PushScene(std::unique_ptr<Scene> nextScene);
 	void PopScene();
+	bool CanPopScene() const { return m_sceneStack.size() > 1; }
 	void ChangeScene(std::unique_ptr<Scene> nextScene); //クリアシーンのために追加 シーンを外部から切り替えるための関数
 	void Quit() { m_running = false; }
 
@@ -67,7 +71,7 @@ private:
 	int m_winColor;
 	std::string m_gameFont;
 	std::string m_debugFont;
-
+	int m_volumes[3] = { 100, 100, 100 }; // master, effects, BGM
 
 	//	FPS計算用
 	float m_fps = 0.0f;

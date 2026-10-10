@@ -4,12 +4,14 @@
 #include "Input.h"
 #include "Color.h"
 #include "TitleUI.h"
-
+#include "StageSelectScene.h"
+#include <memory>
 
 
 TitleScene::TitleScene(Game* game)
 	: Scene(game),
-	titlePos(0.0f, 0.0f)
+	titlePos(0.0f, 0.0f),
+	m_settings(game)
 {
 
 }
@@ -31,6 +33,20 @@ void TitleScene::Update(float deltaTime) {
 
 	updateActors(m_UIactors, deltaTime);
 
+	if (m_settings.IsOpen()) {
+		m_settings.Update();
+		return;
+	}
+
+	const Input& input = m_game->GetInput();
+	if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + 2) % 3;
+	if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % 3;
+
+	if (input.IsTrigger(Action::ENTER)) {
+		if (m_cursor == 0) m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
+		else if (m_cursor == 1) m_settings.Open();
+		else m_game->RequestQuit();
+	}
 }
 
 void TitleScene::Draw() {
@@ -39,14 +55,20 @@ void TitleScene::Draw() {
 
 	drawActors(m_UIactors);
 
+	const char* items[] = { "ゲーム開始", "設定画面", "ゲーム終了" };
+	const auto& font = m_game->GatDebugFont();
+	for (int i = 0; i < 3; ++i) {
+		const bool selected = i == m_cursor;
+		renderer->DrawTextC(
+			Vector2d(m_game->GetWidth() * 0.5f, m_game->GetHeight() * 0.60f + i * 58.0f),
+			(selected ? "> " : "  ") + std::string(items[i]) + (selected ? " <" : "  "),
+			selected ? Color(255, 220, 110) : Color(225, 225, 225), font, 32, false);
+	}
 
-	const std::string& debugFont = m_game->GatDebugFont();
-
-
-	renderer->DrawTextC(Vector2d(m_game->GetWidth() / 2.0f, m_game->GetHeight() * 0.8f), "Press [ENTER] or (B) to Start", Color(192, 192, 192), debugFont, 24, false);
-
+	m_settings.Draw();
 
 #ifdef _DEBUG
+	const std::string& debugFont = m_game->GatDebugFont();
 	renderer->DrawTextL(Vector2d(m_game->GetWidth() - 150.0f, 0), "TitleScene", Color(255, 64, 0), debugFont, 24, false);
 
 #endif // _DEBUG

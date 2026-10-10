@@ -1,5 +1,11 @@
 #include "SoundComponent.h"
 #include <algorithm>
+#include "Actor.h"
+#include "Scene.h"
+#include "Game.h"
+
+std::vector<SoundComponent*> SoundComponent::s_components;
+int SoundComponent::s_voiceVolume = 100;
 
 SoundComponent::SoundComponent(
 	Actor* owner,
@@ -11,11 +17,13 @@ SoundComponent::SoundComponent(
 	, m_volume(255)
 
 {
+	s_components.push_back(this);
 }
 
 SoundComponent::~SoundComponent()
 {
 	Release();
+	s_components.erase(std::remove(s_components.begin(), s_components.end(), this), s_components.end());
 }
 
 bool SoundComponent::Init()
@@ -31,11 +39,7 @@ bool SoundComponent::Init()
 		return false;
 	}
 
-	if (ChangeVolumeSoundMem(m_volume, m_handle) == -1)
-	{
-		Release();
-		return false;
-	}
+	RefreshVolume();
 
 	return true;
 }
@@ -47,6 +51,7 @@ bool SoundComponent::Play(int playType, bool restart)
 		return false;
 	}
 
+	RefreshVolume();
 	return PlaySoundMem(
 		m_handle,
 		playType,
@@ -71,10 +76,7 @@ void SoundComponent::SetVolume(int volume)
 {
 	m_volume = std::clamp(volume, 0, 255);
 
-	if (IsLoaded())
-	{
-		ChangeVolumeSoundMem(m_volume, m_handle);
-	}
+	RefreshVolume();
 }
 
 void SoundComponent::Release()
@@ -92,4 +94,38 @@ void SoundComponent::Release()
 bool SoundComponent::IsLoaded() const
 {
 	return m_handle != -1;
+}
+
+void SoundComponent::SetCategory(SoundCategory category)
+{
+    m_category = category;
+    RefreshVolume();
+}
+
+void SoundComponent::RefreshVolume()
+{
+    if (!IsLoaded() || !m_owner || !m_owner->GetScene()) return;
+    Game* game = m_owner->GetScene()->GetGame();
+    if (!game) return;
+    const int categoryVolume = m_category == SoundCategory::Voice
+        ? s_voiceVolume
+        : game->GetVolume(m_category == SoundCategory::Bgm ? 2 : 1);
+    const int effective = m_volume * game->GetVolume(0) * categoryVolume / 10000;
+    ChangeVolumeSoundMem(effective, m_handle);
+}
+
+void SoundComponent::RefreshAllVolumes()
+{
+    for (SoundComponent* sound : s_components) sound->RefreshVolume();
+}
+
+int SoundComponent::GetVoiceVolume()
+{
+    return s_voiceVolume;
+}
+
+void SoundComponent::AdjustVoiceVolume(int amount)
+{
+    s_voiceVolume = std::clamp(s_voiceVolume + amount, 0, 100);
+    RefreshAllVolumes();
 }

@@ -187,12 +187,14 @@
     <ClCompile Include="PlatformOboroMBlock.cpp" />
     <ClCompile Include="PlatformOboroSBlock.cpp" />
     <ClCompile Include="ScarecrowEnemyEntity.cpp" />
+    <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="SekienkiBossEntity.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StageSelectScene.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
     <ClCompile Include="StoneSBlock.cpp" />
     <ClCompile Include="StructureABlock.cpp" />
@@ -286,6 +288,7 @@
     <ClInclude Include="PlatformOboroMBlock.h" />
     <ClInclude Include="PlatformOboroSBLock.h" />
     <ClInclude Include="ScarecrowEnemyEntity.h" />
+    <ClInclude Include="ScreenMenus.h" />
     <ClInclude Include="SekienkiBossEntity.h" />
     <ClInclude Include="ShurikenUI.h" />
     <ClInclude Include="SkillData.h" />
@@ -293,6 +296,7 @@
     <ClInclude Include="SoundComponent.h" />
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
+    <ClInclude Include="StageSelectScene.h" />
     <ClInclude Include="StoneLBlock.h" />
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />

@@ -21,6 +21,7 @@ public:
 
 	enum class Type {
 		Title,
+		StageSelect,
 		Play,
 		Clear, //クリアシーンのために追加
 		GameOver, // ゲームオーバーのため追加

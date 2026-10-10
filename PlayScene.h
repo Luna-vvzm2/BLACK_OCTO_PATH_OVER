@@ -7,6 +7,7 @@
 #include "MoneyUI.h"
 
 #include "Menu.h"
+#include "ScreenMenus.h"
 
 #include <memory>
 #include <unordered_map>
@@ -88,6 +89,7 @@ private:
 	int m_nextSpawnIndex = 0;
 
 	Menu m_menu;
+	PauseMenu m_pauseMenu;
 
 	Camera m_camera;
 	SoundComponent* m_stageBgm;

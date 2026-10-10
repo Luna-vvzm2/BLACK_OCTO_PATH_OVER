@@ -5,6 +5,7 @@
 #include "TitleScene.h"
 #include "PlayScene.h"
 #include "SpriteComponent.h"
+#include "SoundComponent.h"
 
 Game::Game()
 	: m_window(nullptr),
@@ -119,52 +120,21 @@ bool Game::Run() {
 }
 
 void Game::Update(float deltaTime) {
+
 	ProccessPendingActions();
 
 	if (m_sceneStack.empty()) return;
 
 	Scene* currentScene = GetCurrentScene();
+	if (!currentScene) return;
 
-	//	ESCキーで終了
+	if (currentScene) currentScene->Update(deltaTime);
 
-	if (m_input.IsTrigger(Action::ESCAPE)) {
-		switch (currentScene->GetType())
-		{
-		case Scene::Type::Title:
-			m_running = false;
-			break;
-
-		case Scene::Type::Play:
-			ChangeScene(std::make_unique<TitleScene>(this));
-			break;
-		}
+	if (currentScene->GetType() == Scene::Type::Play && m_input.IsTrigger(Action::ENTER))
+	{
+		auto* playScene = static_cast<PlayScene*>(currentScene);
+		if (playScene->IsResult()) ChangeScene(std::make_unique<PlayScene>(this));
 	}
-
-
-	//	シーン遷移
-	if (m_input.IsTrigger(Action::ENTER)) {
-		switch (currentScene->GetType())
-		{
-		case Scene::Type::Title:
-			ChangeScene(std::make_unique<PlayScene>(this));
-			break;
-
-		case Scene::Type::Clear:
-			ChangeScene(std::make_unique<TitleScene>(this));
-			break;
-
-		case Scene::Type::Play:
-			auto playScene = static_cast<PlayScene*>(currentScene);
-
-			//	Ball の HP が 0（＝リザルト中）のときだけ反応
-			if (playScene->IsResult()) {
-				ChangeScene(std::make_unique<PlayScene>(this));
-			}
-			break;
-		}
-	}
-
-	m_sceneStack.back()->Update(deltaTime);
 }
 
 void Game::Draw() {
@@ -330,3 +300,15 @@ void Game::ProccessPendingActions()
 //	m_prevTime = currentTime;
 //	return true;
 //}
+
+int Game::GetVolume(int channel) const
+{
+	return channel >= 0 && channel < 3 ? m_volumes[channel] : 100;
+}
+
+void Game::AdjustVolume(int channel, int amount)
+{
+	if (channel < 0 || channel >= 3) return;
+	m_volumes[channel] = std::clamp(m_volumes[channel] + amount, 0, 100);
+	SoundComponent::RefreshAllVolumes();
+}
