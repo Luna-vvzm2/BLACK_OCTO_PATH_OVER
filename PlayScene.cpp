@@ -610,17 +610,6 @@ void PlayScene::Update(float deltaTime) {
 		m_autoSaveTimer = 0.0f;
 	}
 
-	if (m_eventManager->IsRunning())
-	{
-		m_eventManager->Update(deltaTime);
-
-		if (!m_eventManager->IsBattleEvent())
-		{
-			return;
-		}
-	}
-	updateActors(m_backactors, deltaTime);
-
 	if (input.IsTrigger(Action::MENU))
 	{
 		if (m_player->GetState() != Actor::State::Paused)
