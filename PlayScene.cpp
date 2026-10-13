@@ -587,9 +587,6 @@ void PlayScene::Update(float deltaTime) {
 		StartFadeToStage(m_nextStage, m_nextSpawnIndex);
 	}
 
-	//イベントのため変更
-	m_playTimer += deltaTime; //クリアシーンのために追加
-
 	// 自動セーブ
 	m_autoSaveTimer += deltaTime;
 
@@ -598,17 +595,6 @@ void PlayScene::Update(float deltaTime) {
 		AutoSave();
 		m_autoSaveTimer = 0.0f;
 	}
-
-	if (m_eventManager->IsRunning())
-	{
-		m_eventManager->Update(deltaTime);
-
-		if (!m_eventManager->IsBattleEvent())
-		{
-			return;
-		}
-	}
-	updateActors(m_backactors, deltaTime);
 
 	if (input.IsTrigger(Action::MENU))
 	{
