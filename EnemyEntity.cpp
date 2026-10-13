@@ -141,7 +141,7 @@ void EnemyEntity::OnDead()
 }
 
 
-void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
+void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {   
     if (m_hp == nullptr)
     {

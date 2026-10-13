@@ -385,7 +385,7 @@ void KasaTenguEnemyEntity::TryHitPlayer(PlayerEntity* player, int stage)
     }
 }
 
-void KasaTenguEnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
+void KasaTenguEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
     if (m_hp == nullptr || m_status == Status::Defeated)
     {

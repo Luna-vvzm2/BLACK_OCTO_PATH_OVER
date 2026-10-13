@@ -160,8 +160,6 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="AlertGaugeComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
-    <ClCompile Include="ArmorEnemyEntity.cpp" />
-    <ClCompile Include="ArrowEnemyEntity.cpp" />
     <ClCompile Include="BackGroundUI.cpp" />
     <ClCompile Include="BlockActor.cpp" />
     <ClCompile Include="BossEntity.cpp" />
@@ -188,8 +186,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GunnerEnemyEntity.cpp" />
-    <ClCompile Include="HealerEnemyEntity.cpp" />
     <ClCompile Include="HitboxData.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -212,9 +208,7 @@
     <ClCompile Include="PlatformOboroSBlock.cpp" />
     <ClCompile Include="PlayerStatusUI.cpp" />
     <ClCompile Include="SaveManager.cpp" />
-    <ClCompile Include="ScarecrowEnemyEntity.cpp" />
     <ClCompile Include="ScreenMenus.cpp" />
-    <ClCompile Include="SekienkiBossEntity.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
@@ -230,9 +224,6 @@
     <ClCompile Include="StructureBBlocke.cpp" />
     <ClCompile Include="Trap.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
-    <ClCompile Include="WhiteEnemyEntity.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="KooniEnemyEntity.cpp" />
     <ClCompile Include="EntityActor.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -262,22 +253,17 @@
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIActor.cpp" />
     <ClCompile Include="VelocityComponent.cpp" />
-    <ClCompile Include="WhiteShurikenBullet.cpp" />
     <ClCompile Include="WoodLBlock.cpp" />
     <ClCompile Include="WoodSBlock.cpp" />
     <ClCompile Include="YaguraLBlock.cpp" />
     <ClCompile Include="YaguraLLBlock.cpp" />
     <ClCompile Include="YaguraMBlock.cpp" />
     <ClCompile Include="YaguraSBlock.cpp" />
-    <ClCompile Include="YellowEnemyEntity.cpp" />
-    <ClCompile Include="YoroiBossEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="AlertGaugeComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
-    <ClInclude Include="ArmorEnemyEntity.h" />
-    <ClInclude Include="ArrowEnemyEntity.h" />
     <ClInclude Include="BackGroundUI.h" />
     <ClInclude Include="BlockActor.h" />
     <ClInclude Include="BossEntity.h" />
@@ -305,8 +291,6 @@
     <ClInclude Include="EventTexture.h" />
     <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameOverUI.h" />
-    <ClInclude Include="GunnerEnemyEntity.h" />
-    <ClInclude Include="HealerEnemyEntity.h" />
     <ClInclude Include="HitboxData.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -330,9 +314,7 @@
     <ClInclude Include="PlayerStatusUI.h" />
     <ClInclude Include="SaveData.h" />
     <ClInclude Include="SaveManager.h" />
-    <ClInclude Include="ScarecrowEnemyEntity.h" />
     <ClInclude Include="ScreenMenus.h" />
-    <ClInclude Include="SekienkiBossEntity.h" />
     <ClInclude Include="ShurikenUI.h" />
     <ClInclude Include="SkillData.h" />
     <ClInclude Include="SkillMenu.h" />
@@ -349,9 +331,6 @@
     <ClInclude Include="StructureBBlock.h" />
     <ClInclude Include="Trap.h" />
     <ClInclude Include="TreasureBox.h" />
-    <ClInclude Include="WhiteEnemyEntity.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="KooniEnemyEntity.h" />
     <ClInclude Include="EntityActor.h" />
     <ClInclude Include="Game.h" />
@@ -379,15 +358,12 @@
     <ClInclude Include="UIActor.h" />
     <ClInclude Include="Vector2d.h" />
     <ClInclude Include="VelocityComponent.h" />
-    <ClInclude Include="WhiteShurikenBullet.h" />
     <ClInclude Include="WoodLBlock.h" />
     <ClInclude Include="WoodSBlock.h" />
     <ClInclude Include="YaguraLBlock.h" />
     <ClInclude Include="YaguraLLBlock.h" />
     <ClInclude Include="YaguraMBlock.h" />
     <ClInclude Include="YaguraSBlock.h" />
-    <ClInclude Include="YellowEnemyEntity.h" />
-    <ClInclude Include="YoroiBossEntity.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\maps\stage1\map.csv" />

@@ -10,19 +10,10 @@
 #include "Renderer.h"
 #include "Input.h"
 #include "PlayerEntity.h"
-#include "ScarecrowEnemyEntity.h"
 #include "EnemyEntity.h"
 #include "DropItemEntity.h"
-#include "WhiteEnemyEntity.h"
 #include "KooniEnemyEntity.h"
-#include "YellowEnemyEntity.h"
-#include "ArrowEnemyEntity.h"
-#include "HealerEnemyEntity.h"
-#include "ArmorEnemyEntity.h"
-#include "GunnerEnemyEntity.h"
 #include "KasaTenguEnemyEntity.h"
-#include "YoroiBossEntity.h"
-#include "SekienkiBossEntity.h"
 #include "EffectActor.h"
 #include "StageBackActor.h"
 #include "StageExitActor.h"
@@ -373,37 +364,6 @@ bool PlayScene::StageInit(int stageNo) {
 				AddActor(new Boss_01(this, pos));
 			} break;
 
-			case 208:
-			{
-				auto* healereEnemy = EnemySpawner::SpawnEnemy<HealerEnemyEntity>(this, pos);
-			} break;
-
-			case 206:
-			{
-				auto* armorEnemy = EnemySpawner::SpawnEnemy<ArmorEnemyEntity>(this, pos);
-			} break;
-
-			case 207:
-			{
-				auto* gunnernemy = EnemySpawner::SpawnEnemy<GunnerEnemyEntity>(this, pos);
-			} break;
-
-			case 205:
-			{
-				auto* yoroiBoss = EnemySpawner::SpawnEnemy<YoroiBossEntity>(this, pos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-			} break;
-
-			case 210:
-			{
-				auto* sekienkiBoss = EnemySpawner::SpawnEnemy<SekienkiBossEntity>(this, pos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-			} break;
-
-
-			case 209:
-			{
-				auto* spiritEnemy = EnemySpawner::SpawnEnemy<SpiritEnemyEntity>(this, pos);
-			}
-			break;
 			default:
 				if (objID >= 100)
 				{
@@ -1679,31 +1639,6 @@ bool PlayScene::UpdateStageLoading()
 		case 204:
 			success =
 				PreloadEnemy<Boss_01>(this);
-			break;
-
-		case 205:
-			success =
-				PreloadEnemy<YoroiBossEntity>(this);
-			break;
-
-		case 206:
-			success =
-				PreloadEnemy<ArmorEnemyEntity>(this);
-			break;
-
-		case 207:
-			success =
-				PreloadEnemy<GunnerEnemyEntity>(this);
-			break;
-
-		case 208:
-			success =
-				PreloadEnemy<HealerEnemyEntity>(this);
-			break;
-
-		case 210:
-			success =
-				PreloadEnemy<SekienkiBossEntity>(this);
 			break;
 
 		default:

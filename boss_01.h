@@ -57,7 +57,7 @@ public:
     void Update(float deltaTime) override;
     void Draw() override;
     int GetMaxHP() const override { return m_parameters.maxHP; }
-    void TakeDamage(int damage, const Vector2d& knockback) override;
+    void TakeDamage(int damage, const Vector2d& knockback, bool attackDir  = false) override;
     void TakeMetsu(int metsu) override;
     void OnDead() override;
 
