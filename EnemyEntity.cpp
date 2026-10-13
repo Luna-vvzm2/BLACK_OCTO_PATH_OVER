@@ -50,6 +50,8 @@ EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size
 
     , m_canMove(true)
     ,m_alertGaugeTimer(0.0f)
+    , m_alertChangeTimer(0.0f)
+    , m_wasPlayerInSearchRange(false)
 {
 }
 
@@ -70,24 +72,24 @@ bool EnemyEntity::Init() {
 
 }
 
-void EnemyEntity::Update(float deltaTime) {
-   
+void EnemyEntity::Update(float deltaTime)
+{
     EntityActor::Update(deltaTime);
 
-   
     if (GetState() == Actor::State::Dead)
+    {
         return;
-
-  
+    }
 
     UpdateAI();
 
+    if (UseAlertGauge())
+    {
+        UpdateAlertGauge(deltaTime);
+    }
+
     UpdateGravity(deltaTime);
-
-
-
 }
-
 void EnemyEntity::UpdateGravity(float deltaTime)
 {
     if (!m_velocity)
@@ -147,21 +149,132 @@ void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackD
     {
         return;
     }
+    
+    int finalDamage = damage;
 
-    m_hp->Damage(damage);
+    //無防備状態か判定
+    const bool isDefenseless = m_alertGauge != nullptr && m_alertGauge->IsDefenseless();
+
+    const bool isCombat = m_alertGauge != nullptr && m_alertGauge->IsCombat();
+    float multiplier = 1.0f;
+
+    if (isDefenseless)
+    {
+        ;
+        //無防備状態の倍率
+        switch (m_enemyRank)
+        {
+        case EnemyRank::Small:
+            multiplier = 20.0f;
+            break;
+
+        case EnemyRank::Elite:
+            multiplier = 3.0f;
+            break;
+
+        case EnemyRank::Boss:
+            multiplier = 2.0f;
+            break;
+        }
+    }
+    else if (isCombat)
+    {
+        //プレイヤーの位置から攻撃方向を判定
+        PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+        PlayerEntity* player = nullptr;
+        if (playScene != nullptr)
+        {
+            player = playScene->GetPlayer();
+        }
+
+        if (player != nullptr && !player->IsDead())
+        {
+            const float playerX = player->GetPos().x;
+            const float enemyX = GetPos().x;
+
+            //m_dir == true は右向きと仮定
+            bool isPlayerInFront = m_dir ? playerX > enemyX : playerX < enemyX;
+            if (attackDir) { isPlayerInFront = !isPlayerInFront; }
+
+            if (isPlayerInFront)
+            {
+                //前方からの攻撃
+                switch (m_enemyRank)
+                {
+                case EnemyRank::Small:
+                    multiplier = 0.7f;
+                    break;
+
+                case EnemyRank::Elite:
+                    multiplier = 0.5f;
+                    break;
+
+                case EnemyRank::Boss:
+                    multiplier = 0.3f;
+                    break;
+                }
+            }
+            else
+            {
+                //後方からの攻撃
+                switch (m_enemyRank)
+                {
+                case EnemyRank::Small:
+                    multiplier = 20.0f;
+                    break;
+
+                case EnemyRank::Elite:
+                    multiplier = 3.0f;
+                    break;
+
+                case EnemyRank::Boss:
+                    multiplier = 2.0f;
+                    break;
+                }
+            }
+        }
+    }
+
+    finalDamage = static_cast<int>(damage * multiplier);
+
+    //ダメージを適用
+    m_hp->Damage(finalDamage);
+
+    if (m_alertGauge != nullptr)
+    {
+        if (isDefenseless)
+        {
+            //ダメージ適用後、ゲージを0にリセット
+            m_alertGauge->SetGauge(0.0f);
+
+            //10秒間、ゲージがマイナスになるのを制限
+            m_defenselessLockTimer = 10.0f;
+        }
+        else
+        {
+            //通常攻撃では、攻撃命中ごとに＋8
+            m_alertGauge->AddGauge(8.0f);
+        }
+    }
 
     if (m_hp->GetHP() <= 0)
     {
-        OnDeadFromDamage(damage, knockback);
-
+        OnDeadFromDamage(finalDamage, knockback);
         return;
     }
+
+    if (m_velocity != nullptr)
+    {
+        m_velocity->Set(knockback);
+    }
+
+    OnDamaged(finalDamage, knockback);
 
     Vector2d vel = m_velocity->Get();
     vel = knockback;
     m_velocity->Set(vel);
 
-    OnDamaged(damage, knockback);
 }
 
 void EnemyEntity::TakeMetsu(int metsu)
@@ -262,6 +375,17 @@ bool EnemyEntity::IsPlayerInSearchRange() const
 
 void EnemyEntity::UpdateAlertGauge(float deltaTime)
 {
+    // 無防備状態解除後の制限時間を減らす
+    if (m_defenselessLockTimer > 0.0f)
+    {
+        m_defenselessLockTimer -= deltaTime;
+
+        if (m_defenselessLockTimer < 0.0f)
+        {
+            m_defenselessLockTimer = 0.0f;
+        }
+    }
+
     if (m_alertGauge == nullptr)
     {
         return;
@@ -276,16 +400,63 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
 
     m_alertGaugeTimer = 0.0f;
 
-    if (IsPlayerInSearchRange())
+    const bool isPlayerInRange = IsPlayerInSearchRange();
+    // 範囲内・範囲外が切り替わったら増減量をリセット
+    if (isPlayerInRange != m_wasPlayerInSearchRange)
     {
-        m_alertGauge->AddGauge(4.0f);
+        m_alertChangeTimer = 0.0f;
+    }
+
+    m_wasPlayerInSearchRange = isPlayerInRange;
+
+    // 1 → 2 → 3 → ... → 10
+    m_alertChangeTimer += 1.0f;
+
+    float changeAmount = m_alertChangeTimer;
+
+    if (changeAmount > 10.0f)
+    {
+        changeAmount = 10.0f;
+    }
+
+    if (isPlayerInRange)
+    {
+        // +1 → +10
+        m_alertGauge->AddGauge(changeAmount);
     }
     else
     {
-        m_alertGauge->AddGauge(-1.0f);
-    }
+        if (m_defenselessLockTimer > 0.0f)
+        {
+            if (m_alertGauge->GetGauge() > 0.0f)
+            {
+                m_alertGauge->AddGauge(-1.0f);
 
-    std::cout << "Enemy Alert Gauge = "
+                if (m_alertGauge->GetGauge() < 0.0f)
+                {
+                    m_alertGauge->SetGauge(0.0f);
+                }
+            }
+        }
+        else
+        {
+            //通常の減少処理
+            // -1 → -10
+            m_alertGauge->AddGauge(-changeAmount);
+        }
+    }
+    std::cout
+        << "Enemy Alert Gauge = "
         << m_alertGauge->GetGauge()
         << std::endl;
 }
+bool EnemyEntity::UseAlertGauge() const
+{
+    return true;
+}
+
+void EnemyEntity::SetEnemyRank(EnemyRank rank)
+{
+    m_enemyRank = rank;
+}
+

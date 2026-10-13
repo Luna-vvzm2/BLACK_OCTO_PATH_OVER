@@ -18,6 +18,19 @@ class EnemyEntity : public EntityActor {
 
 
 public:
+
+    enum class EnemyRank
+    {
+        Small,  //G‹›“G
+        Elite,  //ƒGƒŠ[ƒg“G
+        Boss    //ƒ{ƒX“G
+    };
+
+
+
+    //“G‚Ìí—Ş‚ğİ’è
+    void SetEnemyRank(EnemyRank rank);
+
 	explicit EnemyEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 90, 196 });
 	~EnemyEntity() override = default;
 
@@ -29,7 +42,7 @@ public:
 	void UpdateGravity(float deltaTime);
 	void UpdateAttack(float deltaTime);
 	void UpdateState();
-
+    
 
     ActorType GetType() const override { return ActorType::Enemy; }
     CollisionComponent* GetCollision() const { return m_collision; }
@@ -47,9 +60,12 @@ public:
     int GetMetsuGauge() const { return m_metsuGauge; }
     int GetMetsuMax() const { return m_metsuMax; }
 
+
 protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
+
+    virtual bool UseAlertGauge() const;
 
     HPComponent* m_hp;
     int m_hpMax;
@@ -91,10 +107,15 @@ protected:
     
     void UpdateAlertGauge(float deltaTime);
 
-    bool IsPlayerInSearchRange() const;
+    virtual bool IsPlayerInSearchRange() const;
 
     AlertGaugeComponent* m_alertGauge;
     float m_alertGaugeTimer;
+    bool m_wasPlayerInSearchRange = false;
+    float m_alertChangeTimer = 0.0f;
+
+    EnemyRank m_enemyRank = EnemyRank::Small;
+    float m_defenselessLockTimer = 0.0f;
 
 };
 
