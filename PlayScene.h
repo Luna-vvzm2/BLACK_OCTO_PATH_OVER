@@ -17,7 +17,6 @@ class PlayerEntity;
 class EnemyEntity;
 class HPBarUI;
 class EnemyHPBar;
-class SoundComponent;
 class JutsuChargeUI;
 
 //イベントのため追加
@@ -44,6 +43,7 @@ public:
 	void Draw() override;
 
 	PlayerEntity* GetPlayer() const { return m_player; }
+	int GetStageIndex() const { return m_stageIndex; }
 
 	// 衝突イベント時に呼ぶ
 	//void SpawnHitEffect(const Vector2d& pos);
@@ -92,7 +92,6 @@ private:
 	PauseMenu m_pauseMenu;
 
 	Camera m_camera;
-	SoundComponent* m_stageBgm;
 
 	int m_stageIndex;
 	int m_comboCount = 0;

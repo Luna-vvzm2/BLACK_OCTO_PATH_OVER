@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Input.h"
 #include "Scene.h"
+#include "SoundManager.h"
 #include <memory>
 
 class Game
@@ -24,6 +25,8 @@ public:
 	void RequestQuit() { m_running = false; }
 	int GetVolume(int channel) const;
 	void AdjustVolume(int channel, int amount);
+	SoundManager& GetSoundManager() { return m_soundManager; }
+	const SoundManager& GetSoundManager() const { return m_soundManager; }
 	int GetWidth() const { return m_winWidth; }
 	int GetHeight() const { return m_winHeight; }
 
@@ -49,6 +52,7 @@ private:
 	HWND m_window;
 	std::unique_ptr<Renderer> m_renderer;
 	Input m_input;
+	SoundManager m_soundManager;
 
 	std::vector<std::unique_ptr<Scene>> m_sceneStack;
 	enum class PendingAction

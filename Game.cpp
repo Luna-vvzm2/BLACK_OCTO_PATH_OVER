@@ -9,6 +9,7 @@
 
 Game::Game()
 	: m_window(nullptr),
+	m_soundManager(this),
 	m_pendingAction(PendingAction::None),
 	m_pendingScene(nullptr),
 	m_winWidth(0),
@@ -71,6 +72,11 @@ bool Game::Init(const std::string& title, UINT width, UINT height, UINT color, c
 	m_debugFont = debugfont;
 	m_running = true;
 
+	if (!m_soundManager.LoadCsv("Sound.csv") || !m_soundManager.SetScope(0)) {
+		std::cerr << "Sound.csv initialization failed\n";
+		return false;
+	}
+
 	ChangeScene(std::make_unique<TitleScene>(this));
 	ProccessPendingActions();
 
@@ -129,6 +135,7 @@ void Game::Update(float deltaTime) {
 	if (!currentScene) return;
 
 	if (currentScene) currentScene->Update(deltaTime);
+	m_soundManager.Update(deltaTime);
 
 	if (currentScene->GetType() == Scene::Type::Play && m_input.IsTrigger(Action::ENTER))
 	{
@@ -197,6 +204,7 @@ void Game::End() {
 		m_renderer.reset();
 	}
 	SpriteComponent::ReleaseTextures();
+	m_soundManager.UnloadAll();
 	DxLib_End();	//	DxLib終了処理
 	std::cout << "アプリ終了" << std::endl;
 }
@@ -254,6 +262,7 @@ void Game::ProccessPendingActions()
 	case PendingAction::Push:
 		if (m_pendingScene)
 		{
+			m_soundManager.SetScope(0);
 			m_pendingScene->Init();
 			m_sceneStack.push_back(std::move(m_pendingScene));
 		}
@@ -266,13 +275,22 @@ void Game::ProccessPendingActions()
 
 			if (!m_sceneStack.empty())
 			{
+				Scene* resumedScene = m_sceneStack.back().get();
+				if (resumedScene->GetType() == Scene::Type::Play)
+				{
+					auto* playScene = static_cast<PlayScene*>(resumedScene);
+					m_soundManager.SetScope(playScene->GetStageIndex() + 2);
+				}
+				else m_soundManager.SetScope(0);
 				m_sceneStack.back()->OnResume();
 			}
+			else m_soundManager.SetScope(0);
 		}
 		break;
 
 	case PendingAction::Change:
 		m_sceneStack.clear();
+		m_soundManager.SetScope(0);
 		if (m_pendingScene)
 		{
 			m_pendingScene->Init();
