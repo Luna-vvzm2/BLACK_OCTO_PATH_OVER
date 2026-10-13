@@ -52,6 +52,8 @@
 #include "SaveManager.h"
 #include "PlayerStatusUI.h"
 
+#include "HideBlock.h"
+
 //イベントのため変更
 #include "EventManager.h"
 #include "EventTexture.h"
@@ -302,6 +304,10 @@ bool PlayScene::StageInit(int stageNo) {
 			case 44:
 				pos = Vector2d(x * tileSize, y * tileSize + tileSize * 0.625f);
 				AddActor(new ClearPlatformBlock(this, pos, Vector2d(tileSize * 3.0f, tileSize * 0.25f)));
+				break;
+			case 45:
+				pos = Vector2d(x * tileSize - tileSize, y * tileSize - tileSize * 0.5f);
+				AddActor(new HideBlock(this, pos, Vector2d(tileSize, tileSize * 2.0f)));
 				break;
 			}
 		}

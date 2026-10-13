@@ -123,6 +123,8 @@ public:
     bool Init() override;
     void Update(float deltaTime) override;
 
+    //void Draw() override;
+
     void UpdateIgnorePlatform();
     void UpdateInvincible(float deltaTime);
     void UpdateSensor();
@@ -195,7 +197,7 @@ public:
 
     bool GetIsOcto() { return m_isOcto; }
     void SetIsHide(bool flag) { m_isHide = flag; }
-    bool GetIsHide() { return m_isHide; }
+    bool GetIsHide() { return m_isHide && m_isOcto; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);

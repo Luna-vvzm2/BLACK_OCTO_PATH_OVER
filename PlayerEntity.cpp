@@ -2487,3 +2487,17 @@ void PlayerEntity::HealHP(int value)
     m_hp->Heal(value);
 }
 
+/*
+void PlayerEntity::Draw()
+{
+    EntityActor::Draw();   // 既存の描画(スプライトなど)はそのまま
+
+#ifdef _DEBUG
+    // 隠れている間だけ、画面左上にデバッグ文字を表示
+    if (m_isHide && m_isOcto)
+    {
+        DrawString(20, 100, "[DEBUG] HIDING", GetColor(0, 255, 0));
+    }
+#endif
+}
+*/
