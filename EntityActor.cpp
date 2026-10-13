@@ -1,5 +1,6 @@
 #include "EntityActor.h"
 #include "PlayScene.h"
+#include "PlayerEntity.h"
 #include "BlockActor.h"
 #include "StageBackActor.h"
 #include "StageExitActor.h"
@@ -69,6 +70,8 @@ void EntityActor::MoveAndCollide(float deltaTime) {
     Vector2d pos = m_transform->GetPosition();
     Vector2d vel = m_velocity->Get();
 
+    bool overlapHide = false;   // 隠れる障害物と重なっているか
+
     // === Y方向移動 ===
     pos.y += vel.y * deltaTime;
     m_transform->SetPosition(pos);
@@ -82,6 +85,21 @@ void EntityActor::MoveAndCollide(float deltaTime) {
         switch (actor->GetType()) {
         case ActorType::Block:
             block = static_cast<BlockActor*>(actor);
+
+            // 隠れる障害物はプレイヤーのみ重なりを判定する（通り抜ける）
+            if (block->GetBlockType() == BlockType::Hide)
+            {
+                if (GetType() == ActorType::Player && m_collision != nullptr)
+                {
+                    CollisionComponent* hideCol = block->GetCollision();
+                    if (hideCol != nullptr && m_collision->CheckCollision(hideCol))
+                    {
+                        overlapHide = true;
+                    }
+                }
+                continue;
+            }
+
             actorCol = block->GetCollision();
             actorPos = block->GetPos();
             if (std::abs(actorPos.x - pos.x) > 500)
@@ -184,6 +202,12 @@ void EntityActor::MoveAndCollide(float deltaTime) {
         }
     }
 
+    // 隠れ状態をプレイヤーに通知(重なっていなければ false)
+    if (GetType() == ActorType::Player)
+    {
+        static_cast<PlayerEntity*>(this)->SetIsHide(overlapHide);
+    }
+
     // === X方向移動 ===
     pos = m_transform->GetPosition();
     pos.x += vel.x * deltaTime;
@@ -198,6 +222,7 @@ void EntityActor::MoveAndCollide(float deltaTime) {
         switch (actor->GetType()) {
         case ActorType::Block:
             block = static_cast<BlockActor*>(actor);
+            if (block->GetBlockType() == BlockType::Hide) continue;   // 追加
             actorCol = block->GetCollision();
             actorPos = block->GetPos();
             break;

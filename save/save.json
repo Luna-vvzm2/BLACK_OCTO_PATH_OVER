@@ -1,10 +1,10 @@
 {
-    "currentStage": 0,
+    "currentStage": 2,
     "kunaiCount": 3,
-    "playTime": 235.20335388183594,
+    "playTime": 727.4331665039063,
     "stageClear": [
         true,
-        false,
+        true,
         false
     ]
 }

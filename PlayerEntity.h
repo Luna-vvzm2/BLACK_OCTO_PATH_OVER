@@ -194,7 +194,7 @@ public:
     void SpawnKunai();
 
     bool GetIsOcto() { return m_isOcto; }
-    bool SetIsHide(bool flag) { m_isHide = flag; }
+    void SetIsHide(bool flag) { m_isHide = flag; }
     bool GetIsHide() { return m_isHide; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
@@ -276,7 +276,7 @@ private:
     bool m_isAutoOcto;
     float m_octoTimer;
     bool m_endOcto;
-    bool m_isHide;
+    bool m_isHide = false;
 
     bool m_getHit;
     float m_getHitTimer;
