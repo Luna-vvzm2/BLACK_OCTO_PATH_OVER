@@ -37,17 +37,6 @@ void TitleScene::Update(float deltaTime) {
 		return;
 	}
 
-	const Input& input = m_game->GetInput();
-	if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + 2) % 3;
-	if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % 3;
-
-	if (input.IsTrigger(Action::ENTER)) {
-		if (m_cursor == 0) m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
-		else if (m_cursor == 1) m_settings.Open();
-		else m_game->RequestQuit();
-	}
-}
-
     const Input& input = m_game->GetInput();
     if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + 2) % 3;
     if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % 3;
@@ -80,6 +69,6 @@ void TitleScene::Draw() {
 #ifdef _DEBUG
 	const std::string& debugFont = m_game->GatDebugFont();
 	renderer->DrawTextL(Vector2d(m_game->GetWidth() - 150.0f, 0), "TitleScene", Color(255, 64, 0), debugFont, 24, false);
+#endif
 
-    m_settings.Draw();
 }

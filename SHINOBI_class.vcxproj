@@ -250,8 +250,6 @@
     <ClCompile Include="SpriteComponent.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="TitleScene.cpp" />
-    <ClCompile Include="StageSelectScene.cpp" />
-    <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="TitleUI.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIActor.cpp" />
@@ -359,8 +357,6 @@
     <ClInclude Include="SpriteComponent.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="TitleScene.h" />
-    <ClInclude Include="StageSelectScene.h" />
-    <ClInclude Include="ScreenMenus.h" />
     <ClInclude Include="TitleUI.h" />
     <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="UIActor.h" />

@@ -312,12 +312,6 @@
     <ClCompile Include="GameOverUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
-    <ClCompile Include="ScreenMenus.cpp">
-      <Filter>ソース ファイル\Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="StageSelectScene.cpp">
-      <Filter>ソース ファイル\Scene</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -597,12 +591,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GameOverScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ScreenMenus.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="StageSelectScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
