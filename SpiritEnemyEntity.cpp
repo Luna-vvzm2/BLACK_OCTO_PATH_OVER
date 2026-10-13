@@ -38,7 +38,7 @@ bool SpiritEnemyEntity::Init()
     {
         return false;
     }
-
+    SetEnemyRank(EnemyRank::Small);
     // ‰…—ì‚ÌHP
     m_hp = AddComponent<HPComponent>(80);
 
@@ -165,7 +165,7 @@ void SpiritEnemyEntity::UpdateAI()
 
         // Œx‰úƒQ[ƒW‚ª100‚É‚È‚Á‚½‚çí“¬ŠJŽn
         if (m_alertGauge != nullptr &&
-            m_alertGauge->IsCombat())
+            m_alertGauge->GetGauge() > 0.0f)
         {
             m_state = CombatMove;
             m_attackTimer = 0.0f;

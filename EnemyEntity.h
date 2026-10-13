@@ -18,6 +18,19 @@ class EnemyEntity : public EntityActor {
 
 
 public:
+
+    enum class EnemyRank
+    {
+        Small,  //G‹›“G
+        Elite,  //ƒGƒŠ[ƒg“G
+        Boss    //ƒ{ƒX“G
+    };
+
+
+
+    //“G‚Ìí—Ş‚ğİ’è
+    void SetEnemyRank(EnemyRank rank);
+
 	explicit EnemyEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 90, 196 });
 	~EnemyEntity() override = default;
 
@@ -100,6 +113,9 @@ protected:
     float m_alertGaugeTimer;
     bool m_wasPlayerInSearchRange = false;
     float m_alertChangeTimer = 0.0f;
+
+    EnemyRank m_enemyRank = EnemyRank::Small;
+    float m_defenselessLockTimer = 0.0f;
 
 };
 

@@ -124,14 +124,19 @@ void AlertGaugeComponent::Draw()
     // ゲージの色
     Color gaugeColor;
 
-    if (m_gauge >= 0.0f)
+    if (m_gauge >= 70.0f)
     {
-        // 0以上：オレンジ
+        // 70～100：赤
+        gaugeColor = Color(255, 0, 0);
+    }
+    else if (m_gauge >= 0.0f)
+    {
+        // 0～69：オレンジ
         gaugeColor = Color(255, 150, 0);
     }
     else
     {
-        // 0未満：青
+        // -100～0未満：青
         gaugeColor = Color(0, 100, 255);
     }
 
