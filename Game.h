@@ -33,7 +33,13 @@ public:
 	const std::string& GatGameFont() const { return m_gameFont; }
 	const std::string& GatDebugFont() const { return m_debugFont; }
 
-	void ChangeScene(std::unique_ptr<Scene>nextScene); //クリアシーンのために追加 シーンを外部から切り替えるための関数
+	void PushScene(std::unique_ptr<Scene> nextScene);
+	void PopScene();
+	bool CanPopScene() const { return m_sceneStack.size() > 1; }
+	void ChangeScene(std::unique_ptr<Scene> nextScene); //クリアシーンのために追加 シーンを外部から切り替えるための関数
+	void Quit() { m_running = false; }
+
+	Scene* GetCurrentScene() const;
 
 private:
 
@@ -44,8 +50,18 @@ private:
 	std::unique_ptr<Renderer> m_renderer;
 	Input m_input;
 
-	std::unique_ptr<Scene> m_scene;
-	std::unique_ptr<Scene> m_nextScene{ nullptr };//クリアシーンのために追加
+	std::vector<std::unique_ptr<Scene>> m_sceneStack;
+	enum class PendingAction
+	{
+		None,
+		Push,
+		Pop,
+		Change
+	};
+	PendingAction m_pendingAction;
+	std::unique_ptr<Scene> m_pendingScene;
+
+	void ProccessPendingActions();
 
 	bool m_running;
 	bool m_ended;
@@ -56,7 +72,6 @@ private:
 	std::string m_gameFont;
 	std::string m_debugFont;
 	int m_volumes[3] = { 100, 100, 100 }; // master, effects, BGM
-
 
 	//	FPS計算用
 	float m_fps = 0.0f;

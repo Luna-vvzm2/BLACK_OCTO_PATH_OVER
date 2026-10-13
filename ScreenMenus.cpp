@@ -137,6 +137,11 @@ void PauseMenu::Open()
     m_cursor = 0;
 }
 
+void PauseMenu::Toggle()
+{
+    m_open = !m_open;
+}
+
 PauseMenu::Result PauseMenu::Update()
 {
     if (!m_open) return Result::None;
