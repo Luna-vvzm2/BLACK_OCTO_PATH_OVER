@@ -1,4 +1,5 @@
 #include "KunaiActor.h"
+#include "PlayerEntity.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
 #include "CollisionComponent.h"
@@ -7,8 +8,9 @@
 #include "EnemyEntity.h"
 #include "BlockActor.h"
 
-KunaiActor::KunaiActor(Scene* scene, const Vector2d& pos, bool dir) 
+KunaiActor::KunaiActor(Scene* scene, PlayerEntity* player, const Vector2d& pos, bool dir) 
 	: Actor(scene)
+    , m_player(player)
     , m_transform(nullptr)
     , m_velocity(nullptr)
     , m_collision(nullptr)
@@ -62,59 +64,55 @@ void KunaiActor::Update(float deltaTime)
 
     for (Actor* actor : m_scene->GetActors())
     {
-        if (actor->GetType() != ActorType::Enemy)
-            continue;
+        if (actor->GetType() == ActorType::Enemy) {
+            EnemyEntity* enemy = static_cast<EnemyEntity*>(actor);
 
-        EnemyEntity* enemy = static_cast<EnemyEntity*>(actor);
+            if (m_collision->CheckCollision(enemy->GetCollision()))
+            {
+                enemy->TakeDamage(100, { m_dir ? 300.0f : -300.0f, 0 });
+                enemy->TakeMetsu(60);
+                SetState(State::Dead);
 
-        if (m_collision->CheckCollision(enemy->GetCollision()))
-        {
-            enemy->TakeDamage( 100, { m_dir ? 300.0f : -300.0f, 0 } );
-            enemy->TakeMetsu(60);
-            SetState(State::Dead);
-
-            return;
+                return;
+            }
+        }
+        else if (actor->GetType() == ActorType::Block) {
+            CheckBlockCollision(actor);
         }
     }
 }
 
-void KunaiActor::CheckBlockCollision()
+void KunaiActor::CheckBlockCollision(Actor* actor)
 {
-    for (Actor* actor : m_scene->GetActors())
+    BlockActor* block = static_cast<BlockActor*>(actor);
+    if (block->GetBlockType() != BlockType::Solid) return;
+
+    CollisionComponent* blockCol = block->GetCollision();
+
+    if (!blockCol)
     {
-        if (actor->GetType() != ActorType::Block)
-        {
-            continue;
-        }
-
-        BlockActor* block = static_cast<BlockActor*>(actor);
-
-        CollisionComponent* blockCol = block->GetCollision();
-
-        if (!blockCol)
-        {
-            continue;
-        }
-
-        float diffX = m_transform->GetPosition().x - block->GetPos().x;
-        float diffY = m_transform->GetPosition().y - block->GetPos().y;
-
-        float overlapX =
-            (m_collision->GetWidth() * 0.5f +
-                blockCol->GetWidth() * 0.5f)
-            - std::abs(diffX);
-
-        float overlapY =
-            (m_collision->GetHeight() * 0.5f +
-                blockCol->GetHeight() * 0.5f)
-            - std::abs(diffY);
-
-        if (overlapX > 0 && overlapY > 0)
-        {
-            OnBlockHit();
-            return;
-        }
+        return;
     }
+
+    float diffX = m_transform->GetPosition().x - block->GetPos().x;
+    float diffY = m_transform->GetPosition().y - block->GetPos().y;
+
+    float overlapX =
+        (m_collision->GetWidth() * 0.5f +
+            blockCol->GetWidth() * 0.5f)
+        - std::abs(diffX);
+
+    float overlapY =
+        (m_collision->GetHeight() * 0.5f +
+            blockCol->GetHeight() * 0.5f)
+        - std::abs(diffY);
+
+    if (overlapX > 0 && overlapY > 0)
+    {
+        OnBlockHit();
+        return;
+    }
+
 }
 
 void KunaiActor::OnBlockHit()

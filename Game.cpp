@@ -9,6 +9,9 @@
 
 Game::Game()
 	: m_window(nullptr),
+	m_soundManager(this),
+	m_pendingAction(PendingAction::None),
+	m_pendingScene(nullptr),
 	m_winWidth(0),
 	m_winHeight(0),
 	m_winColor(0),
@@ -69,11 +72,17 @@ bool Game::Init(const std::string& title, UINT width, UINT height, UINT color, c
 	m_debugFont = debugfont;
 	m_running = true;
 
-	m_scene = std::make_unique<TitleScene>(this);
-	if (!m_scene->Init()) {
-		std::cerr << "TitleScene 初期化失敗" << std::endl;
-		return false;
+	if (m_soundManager.LoadCsv("assets/SoundAssets/Sound.csv")) {
+		if (!m_soundManager.SetScope(0)) {
+			std::cerr << "Some sounds could not be loaded from Sound.csv\n";
+		}
 	}
+	else {
+		std::cerr << "Sound.csv could not be loaded; continuing without CSV sounds\n";
+	}
+
+	ChangeScene(std::make_unique<TitleScene>(this));
+	ProccessPendingActions();
 
 	QueryPerformanceFrequency(&m_freq);
 	QueryPerformanceCounter(&m_prevTime);
@@ -115,28 +124,33 @@ bool Game::Run() {
 			: 0.0f;
 	}
 
-	return m_scene->IsRunning();
+	Scene* currentScene = GetCurrentScene();
+	if (currentScene) return currentScene->IsRunning();
+	return false;
 }
 
 void Game::Update(float deltaTime) {
-    if (m_scene) m_scene->Update(deltaTime);
 
-    if (!m_nextScene && m_scene && m_scene->GetType() == Scene::Type::Play
-        && m_input.IsTrigger(Action::ENTER)) {
-        auto* playScene = static_cast<PlayScene*>(m_scene.get());
-        if (playScene->IsResult()) ChangeScene(std::make_unique<PlayScene>(this));
-    }
+	ProccessPendingActions();
 
-    // Apply transitions after the current scene has finished updating.
-    if (m_nextScene) {
-        m_scene = std::move(m_nextScene);
-        m_scene->Init();
-    }
+	if (m_sceneStack.empty()) return;
+
+	Scene* currentScene = GetCurrentScene();
+	if (!currentScene) return;
+
+	if (currentScene) currentScene->Update(deltaTime);
+	m_soundManager.Update(deltaTime);
+
+	if (currentScene->GetType() == Scene::Type::Play && m_input.IsTrigger(Action::ENTER))
+	{
+		auto* playScene = static_cast<PlayScene*>(currentScene);
+		if (playScene->IsResult()) ChangeScene(std::make_unique<PlayScene>(this));
+	}
 }
 void Game::Draw() {
 	ClearDrawScreen();
 	//	以後描画処理を書く
-	if (m_scene) m_scene->Draw();
+	for (const auto& scene : m_sceneStack) scene->Draw(); 
 
 #ifdef _DEBUG
 
@@ -188,13 +202,13 @@ void Game::End() {
 
 	m_ended = true;
 
-	if (m_scene) {
-		m_scene.reset();
-	}
+	m_sceneStack.clear();
+
 	if (m_renderer) {
 		m_renderer.reset();
 	}
 	SpriteComponent::ReleaseTextures();
+	m_soundManager.UnloadAll();
 	DxLib_End();	//	DxLib終了処理
 	std::cout << "アプリ終了" << std::endl;
 }
@@ -218,12 +232,79 @@ void Game::InitConsole() {
 
 }
 
+void Game::PushScene(std::unique_ptr<Scene> nextScene)
+{
+	m_pendingAction = PendingAction::Push;
+	m_pendingScene = std::move(nextScene);
+}
+
+void Game::PopScene()
+{
+	m_pendingAction = PendingAction::Pop;
+}
+
 //クリアシーンのために追加
 void Game::ChangeScene(std::unique_ptr<Scene>nextScene)
 {
-	if (!nextScene) return;
+	m_pendingAction = PendingAction::Change;
+	m_pendingScene = std::move(nextScene);
+}
 
-	m_nextScene = std::move(nextScene);
+Scene* Game::GetCurrentScene() const
+{
+	if (m_sceneStack.empty()) return nullptr;
+
+	return m_sceneStack.back().get();
+}
+
+void Game::ProccessPendingActions()
+{
+	if (m_pendingAction == PendingAction::None) return;
+
+	switch (m_pendingAction)
+	{
+	case PendingAction::Push:
+		if (m_pendingScene)
+		{
+			m_soundManager.SetScope(0);
+			m_pendingScene->Init();
+			m_sceneStack.push_back(std::move(m_pendingScene));
+		}
+		break;
+
+	case PendingAction::Pop:
+		if (!m_sceneStack.empty())
+		{
+			m_sceneStack.pop_back();
+
+			if (!m_sceneStack.empty())
+			{
+				Scene* resumedScene = m_sceneStack.back().get();
+				if (resumedScene->GetType() == Scene::Type::Play)
+				{
+					auto* playScene = static_cast<PlayScene*>(resumedScene);
+					m_soundManager.SetScope(playScene->GetStageIndex() + 2);
+				}
+				else m_soundManager.SetScope(0);
+				m_sceneStack.back()->OnResume();
+			}
+			else m_soundManager.SetScope(0);
+		}
+		break;
+
+	case PendingAction::Change:
+		m_sceneStack.clear();
+		m_soundManager.SetScope(0);
+		if (m_pendingScene)
+		{
+			m_pendingScene->Init();
+			m_sceneStack.push_back(std::move(m_pendingScene));
+		}
+		break;
+	}
+
+	m_pendingAction = PendingAction::None;
+	m_pendingScene = nullptr;
 }
 
 //bool Game::tick(float& deltaTime, int targetFPS, float maxDeltaTime) {
@@ -240,14 +321,15 @@ void Game::ChangeScene(std::unique_ptr<Scene>nextScene)
 //	m_prevTime = currentTime;
 //	return true;
 //}
+
 int Game::GetVolume(int channel) const
 {
-    return channel >= 0 && channel < 3 ? m_volumes[channel] : 100;
+	return channel >= 0 && channel < 3 ? m_volumes[channel] : 100;
 }
 
 void Game::AdjustVolume(int channel, int amount)
 {
-    if (channel < 0 || channel >= 3) return;
-    m_volumes[channel] = std::clamp(m_volumes[channel] + amount, 0, 100);
-    SoundComponent::RefreshAllVolumes();
+	if (channel < 0 || channel >= 3) return;
+	m_volumes[channel] = std::clamp(m_volumes[channel] + amount, 0, 100);
+	SoundComponent::RefreshAllVolumes();
 }

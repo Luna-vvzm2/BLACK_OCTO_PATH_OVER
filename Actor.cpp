@@ -19,7 +19,7 @@ Actor::~Actor() {
 
 void Actor::Update(float deltaTime) {
 
-	if (m_state != State::Active) return;
+	if (m_state == State::Dead) return;
 
 	for (auto comp : m_components) {
 		comp->Update(deltaTime);

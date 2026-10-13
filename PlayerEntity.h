@@ -22,6 +22,9 @@ struct SensorData
     BlockActor* frontBottom = nullptr;
     BlockActor* frontGround = nullptr;
     BlockActor* frontNearGround = nullptr;
+
+    BlockActor* frontWall = nullptr;
+    BlockActor* upperArea = nullptr;
 };
 
 class EnemyEntity;
@@ -110,6 +113,7 @@ public:
         OCTO_START,
         OCTO_AUTO,
         OCTO_END,
+        OCTO_AUTO_END,
         TIGER,
         ORCA,
 
@@ -143,6 +147,8 @@ public:
     void ChangeState(PlayerState newState);
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
+    void UpdateOcto(float deltaTime);
+    void UpdateWallSensor();
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
     void UpdateDash(float deltaTime);
@@ -162,6 +168,7 @@ public:
     int GetJutsuGaugeAmount() const { return m_jutsuGauge; }
 
     bool GetOwnJutsu(int idx);      // 忍術の獲得状況フラグ。　蛸 = 0、虎 = 1、蛙 = 2、鯱 = 3
+    bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx]; }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
@@ -192,9 +199,12 @@ public:
     void SpawnKunai();
 
     bool GetIsOcto() { return m_isOcto; }
+    bool SetIsHide(bool flag) { m_isHide = flag; }
+    bool GetIsHide() { return m_isHide; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);
+    void SubShadowGauge(int amount);
     void AddShadowGaugeMax();   // 忍術を新しく使えるようになった時に1回呼ぶ
 
     Vector2d GetDrawOffset() const { return m_sprite->GetDrawOffset(); }
@@ -261,12 +271,20 @@ private:
     int m_weakAttackIdx;
 
     float m_attackTimer;
+    float m_jutsuTimer; // 忍術蛸の発動モーションタイマー（仮）
 
     bool m_canAttack;
     float m_attackLockTimer;
 
     bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
+    bool m_isJutsu[4] = { false , false, false, false };    // 忍術使用中フラグ
+    int m_jutsuCost[4] = { 5, 60, 10, 60 }; // 忍術消費影ゲージ量
     bool m_isOcto;
+    bool m_isAutoOcto;
+    float m_octoRatio;
+    float m_octoTimer;
+    bool m_endOcto;
+    bool m_isHide;
 
     bool m_getHit;
     float m_getHitTimer;

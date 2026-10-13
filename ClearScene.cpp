@@ -1,9 +1,9 @@
 #include <cstdio>
+#include <memory>
 #include "ClearScene.h"
 #include "ClearUI.h"
 #include "StageSelectScene.h"
 #include "Input.h"
-#include <memory>
 #include "Game.h"
 
 ClearScene::ClearScene(Game* game, float clearTime)
@@ -29,10 +29,13 @@ void ClearScene::Update(float deltaTime)
 	if (m_game->GetInput().IsTrigger(Action::ENTER))
 		m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
 
+	if (m_game->GetInput().IsTrigger(Action::ENTER))
+		m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
 }
 
 
-void ClearScene::Draw() {
+void ClearScene::Draw()
+{
 	Renderer* renderer = m_game->GetRenderer();
 	if (!renderer) return;
 

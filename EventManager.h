@@ -13,6 +13,7 @@ class Input;
 class EventBase;
 class EventTexture;
 class Actor;
+class Camera;
 
 class EventManager
 {
@@ -41,6 +42,7 @@ public:
 private:
 	Scene* m_scene{ nullptr }; //イベントを管理するシーン
 	EventTexture* m_eventTexture{ nullptr }; //イベントの画像を管理
+
 	//std::unique_ptr<EventBase> m_currentEvent{ nullptr }; //実行中のイベント
 	std::vector<std::unique_ptr<EventBase>> m_eventQueue; //イベントのキュー
 	size_t m_currentEventIndex{ 0 };
@@ -53,6 +55,8 @@ enum class EventType
 {
 	Talk,
 	Battle,
+	Tutorial,
+	GetSkill,
 	CutIn,
 	Clear
 };
@@ -114,19 +118,24 @@ private:
 	bool m_isTextTimerActive{ false }; //テキスト表示タイマーが有効か
 	float m_textTimer{ 0.0f }; //テキスト表示タイマー
 	ActorPosition m_talkerPosition{ ActorPosition::None };
-	int m_actorTextureId{ -1 }; //立ち絵のid
-	int m_actorW{ 480 };
-	int m_actorH{ 510 };
+	int m_actorRTextureId{ -1 }; //右立ち絵のid
+	int m_actorLTextureId{ -1 }; //左立ち絵のid
 
-	int m_boxX{ 280 };
-	int m_boxY{ 510 };
-	int m_boxW{ 720 };
-	int m_boxH{ 160 };
+	//立ち絵の簡易アニメーション
+	bool m_talkStart{ false };
+	int m_talkStep{ 0 };
+	int m_actorLY{ 0 };
+	int m_actorRY{ 0 };
+
+	Vector2d m_actorSize{ 480.0f, 510.0f };
+
+	Vector2d m_boxPos{ 280.0f, 510.0f };
+	Vector2d m_boxSize{ 720.0f, 160.0f };
 
 	int m_fontSize{ 20 };
 	int m_nameX{ 0 };
-	int m_nameY{ m_boxY - 30 };
-	int m_nameX2{ m_boxW + 230 };
+	int m_nameY{ static_cast<int>(m_boxPos.y) - 30 };
+	int m_nameX2{ static_cast<int>(m_boxSize.x) + 230 };
 
 	Color m_textColor{ 255, 255, 255, 255 };
 	Color m_boxColor{ 0, 0, 0, 180 };
@@ -181,6 +190,89 @@ private:
 	void Draw() override;
 };
 
+class TutorialEvent : public EventBase
+{
+	public:
+	TutorialEvent(Scene* scene, const std::string& filePath, EventManager* eventManager); //コンストラクタ
+	TutorialEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager);
+	~TutorialEvent() override;
+
+	EventType GetType() const override { return EventType::Tutorial; }
+
+	void Init() override;
+	void Update(float deltaTime) override;
+	void End() override;
+
+	bool IsEnd() const override;
+
+private:
+	Scene* m_scene{ nullptr };
+	EventManager* m_eventManager{ nullptr };
+
+	int m_currentPage{ 0 }; //表示中のテキストインデックス
+	bool m_isEnd{ false }; //イベント終了確認
+
+	std::string m_bodyText{ "" }; //説明文
+	std::string m_headerText{ "" }; //見出し文
+	int m_explanationImageId{ -1 }; //表示画像
+
+	Vector2d m_imageSize{ 480.0f, 270.0f }; //16:9
+
+	Vector2d m_boxSize{ 720.0f, 500.0f };
+	Vector2d m_boxPos{ (1280.0f - m_boxSize.x) * 0.5f, (720.0f - m_boxSize.y) * 0.5f };
+
+	int m_bodyFontSize{ 20 };
+	int m_headerFontSize{ 40 };
+
+	Color m_textColor{ 255, 255, 255, 255 };
+	Color m_boxColor{ 0, 0, 0, 180 };
+	Color m_boxBorderColor{ 100, 80, 10, 180 };
+
+	void ShowText(); //テキストを描画
+
+	void Draw() override;
+};
+
+class GetSkillEvent : public EventBase
+{
+public:
+	GetSkillEvent(Scene* scene, const std::string& filePath, EventManager* eventManager);
+	GetSkillEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager);
+	~GetSkillEvent() override; //デストラクタ
+
+	enum class SkillType
+	{
+		Tiger,
+		Frog,
+		Orca
+	};
+
+	EventType GetType() const override { return EventType::GetSkill; }
+
+	void Init() override; //イベント開始時の処理
+	void Update(float deltaTime) override; //更新
+	void End() override; //終了
+
+	bool IsEnd() const override;
+
+	void Draw() override {};
+
+private:
+	Scene* m_scene{ nullptr };
+	EventManager* m_eventManager{ nullptr };
+
+	SkillType m_skillType{ SkillType::Tiger };
+
+	Vector2d m_initPos{ 0.0f, 0.0f };
+	Vector2d m_targetPos{ 500.0f, 0.0f };
+	float m_moveSpeed{ 500.0f }; // カメラの移動速度
+
+	float m_viewTimer{ 2.0f };
+
+	bool m_isCameraMoving{ false };
+	bool m_isMoveEnd{ false };
+	bool m_isEnd{ false };
+};
 
 class CutInEvent : public EventBase
 {
@@ -213,28 +305,20 @@ private:
 
 	int m_bandTextureId{ -1 };
 	int m_bossTextureId{ -1 };
-	int m_musashiTextureId{ -1 };
+	int m_heroTextureId{ -1 };
 
-	int m_bandX{ 0 };
-	int m_bandY{ 0 };
-	int m_bandW{ 1280 };
-	int m_bandH{ 720 };
+	Vector2d m_bandPos{ 0.0f, 0.0f };
+	Vector2d m_bandSize{ 1280.0f, 720.0f };	
 
-	int m_bossX{ 2300 };
-	int m_bossY{ 0 };
-	int m_bossW{ 362 };
-	int m_bossH{ 720 };
+	Vector2d m_bossPos{ 2300.0f, 0.0f };
+	Vector2d m_bossSize{ 362.0f, 720.0f };
 
-	int m_musashiX{ -1400 };
-	int m_musashiY{ 385 };
-	int m_musashiW{ 378 };
-	int m_musashiH{ 335 };
+	Vector2d m_heroPos{ -1400.0f, 385.0f };
+	Vector2d m_heroSize{ 378.0f, 335.0f };
 
-	int m_rBossNameX{ 1280 };
-	int m_rBossNameY{ 320 };
+	Vector2d m_rBossNamePos{ 1280.0f, 320.0f };
 
-	int m_jBossNameX{ 1430 };
-	int m_jBossNameY{ 380 };
+	Vector2d m_jBossNamePos{ 1430.0f, 380.0f };
 
 	int m_rFontSize{ 96 };
 	int m_jFontSize{ 60 };

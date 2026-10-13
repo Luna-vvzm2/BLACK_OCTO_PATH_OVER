@@ -20,8 +20,6 @@ class PlayerEntity;
 class EnemyEntity;
 class HPBarUI;
 class EnemyHPBar;
-class SoundComponent;
-class GameOverMenuUI;
 class JutsuChargeUI;
 class PlayerStatusUI;
 
@@ -49,6 +47,7 @@ public:
 	void Draw() override;
 
 	PlayerEntity* GetPlayer() const { return m_player; }
+	int GetStageIndex() const { return m_stageIndex; }
 
 	// 衝突イベント時に呼ぶ
 	//void SpawnHitEffect(const Vector2d& pos);
@@ -79,6 +78,7 @@ public:
 
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
+	void OnResume() override;
 
 	int m_bgHandle;
 	int m_fgHandle;
@@ -96,7 +96,6 @@ private:
 	PauseMenu m_pauseMenu;
 
 	Camera m_camera;
-	SoundComponent* m_stageBgm;
 
 	int m_stageIndex;
 	int m_comboCount = 0;
@@ -130,11 +129,6 @@ private:
 
 	// リスポーン位置（初期位置）
 	Vector2d m_respawnPos;
-
-	// ゲームオーバーメニュー
-	GameOverMenuUI* m_gameOverMenu;
-	bool m_isGameOver;
-	bool m_isPaused;  // ゲームが一時停止中か
 
 	// 最初に配置された地面のY座標
 	float m_initialGroundY = 0.0f;

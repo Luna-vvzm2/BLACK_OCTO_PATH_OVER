@@ -31,6 +31,7 @@ public:
 
     void Open();
     bool IsOpen() const { return m_open; }
+    void Toggle();
     Result Update();
     void Draw() const;
 

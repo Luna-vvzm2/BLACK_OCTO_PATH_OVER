@@ -37,8 +37,19 @@ void StageSelectScene::Update(float)
 
     // The current map set represents one playable stage. Later stages do not
     // yet have separate content, so their cards stay locked.
-    if (input.IsTrigger(Action::ENTER))
-        m_game->ChangeScene(std::make_unique<PlayScene>(m_game));
+    if (input.IsTrigger(Action::ENTER)) 
+    {
+        if (m_game->CanPopScene())
+        {
+
+            m_game->PopScene();
+        }
+        else
+        {
+            m_game->ChangeScene(std::make_unique<PlayScene>(m_game));
+
+        }
+    }
 }
 
 void StageSelectScene::Draw()

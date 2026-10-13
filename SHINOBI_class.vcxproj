@@ -89,6 +89,8 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgInstalledDir>$(ProjectDir)vcpkg_installed\</VcpkgInstalledDir>
+    <VcpkgManifestInstall Condition="'$(Platform)' == 'x64' and Exists('$(ProjectDir)vcpkg_installed\x64-windows\include\nlohmann\json.hpp')">false</VcpkgManifestInstall>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -167,12 +169,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ClearBlock.cpp" />
     <ClCompile Include="ClearPlatformBlock.cpp" />
-    <ClCompile Include="ClearScene.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="ClearScene.cpp" />
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
@@ -184,7 +181,13 @@
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
-    <ClCompile Include="GameOverMenuUI.cpp" />
+    <ClCompile Include="GameOverScene.cpp" />
+    <ClCompile Include="GameOverUI.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="GunnerEnemyEntity.cpp" />
     <ClCompile Include="HealerEnemyEntity.cpp" />
     <ClCompile Include="HitboxData.cpp">
@@ -210,14 +213,17 @@
     <ClCompile Include="PlayerStatusUI.cpp" />
     <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="ScarecrowEnemyEntity.cpp" />
+    <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="SekienkiBossEntity.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="SpiritBulletEntity.cpp" />
     <ClCompile Include="SpiritEnemyEntity.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StageSelectScene.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
     <ClCompile Include="StoneSBlock.cpp" />
     <ClCompile Include="StructureABlock.cpp" />
@@ -252,8 +258,6 @@
     <ClCompile Include="SpriteComponent.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="TitleScene.cpp" />
-    <ClCompile Include="StageSelectScene.cpp" />
-    <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="TitleUI.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIActor.cpp" />
@@ -299,7 +303,8 @@
     <ClInclude Include="EquipmentMenu.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="EventTexture.h" />
-    <ClInclude Include="GameOverMenuUI.h" />
+    <ClInclude Include="GameOverScene.h" />
+    <ClInclude Include="GameOverUI.h" />
     <ClInclude Include="GunnerEnemyEntity.h" />
     <ClInclude Include="HealerEnemyEntity.h" />
     <ClInclude Include="HitboxData.h">
@@ -326,15 +331,18 @@
     <ClInclude Include="SaveData.h" />
     <ClInclude Include="SaveManager.h" />
     <ClInclude Include="ScarecrowEnemyEntity.h" />
+    <ClInclude Include="ScreenMenus.h" />
     <ClInclude Include="SekienkiBossEntity.h" />
     <ClInclude Include="ShurikenUI.h" />
     <ClInclude Include="SkillData.h" />
     <ClInclude Include="SkillMenu.h" />
     <ClInclude Include="SoundComponent.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="SpiritBulletEntity.h" />
     <ClInclude Include="SpiritEnemyEntity.h" />
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
+    <ClInclude Include="StageSelectScene.h" />
     <ClInclude Include="StoneLBlock.h" />
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />
@@ -366,8 +374,6 @@
     <ClInclude Include="SpriteComponent.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="TitleScene.h" />
-    <ClInclude Include="StageSelectScene.h" />
-    <ClInclude Include="ScreenMenus.h" />
     <ClInclude Include="TitleUI.h" />
     <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="UIActor.h" />

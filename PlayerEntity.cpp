@@ -24,6 +24,11 @@
 #define airWeak1Num 3
 #define squatAttackNum 4
 
+#define OCTONum 0
+#define TIGERNum 1
+#define FROGNum 2
+#define ORCANum 3
+
 //                       offset, width, height, damage, metsu
 //AttackHitbox weak1{ Vector2d(100,0), 300, 200, 70, 15 };
 //AttackHitbox weak2{ Vector2d(100,0), 300, 200, 70, 15 };
@@ -88,8 +93,14 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_attackCol(nullptr)
     , m_weakAttackIdx(0)
     , m_attackTimer(0.0f)
+    , m_jutsuTimer(0.0f)
 
     , m_isOcto(false)
+    , m_isAutoOcto(false)
+    , m_octoRatio(0.3f)
+    , m_octoTimer(0.0f)
+    , m_endOcto(false)
+    , m_isHide(false)
 
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
@@ -301,17 +312,17 @@ bool PlayerEntity::Init() {
     wallJump.loop = false;
     m_anim->AddClip("wallJump", wallJump);
 
-    AnimationClip wallClimbUp; //　壁を歩いて登るアニメーション
-    wallClimbUp.frames = { 99, 100, 101, 102 };
-    wallClimbUp.speed = 0.1f;
-    wallClimbUp.loop = true;
-    m_anim->AddClip("wallClimbUp", wallClimbUp);
-
-    AnimationClip wallClimb; // 壁よじ登り
-    wallClimb.frames = { 103, 103, 104, 105, 105, 106 };
-    wallClimb.speed = 0.1f;
-    wallClimb.loop = false;
+    AnimationClip wallClimb; // 壁を歩いて登るアニメーション
+    wallClimb.frames = { 99, 100, 101, 102 };
+    wallClimb.speed = 0.25f;
+    wallClimb.loop = true;
     m_anim->AddClip("wallClimb", wallClimb);
+
+    AnimationClip wallClimbUp; //　壁よじ登り
+    wallClimbUp.frames = { 103, 103, 104, 105, 105, 106 };
+    wallClimbUp.speed = 0.1f;
+    wallClimbUp.loop = false;
+    m_anim->AddClip("wallClimbUp", wallClimbUp);
 
     AnimationClip platformClimb;
     platformClimb.frames = { 107, 108, 108, 109, 110, 110 };
@@ -320,10 +331,10 @@ bool PlayerEntity::Init() {
     m_anim->AddClip("platformClimb", platformClimb);
 
     AnimationClip climbEnd;
-    wallClimb.frames = { 111, 112, 113, 114, 115, 115 };
-    wallClimb.speed = 0.1f;
-    wallClimb.loop = false;
-    m_anim->AddClip("wallClimb", wallClimb);
+    climbEnd.frames = { 111, 112, 113, 114, 115, 115 };
+    climbEnd.speed = 0.1f;
+    climbEnd.loop = false;
+    m_anim->AddClip("climbEnd", climbEnd);
 
     AnimationClip wallAttack;
     wallAttack.frames = { 116, 116, 117, 118, 118, 119, 120, 120, 121, 121, 122, 122 };
@@ -633,32 +644,35 @@ bool PlayerEntity::Init() {
 
 void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
-    UpdateIgnorePlatform();
-    UpdateInvincible(deltaTime);
-
-    UpdateKamae(deltaTime);
-    UpdateExecution(deltaTime);
-
-    UpdateSensor();
     UpdateGravity(deltaTime);
 
-    CheckCanStand();
+    if (Actor::m_state == State::Active) {
+        UpdateIgnorePlatform();
+        UpdateInvincible(deltaTime);
 
-    UpdateScale();
-    UpdateState(deltaTime);
+        UpdateKamae(deltaTime);
+        UpdateExecution(deltaTime);
 
-    if (m_anim) m_anim->Update(deltaTime);
+        UpdateSensor();
 
-    // デバッグ用：4キーを押すとHPが0になる
-#ifdef _DEBUG
-    const Input& input = m_scene->GetGame()->GetInput();
-    if (input.GetKey().IsTrigger(Key::NUM_4)) {
-        if (m_hp) {
-            m_hp->Damage(m_hp->GetMaxHP());
-            std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+        CheckCanStand();
+
+        UpdateState(deltaTime);
+
+        if (m_anim) m_anim->Update(deltaTime);
+
+        // デバッグ用：4キーを押すとHPが0になる
+    #ifdef _DEBUG
+        const Input& input = m_scene->GetGame()->GetInput();
+        if (input.GetKey().IsTrigger(Key::NUM_4)) {
+            if (m_hp) {
+                m_hp->Damage(m_hp->GetMaxHP());
+                std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+            }
         }
+    #endif
+
     }
-#endif
 
 }
 
@@ -705,7 +719,7 @@ void PlayerEntity::UpdateInvincible(float deltaTime)
 void PlayerEntity::UpdateSensor() {
     float dir = m_dir ? 1.0f : -1.0f;
 
-    m_sensor.front = CheckSensor({ dir * 130.0f, -60.0f });
+    m_sensor.front = CheckSensor({ dir * 130.0f, -10.0f });
     m_sensor.frontUpper = CheckSensor({ dir * 130.0f, -60.0f });
     m_sensor.frontBottom = CheckSensor({ dir * 130.0f, 40.0f });
     m_sensor.frontGround = CheckSensor({ dir * 130.0f, 80.0f });
@@ -1078,13 +1092,14 @@ void PlayerEntity::SpawnKunai()
 {
     Vector2d pos = GetPos();
 
-    pos.x += m_dir ? 40.0f : -40.0f;
+    pos.x += m_dir ? 10.0f : -10.0f;
     pos.y -= 10.0f;
 
-    auto kunai = new KunaiActor(m_scene, pos, m_dir);
+    auto kunai = new KunaiActor(m_scene, this, pos, m_dir);
 
     SpawnEffect(kunai);
 }
+
 
 void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
 {
@@ -1155,6 +1170,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
             }
         }
         ChangeState(PlayerState::DEAD);
+        m_sprite->SetDrawOffset(0.0f, -34.0f);
         m_canMove = false;
         return;
     }
@@ -1171,6 +1187,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         if (m_isGround) {
             if (!(m_state == PlayerState::HIT_AIR)) {
                 ChangeState(PlayerState::HIT_GROUND);
+                m_sprite->SetDrawOffset(0.0f, -34.0f);
                 m_canMove = false;
                 return;
             }
@@ -1178,6 +1195,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         else {
             ChangeState(PlayerState::HIT_AIR);
+            m_sprite->SetDrawOffset(0.0f, -34.0f);
             m_canMove = false;
             return;
         }
@@ -1256,10 +1274,87 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     const Input& input = m_scene->GetGame()->GetInput();
-    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_isOcto) * m_buffRatio;
 
-    if (input.IsTrigger(Action::OCTO)) {
-        ChangeState(PlayerState::OCTO_START);
+    if (m_isOcto) {
+        UpdateOcto(deltaTime);
+
+        if (m_endOcto) {
+            if (m_isGround) {
+                ChangeState(PlayerState::OCTO_END);
+                return;
+            }
+            else if (m_isAutoOcto) {
+                if (m_sensor.frontWall != nullptr) {
+                    ChangeState(PlayerState::OCTO_AUTO_END);
+                    return;
+                }
+            }
+        }
+    }
+
+    if (m_state == PlayerState::OCTO_START) {
+        m_jutsuTimer -= deltaTime;
+        if (m_jutsuTimer > 0.0f) {
+            m_anim->Play("Kamae");
+            return;
+        }
+    }
+
+    if (m_state == PlayerState::OCTO_AUTO) {
+        if (!m_anim->IsFinished()) {
+            Vector2d vel = m_velocity->Get();
+            vel.x = 0.0f;
+            vel.y = 200.0f * deltaTime;
+            m_velocity->Set(vel);
+            return;
+        }
+
+        UpdateWallSensor();
+        if (m_sensor.frontWall != nullptr) {
+            if (input.IsDown(Action::JUMP)) {
+                ChangeState(PlayerState::WALL_CLIMB);
+                return;
+            }
+            else {
+                ChangeState(PlayerState::WALL_HOLD);
+                return;
+            }
+        }
+    }
+
+    if (m_state == PlayerState::OCTO_AUTO_END) {
+        if (!m_anim->IsFinished()) {
+            Vector2d vel = m_velocity->Get();
+            vel.x = 0.0f;
+            vel.y = 200.0f * deltaTime;
+            m_velocity->Set(vel);
+            return;
+        }
+        ChangeState(PlayerState::FALL);
+        return;
+    }
+
+    if (m_state == PlayerState::OCTO_END) {
+        if (!m_anim->IsFinished()) {
+            return;
+        }
+    }
+
+    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * m_octoRatio * m_isOcto) * m_buffRatio;
+
+    if (input.IsTrigger(Action::OCTO) && m_isGround) {
+        if (!m_isOcto) {
+            ChangeState(PlayerState::OCTO_START);
+            return;
+        }
+        else {
+            ChangeState(PlayerState::OCTO_END);
+            return;
+        }
+    }
+
+    if (input.IsTrigger(Action::TIGER) && GetCanJutsu(TIGERNum) && m_isGround) {
+        ChangeState(PlayerState::TIGER);
         return;
     }
 
@@ -1370,7 +1465,93 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::KUNAI)) {
+    if (m_state == PlayerState::WALL_HOLD) {
+        UpdateDir(input);
+        UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
+        if (m_sensor.frontWall != nullptr) {
+            if (!m_isGround) {
+                if (input.IsTrigger(Action::JUMP)) {
+                    ChangeState(PlayerState::WALL_JUMP);
+                    return;
+                }
+
+                Vector2d vel = m_velocity->Get();
+                vel.x = 0.0f;
+                vel.y = 200.0f * deltaTime;
+                m_velocity->Set(vel);
+                return;
+            }
+        }
+        else {
+            ChangeState(PlayerState::FALL);
+        }
+    }
+
+    if (m_state == PlayerState::WALL_CLIMB) {
+        UpdateDir(input);
+        UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
+        if (m_sensor.frontWall != nullptr) {
+            if (input.IsDown(Action::JUMP)) {
+                Vector2d vel = m_velocity->Get();
+                vel.x = 0.0f;
+                vel.y = -7000.0f * deltaTime;
+                m_velocity->Set(vel);
+                return;
+            }
+            else {
+                ChangeState(PlayerState::WALL_HOLD);
+                return;
+            }
+        }
+        else {
+            ChangeState(PlayerState::FALL);
+        }
+    }
+
+    if (m_state == PlayerState::WALL_CLIMB_UP) {
+        if (!m_anim->IsFinished()) {
+            Vector2d vel = m_velocity->Get();
+            vel.x = 0.0f;
+            vel.y = -350.0f;
+            m_velocity->Set(vel);
+
+            Vector2d offset = GetDrawOffset();
+            offset.y += 500 * deltaTime;
+            m_sprite->SetDrawOffset(offset.x, offset.y);
+            return;
+        }
+        ChangeState(PlayerState::CLIMB_END);
+        return;
+    }
+
+    if (m_state == PlayerState::CLIMB_END) {
+        if (!m_anim->IsFinished()) {
+            float dir = m_dir ? 1.0f : -1.0f;
+            Vector2d vel = m_velocity->Get();
+            vel.x = dir * 150.0f;
+            vel.y = -20.0f;
+            m_velocity->Set(vel);
+
+            return;
+        }
+        m_sprite->SetDrawOffset(0.0f, -34.0f);
+        if (m_isAutoOcto) {
+            ChangeState(PlayerState::OCTO_END);
+            return;
+        }
+    }
+
+    if (input.IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
         if (m_kunai > 0) {
             m_attack = true;
             m_canAttack = false;
@@ -1461,7 +1642,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (input.IsTrigger(Action::DASH)) {
         if (m_isGround) {
-            if (m_sensor.frontBottom != nullptr && m_sensor.front == nullptr) {
+            if (m_sensor.frontBottom != nullptr && m_sensor.frontUpper == nullptr) {
                 ChangeState(PlayerState::SENTEN);
                 return;
             }
@@ -1504,6 +1685,14 @@ void PlayerEntity::UpdateState(float deltaTime) {
             ChangeState(PlayerState::JUMP_SECOND);
             return;
         }*/
+    }
+
+    if (m_state == PlayerState::WALL_JUMP) {
+        if (!m_anim->IsFinished()) {
+            return;
+        }
+        ChangeState(PlayerState::JUMP);
+        return;
     }
 
     if (m_state == PlayerState::JUMP_START) {
@@ -1594,6 +1783,25 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 m_velocity->SetX(m_moveSpeed);
             }
         }
+
+        UpdateWallSensor();
+        if (m_sensor.frontWall != nullptr){
+            if (m_isOcto) {
+                if (input.IsDown(Action::JUMP)) {
+                    ChangeState(PlayerState::WALL_CLIMB);
+                    return;
+                }
+                else {
+                    ChangeState(PlayerState::WALL_HOLD);
+                    return;
+                }
+            }
+            else if (m_shadowGauge >= 5) {
+                ChangeState(PlayerState::OCTO_AUTO);
+                return;
+            }
+        }
+        
         return;
     }
 
@@ -1640,11 +1848,16 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 return;
             }
 
-            if (input.IsDown(Action::LEFT)) {
-                m_velocity->SetX(-m_moveSpeed * 0.5f);
+            if (m_sensor.frontNearGround == nullptr) {
+                vel.x = 0.0f;
             }
-            if (input.IsDown(Action::RIGHT)) {
-                m_velocity->SetX(m_moveSpeed * 0.5f);
+            else {
+                if (input.IsDown(Action::LEFT)) {
+                    m_velocity->SetX(-m_moveSpeed * 0.5f);
+                }
+                if (input.IsDown(Action::RIGHT)) {
+                    m_velocity->SetX(m_moveSpeed * 0.5f);
+                }
             }
             return;
         }
@@ -1775,6 +1988,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         return;
 
     m_state = newState;
+    UpdateScale();
 
     switch (m_state)
     {
@@ -1846,12 +2060,12 @@ void PlayerEntity::ChangeState(PlayerState newState)
     {
         Vector2d move(0.0f, 0.0f);
         float dir = m_dir ? 1.0f : -1.0f;
-        move.x = 0.5f * dir;
-        move.x *= m_moveSpeed;
+        if (m_sensor.frontNearGround != nullptr) {
+            move.x = 0.5f * dir;
+            move.x *= m_moveSpeed;
+        }
 
-        Vector2d vel = m_velocity->Get();
-        vel.x = move.x;
-        m_velocity->Set(vel);
+        m_velocity->SetX(move.x);
 
         m_anim->Play("squatWalk");
     }   break;
@@ -1961,28 +2175,81 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::WALL_HOLD:
+    {
+        Vector2d vel = m_velocity->Get();
+        vel.x = 0.0f;
+        vel.y = -20.0f;
+        m_velocity->Set(vel);
+
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? -1.0f : 1.0f;
+        m_transform->SetScale(scale);
+
         m_anim->Play("wallHold");
-        break;
+    }   break;
 
     case PlayerState::WALL_JUMP:
+    {
+        m_dir = !m_dir;
+        float dir = m_dir ? 1.0f : -1.0f;
+        Vector2d vel = m_velocity->Get();
+        vel.x = dir * m_moveSpeed * 3.0f;
+        vel.y = m_jumpSpeed;
+        m_velocity->Set(vel);
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? 1.0f : -1.0f;
+        m_transform->SetScale(scale);
+
         m_anim->Play("wallJump");
-        break;
+    }   break;
 
     case PlayerState::WALL_CLIMB:
+    {
+        Vector2d vel = m_velocity->Get();
+        vel.x = 0.0f;
+        vel.y = -20.0f;
+        m_velocity->Set(vel);
+
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? -1.0f : 1.0f;
+        m_transform->SetScale(scale);
+
         m_anim->Play("wallClimb");
-        break;
+    }   break;
 
     case PlayerState::WALL_CLIMB_UP:
+    {
+        Vector2d vel = m_velocity->Get();
+        vel.x = 0.0f;
+        vel.y = -20.0f;
+        m_velocity->Set(vel);
+
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? -1.0f : 1.0f;
+        m_transform->SetScale(scale);
+
         m_anim->Play("wallClimbUp");
-        break;
+    }   break;
 
     case PlayerState::PLATFORM_CLIMB:
         m_anim->Play("platformClimb");
         break;
 
     case PlayerState::CLIMB_END:
+    {
+        Vector2d vel = m_velocity->Get();
+        vel.x = 0.0f;
+        vel.y = -20.0f;
+        m_velocity->Set(vel);
+
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? -1.0f : 1.0f;
+        m_transform->SetScale(scale);
+
+        m_sprite->SetDrawOffset(0.0f, 0.0f);
+
         m_anim->Play("climbEnd");
-        break;
+    }   break;
 
     case PlayerState::WEAK_ATTACK1:
         StartAttack(weak1Num);
@@ -2176,15 +2443,40 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
+        m_isOcto = true;
+        m_jutsuTimer = 2.0f;
         m_anim->Play("OctoStart");
         break;
 
     case PlayerState::OCTO_AUTO:
-        m_anim->Play("OctoAuto");
-        break;
+    {
+        m_isOcto = true;
+        m_isAutoOcto = true;
+
+        Vector2d vel = m_velocity->Get();
+        vel.x = 0.0f;
+        vel.y = -20.0f;
+        m_velocity->Set(vel);
+
+        Vector2d scale = m_transform->GetScale();
+        scale.x = m_dir ? -1.0f : 1.0f;
+        m_transform->SetScale(scale);
+
+        m_anim->Play("wallHold");   // 後ほどOctoAutoに修正
+    }   break;
 
     case PlayerState::OCTO_END:
-        m_anim->Play("OctoEnd");
+        m_isOcto = false;
+        m_isAutoOcto = false;
+        m_endOcto = false;
+        m_anim->Play("Kamae");  //後ほど修正
+        break;
+
+    case PlayerState::OCTO_AUTO_END:
+        m_isOcto = false;
+        m_isAutoOcto = false;
+        m_endOcto = false;
+        m_anim->Play("OctoAutoEnd");
         break;
 
     case PlayerState::TIGER:
@@ -2204,7 +2496,12 @@ void PlayerEntity::ChangeState(PlayerState newState)
 void PlayerEntity::UpdateMove() {
     Vector2d vel = m_velocity->Get();
     if (vel.x != 0.0f) {
-        vel.x *= 0.8f;
+        if (m_isGround) {
+            vel.x *= 0.8f;
+        }
+        else {
+            vel.x *= 0.95f;
+        }
 
         if (std::abs(vel.x) < 1.0f) {
             vel.x = 0.0f;
@@ -2221,6 +2518,29 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
         AddShadowGauge(1);
         m_shadowGaugeTimer -= 2.0f;
     }
+}
+
+void PlayerEntity::UpdateOcto(float deltaTime) {
+    if (m_endOcto) return;
+
+    m_octoTimer += deltaTime;
+
+    if (m_octoTimer >= 1.0f) {
+        SubShadowGauge(5);  //　GDDでは1
+        m_octoTimer -= 1.0f;
+    }
+
+    if (GetShadowGauge() <= 0) {
+        m_shadowGauge = 0;
+        m_endOcto = true;
+    }
+}
+
+void PlayerEntity::UpdateWallSensor() {
+    float dir = m_dir ? 1.0f : -1.0f;
+
+    m_sensor.frontWall = CheckSensor({ dir * m_collision->GetWidth() / 2.0f, -50.0f });
+    m_sensor.upperArea = CheckSensor({ dir * 45.0f, -(m_collision->GetHeight()) }, { 170, 152 });
 }
 
 void PlayerEntity::UpdateKunai(float deltaTime) {
@@ -2319,6 +2639,12 @@ void PlayerEntity::HitTrap() {
 
 void PlayerEntity::AddShadowGauge(int amount) {
     m_shadowGauge = std::clamp(m_shadowGauge + amount, 0, m_shadowGaugeMax);
+    std::cout << "影ゲージ："  << m_shadowGauge << "\n";
+}
+
+void PlayerEntity::SubShadowGauge(int amount) {
+    m_shadowGauge = std::clamp(m_shadowGauge - amount, 0, m_shadowGaugeMax);
+    std::cout << "影ゲージ：" << m_shadowGauge << "\n";
 }
 
 void PlayerEntity::AddShadowGaugeMax() {

@@ -2,11 +2,10 @@
 #include "PlayScene.h"
 #include "TitleScene.h"
 #include "StageSelectScene.h"
+#include "GameOverScene.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
-#include "SoundComponent.h"
 #include "HPComponent.h"
-#include "GameOverMenuUI.h"
 #include "Game.h"
 #include "Renderer.h"
 #include "Input.h"
@@ -75,7 +74,6 @@ PlayScene::PlayScene(Game* game)
 	m_pauseMenu(game, false),
 	m_player(nullptr),
 	m_camera(static_cast<float>(game->GetWidth()), static_cast<float>(game->GetHeight())),
-	m_stageBgm(nullptr),
 	m_stageIndex(0),
 	m_comboCount(0),
 	m_currentStage(1),
@@ -83,10 +81,7 @@ PlayScene::PlayScene(Game* game)
 	m_fgHandle(-1),
 	m_eventTexture(std::make_unique<EventTexture>()),
 	m_eventManager(std::make_unique<EventManager>(this, m_eventTexture.get())), //イベントのため変更
-	m_respawnPos(200, 800),
-	m_gameOverMenu(nullptr),
-	m_isGameOver(false),
-	m_isPaused(false)
+	m_respawnPos(200, 800)
 {
 
 }
@@ -188,16 +183,6 @@ bool PlayScene::Init() {
 	// Renderer に Camera をセット
 	m_game->GetRenderer()->SetCamera(&m_camera);
 
-	m_stageBgm = m_player->AddComponent<SoundComponent>(
-		_T("assets/sounds/bgm.wav")
-	);
-
-	if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->SetCategory(SoundCategory::Bgm);
-		m_stageBgm->SetVolume(90);
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
-	}
 	return true;
 }
 
@@ -429,9 +414,6 @@ bool PlayScene::StageInit(int stageNo) {
 		} // for x
 	} // for y
 
-	// ---- ゲームオーバーメニューUI 作成 ----
-	m_gameOverMenu = new GameOverMenuUI(this);
-	AddUIActor(m_gameOverMenu);
 
 	BackGroundUI* back = new BackGroundUI(this, "assets/images/uies/bg.png");
 	AddBackActor(back);
@@ -492,6 +474,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 	}
 
 	m_stageIndex = index;
+	m_game->GetSoundManager().SetScope(index + 2);
 
 	ClearStageActors();
 	StageInit(index);
@@ -516,13 +499,6 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 
 		m_camera.SetCenter(camPos);
 	}
-
-		if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->Stop();
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
-	}
-
 	// ステージ進行を自動保存
 	AutoSave();
 }
@@ -580,30 +556,34 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 }
 
 void PlayScene::Update(float deltaTime) {
-    const Input& menuInput = m_game->GetInput();
+	const Input& input = m_game->GetInput();
 
-    if (m_pauseMenu.IsOpen()) {
-        const PauseMenu::Result result = m_pauseMenu.Update();
-        if (result == PauseMenu::Result::Resume) m_isPaused = false;
-        else if (result == PauseMenu::Result::StageSelect)
-            m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
-        else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
-        return;
-    }
+	if (m_pauseMenu.IsOpen()) {
+		const PauseMenu::Result result = m_pauseMenu.Update();
+		if (result == PauseMenu::Result::StageSelect)
+		{
+			//Game* game = GetGame(); 
+			//m_game->PushScene(std::make_unique<GameOverScene>(game));
+			m_game->PushScene(std::make_unique<StageSelectScene>(m_game));
+		}
 
-    // Events use a held Escape input to skip dialogue; the pause shortcut
-    // must not consume that input. Game over also owns its own menu.
-    if (!m_isGameOver && m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
-        if (m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
-            m_menu.Toggle();
-            return;
-        }
-        if (!m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
-            m_pauseMenu.Open();
-            m_isPaused = true;
-            return;
-        }
-    }
+		else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
+		return;
+	}
+
+	// Events use a held Escape input to skip dialogue; the pause shortcut
+	// must not consume that input. Game over also owns its own menu.
+	if (m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
+		if (m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
+			m_menu.Toggle();
+			return;
+		}
+		if (!m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
+			m_pauseMenu.Open();
+			return;
+		}
+	}
+
 	// ====== フェード遷移中はゲームロジックを止める ======
 	if (m_fadeState != FadeState::None) {
 		UpdateFade(deltaTime);
@@ -641,9 +621,6 @@ void PlayScene::Update(float deltaTime) {
 	}
 	updateActors(m_backactors, deltaTime);
 
-
-	const Input& input = m_game->GetInput();
-
 	if (input.IsTrigger(Action::MENU))
 	{
 		if (m_player->GetState() != Actor::State::Paused)
@@ -666,48 +643,14 @@ void PlayScene::Update(float deltaTime) {
 	updateActors(m_actors, deltaTime);
 	updateActors(m_UIactors, deltaTime);
 
-	// ゲームオーバーメニューの処理
-	if (m_gameOverMenu && m_gameOverMenu->IsActive()) {
-		if (m_gameOverMenu->IsDecided()) {
-			m_gameOverMenu->ResetDecided();
-
-			switch (m_gameOverMenu->GetSelectedItem()) {
-			case GameOverMenuUI::MenuItem::CONTINUE:
-				// コンティニュー：リスポーン
-				m_isPaused = false;
-				m_isGameOver = false;
-				m_gameOverMenu->SetActive(false);
-				if (m_hpBarUI) {
-					m_hpBarUI->SetVisible(true);
-				}
-				if (m_shurikenUI) {
-					m_shurikenUI->SetVisible(true);
-				}
-				if (m_jutsuChargeUI) {
-					m_jutsuChargeUI->SetVisible(true);
-				}
-				RespawnPlayer();
-				break;
-
-			case GameOverMenuUI::MenuItem::WORLD_MAP:
-				// ワールドマップ画面へ移動
-				// TODO: ワールドマップシーンへの遷移処理を追加
-				std::cout << "Transition to World Map (not implemented yet)" << std::endl;
-				break;
-
-			case GameOverMenuUI::MenuItem::TITLE:
-				// タイトル画面へ移動
-			{
-				Game* game = m_eventManager->GetGame();
-				if (game)
-				{
-					game->ChangeScene(std::make_unique<TitleScene>(game));
-				}
-			}	break;
-
-			default:
-				break;
-			}
+	//イベントのため変更
+	m_playTimer += deltaTime; //クリアシーンのために追加
+	if (m_eventManager->IsRunning())
+	{
+		m_eventManager->Update(deltaTime);
+		if (!m_eventManager->IsBattleEvent())
+		{
+			return;
 		}
 	}
 
@@ -1161,10 +1104,6 @@ void PlayScene::Draw()
 		if (actor == nullptr || actor->IsDead())
 			continue;
 
-		// GameOverMenuUIは最後に描く
-		if (actor == m_gameOverMenu)
-			continue;
-
 		actor->Draw();
 	}
 
@@ -1293,18 +1232,6 @@ void PlayScene::Draw()
 				EffectActor::RenderLayer::Global;
 		});
 
-
-	// =====================================================
-	// ⑮ ゲームオーバー画面
-	// =====================================================
-
-	if (m_gameOverMenu &&
-		m_gameOverMenu->IsActive())
-	{
-		m_gameOverMenu->Draw();
-	}
-
-
 	// =====================================================
 	// フェード
 	// =====================================================
@@ -1326,7 +1253,7 @@ void PlayScene::Draw()
 	// =====================================================
 
 #ifdef _DEBUG
-
+	const std::string& debugFont = m_game->GatDebugFont();
 	// sensor描画
 	if (m_player)
 	{
@@ -1354,8 +1281,9 @@ void PlayScene::Draw()
 		);
 	}
 
-	const std::string& debugFont =
-		m_game->GatDebugFont();
+	// ←ここを追加
+	DrawFadeOverlay();
+	m_pauseMenu.Draw();
 
 	renderer->DrawTextL(
 		Vector2d(
@@ -1428,33 +1356,20 @@ void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
 	}
 }
 
-void PlayScene::ShowGameOverMenu() {
-	m_isGameOver = true;
-	m_isPaused = true;
+void PlayScene::ShowGameOverMenu()
+{
+	Game* game = GetGame();
 
-	auto it = std::find(m_UIactors.begin(), m_UIactors.end(), m_gameOverMenu);
-	if (it != m_UIactors.end())
+	game->PushScene(std::make_unique<GameOverScene>(game));
+}
+
+void PlayScene::OnResume()
+{
+	RespawnPlayer();
+
+	if (m_pauseMenu.IsOpen())
 	{
-		m_UIactors.erase(it);
-		m_UIactors.push_back(m_gameOverMenu);
-	}
-
-	if (m_hpBarUI) {
-		m_hpBarUI->SetVisible(false);
-	}
-
-	if (m_shurikenUI) {
-		m_shurikenUI->SetVisible(false);
-	}
-
-	if (m_jutsuChargeUI) {
-		m_jutsuChargeUI->SetVisible(false);
-		std::cout << "m_jutsuChargeUI = false;" << std::endl;
-	}
-
-	if (m_gameOverMenu) {
-		m_gameOverMenu->SetActive(true);
-		std::cout << "Game Over Menu displayed" << std::endl;
+		m_pauseMenu.Toggle();
 	}
 }
 
