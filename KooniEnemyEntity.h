@@ -54,6 +54,6 @@ private:
     bool m_attackHit;
     bool m_attackRecoveryStarted;
     std::string m_currentTexturePath;
-    SoundComponent* m_hitSound;
+    SoundComponent* m_attackSound;
 };
 

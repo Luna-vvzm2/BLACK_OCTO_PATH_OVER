@@ -72,9 +72,13 @@ bool Game::Init(const std::string& title, UINT width, UINT height, UINT color, c
 	m_debugFont = debugfont;
 	m_running = true;
 
-	if (!m_soundManager.LoadCsv("Sound.csv") || !m_soundManager.SetScope(0)) {
-		std::cerr << "Sound.csv initialization failed\n";
-		return false;
+	if (m_soundManager.LoadCsv("assets/SoundAssets/Sound.csv")) {
+		if (!m_soundManager.SetScope(0)) {
+			std::cerr << "Some sounds could not be loaded from Sound.csv\n";
+		}
+	}
+	else {
+		std::cerr << "Sound.csv could not be loaded; continuing without CSV sounds\n";
 	}
 
 	ChangeScene(std::make_unique<TitleScene>(this));

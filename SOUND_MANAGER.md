@@ -1,8 +1,8 @@
 # Sound.csv integration
 
-Place the final `Sound.csv` next to `SHINOBI_class.vcxproj`, and place WAV files under `SoundAssets` there. `FilePath` in the CSV is relative to the game's working directory, for example `SoundAssets/SwordSwing.wav`. Adding the CSV to Visual Studio's **Resource Files** filter does not move it on disk. The trial CSV and WAV files are not included in this change.
+Place `Sound.csv` and WAV files in `assets/SoundAssets`. A CSV `FilePath` such as `SoundAssets/SwordSwing.wav` is resolved from `assets`, so it reaches `assets/SoundAssets/SwordSwing.wav`. The CSV can also be found when the game is started from its build output folder.
 
-`Game::Init()` reads `Sound.csv` and loads scope 0. The game currently treats a missing/invalid CSV or missing WAV in the active scope as an initialization error. Scope 0 is shared by all scenes; stage 1, 2, and 3 use scopes 2, 3, and 4. Scope 1 is currently unused. Changing a stage or scene unloads sounds outside the new scope.
+`Game::Init()` reads `assets/SoundAssets/Sound.csv` and loads scope 0. A missing/invalid CSV or missing WAV is reported in the debug console; the game continues without the affected CSV sound. Scope 0 is shared by all scenes; stage 1, 2, and 3 use scopes 2, 3, and 4. Scope 1 is currently unused. Changing a stage or scene unloads sounds outside the new scope.
 
 Create a pathless `SoundComponent` in an actor, then call the CSV `SoundId`:
 

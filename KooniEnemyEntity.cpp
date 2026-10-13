@@ -48,7 +48,7 @@ KooniEnemyEntity::KooniEnemyEntity(Scene* scene, const Vector2d& pos)
     , m_faceRight(true)
     , m_attackHit(false)
     , m_attackRecoveryStarted(false)
-    , m_hitSound(nullptr)
+    , m_attackSound(nullptr)
 {
 }
 
@@ -66,9 +66,7 @@ bool KooniEnemyEntity::Init()
     }
 
     m_anim->SetSprite(m_sprite);
-    m_hitSound = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/weakAttack1.wav")
-    );
+    m_attackSound = AddComponent<SoundComponent>();
 
     AnimationClip idle;
     idle.frames = { 0, 1, 2 };
@@ -202,6 +200,10 @@ void KooniEnemyEntity::ChangeStatus(Status nextStatus)
         m_attackHit = false;
         m_attackRecoveryStarted = false;
         PlayMotion("attack", KOONI_TEXTURE_ATTACK, 3);
+        if (m_attackSound != nullptr)
+        {
+            m_attackSound->Play("enemy_Kooni_attack");
+        }
         break;
     case Status::Defeated:
         PlayMotion("dead", KOONI_TEXTURE_DEAD, 7);
@@ -362,10 +364,6 @@ void KooniEnemyEntity::TryHitPlayer(PlayerEntity* player)
     {
         const float knockbackX = m_faceRight ? KOONI_ATTACK_KNOCKBACK : -KOONI_ATTACK_KNOCKBACK;
         player->TakeDamage(KOONI_ATTACK_DAMAGE, Vector2d(knockbackX, 0.0f));
-        if (m_hitSound != nullptr)
-        {
-            m_hitSound->Play();
-        }
     }
 }
 

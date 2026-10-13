@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -13,6 +14,24 @@
 
 namespace
 {
+    std::filesystem::path ResolveCsvPath(const std::string& csvPath)
+    {
+        const auto requested = std::filesystem::u8path(csvPath);
+        if (std::filesystem::exists(requested)) return std::filesystem::absolute(requested);
+
+        wchar_t modulePath[MAX_PATH] = {};
+        if (GetModuleFileNameW(nullptr, modulePath, MAX_PATH) == 0) return requested;
+        auto directory = std::filesystem::path(modulePath).parent_path();
+        for (int depth = 0; depth < 4; ++depth)
+        {
+            const auto candidate = directory / requested;
+            if (std::filesystem::exists(candidate)) return candidate;
+            if (directory == directory.parent_path()) break;
+            directory = directory.parent_path();
+        }
+        return requested;
+    }
+
     std::vector<std::string> SplitCsv(const std::string& line)
     {
         std::vector<std::string> fields;
@@ -120,12 +139,17 @@ SoundManager::~SoundManager()
 
 bool SoundManager::LoadCsv(const std::string& csvPath)
 {
-    std::ifstream file(csvPath, std::ios::binary);
+    const auto resolvedCsvPath = ResolveCsvPath(csvPath);
+    std::ifstream file(resolvedCsvPath, std::ios::binary);
     if (!file)
     {
-        std::cerr << "SoundManager: cannot open " << csvPath << '\n';
+        std::cerr << "SoundManager: cannot open " << resolvedCsvPath.u8string() << '\n';
         return false;
     }
+
+    const auto csvDirectory = resolvedCsvPath.parent_path();
+    const auto assetRoot = csvDirectory.filename() == L"SoundAssets"
+        ? csvDirectory.parent_path() : csvDirectory;
 
     std::string line;
     if (!std::getline(file, line)) return false;
@@ -159,10 +183,10 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
         if (values.size() < header.size()) return false;
         const auto& id = values[columns[0]];
         Sound sound;
-        sound.filePath = values[columns[1]];
+        const std::string& relativeFilePath = values[columns[1]];
         const std::string& loop = values[columns[7]];
         sound.loop = loop == "true" || loop == "TRUE" || loop == "1";
-        if (id.empty() || sound.filePath.empty() ||
+        if (id.empty() || relativeFilePath.empty() ||
             !ParseInt(values[columns[2]], sound.scope) || sound.scope < 0 ||
             !ParseInt(values[columns[3]], sound.volume) || sound.volume < 0 || sound.volume > 255 ||
             !ParseInt(values[columns[4]], sound.pan) || sound.pan < -255 || sound.pan > 255 ||
@@ -171,12 +195,17 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
             !ParseInt(values[columns[8]], sound.loopFadeFrames) || sound.loopFadeFrames < 0 ||
             (loop != "true" && loop != "false" && loop != "TRUE" &&
              loop != "FALSE" && loop != "0" && loop != "1") ||
-            sound.filePath.find("..") != std::string::npos ||
-            sound.filePath.find(':') != std::string::npos ||
-            sound.filePath[0] == '/' || sound.filePath[0] == '\\' ||
-            !parsed.emplace(id, sound).second)
+            relativeFilePath.find("..") != std::string::npos ||
+            relativeFilePath.find(':') != std::string::npos ||
+            relativeFilePath[0] == '/' || relativeFilePath[0] == '\\')
         {
             std::cerr << "SoundManager: invalid CSV row " << rowNumber << '\n';
+            return false;
+        }
+        sound.filePath = (assetRoot / std::filesystem::u8path(relativeFilePath)).u8string();
+        if (!parsed.emplace(id, std::move(sound)).second)
+        {
+            std::cerr << "SoundManager: duplicate SoundId on CSV row " << rowNumber << '\n';
             return false;
         }
     }
