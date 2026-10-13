@@ -1,5 +1,6 @@
 ﻿#include "boss_01.h"
 #include "AnimationComponent.h"
+#include "SoundComponent.h"
 #include "CollisionComponent.h"
 #include "GravityComponent.h"
 #include "HPComponent.h"
@@ -115,6 +116,13 @@ bool Boss_01::Init()
     m_hpMax = GetMaxHP();
     m_moveSpeed = m_parameters.moveSpeed;
     m_dropTable.clear();
+    // 音声はActorのComponentとして管理する。読み込み失敗時もゲームは継続する。
+    m_walkSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_walk.wav"));
+    m_meleeSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_attack.wav"));
+    m_jumpSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_jump.wav"));
+    m_shurikenSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_shuriken.wav"));
+    m_trapPlaceSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_Poison Thread1.wav"));
+    m_trapContactSound = AddComponent<SoundComponent>(_T("assets/sounds/sujo/enemy_Sujo_Poison Thread2.wav"));
     m_initialized = true;
     SetVel(Vector2d::Zero());
 
@@ -133,6 +141,7 @@ int Boss_01::GetDefeatHP() const
 
 void Boss_01::Update(float deltaTime)
 {
+    if (GetState() != Actor::State::Active && m_walkSound) m_walkSound->Stop();
     if (!m_initialized || GetState() != Actor::State::Active ||
         !std::isfinite(deltaTime) || deltaTime <= 0.0f) return;
 
@@ -159,7 +168,23 @@ void Boss_01::Update(float deltaTime)
     if (!IsBattleFinished())
     {
         m_gravity->Update(deltaTime);
+        const float previousX = GetPos().x;
         MoveAndCollide(deltaTime);
+        // 実際に地上を歩いた時だけ鳴らす。壁に押し付けている間や空中では鳴らさない。
+        if (m_behavior == Behavior::Move && m_isGround && std::fabs(GetPos().x - previousX) > 0.01f)
+        {
+            m_stepSoundTimer -= deltaTime;
+            if (m_stepSoundTimer <= 0.0f)
+            {
+                if (m_walkSound) m_walkSound->Play();
+                m_stepSoundTimer = 0.3f; // 仮の歩幅。アニメーション導入時に調整。
+            }
+        }
+        else
+        {
+            m_stepSoundTimer = 0.0f;
+            if (m_walkSound) m_walkSound->Stop();
+        }
         if (m_isGround) SetVel({GetVel().x, 0.0f});
         // 着地したフレームから硬直を開始する。投擲中も重力を止めない。
         if (m_isGround && (m_behavior == Behavior::Shuriken || m_behavior == Behavior::Fall))
@@ -326,6 +351,10 @@ void Boss_01::TakeDamage(int damage, const Vector2d& knockback)
     m_hp->Damage((std::min)(damage, remaining));
     if (!IsBattleFinished() && std::isfinite(knockback.x) && std::isfinite(knockback.y))
     {
+        // 独自の被弾処理から、EnemyEntityの共通振り向きを呼び出す。
+        FacePlayerOnDamage(knockback);
+        // 洲条の原画向き設定に合わせ、画像と仮描画の向きを一致させる。
+        if (m_sprite) m_sprite->SetFlipX(m_dir != m_sourceFacesRight);
         ChangeBehavior(Behavior::Recovery);
         m_knockbackRemaining = m_parameters.knockbackSeconds;
         // 攻撃側から渡された向きを維持し、後方への移動と浮き上がりを強める。
@@ -363,6 +392,11 @@ void Boss_01::EnterDefeated()
 void Boss_01::ChangeBehavior(Behavior behavior)
 {
     if (m_behavior == behavior) return;
+    if (m_walkSound) m_walkSound->Stop();
+    m_stepSoundTimer = 0.0f;
+    // 状態遷移時に一度だけ再生する。
+    if (behavior == Behavior::Jump && m_jumpSound) m_jumpSound->Play();
+    if (behavior == Behavior::Melee && m_meleeSound) m_meleeSound->Play();
     m_behavior = behavior;
     m_behaviorTime = 0.0f;
     m_attackTriggered = false;
@@ -501,6 +535,8 @@ bool Boss_01::StartPoisonTrap()
 
 void Boss_01::SpawnShuriken()
 {
+    // 3本の投擲に対して音は一回だけ。
+    if (m_shurikenSound) m_shurikenSound->Play();
     for (float degrees : {30.0f, 45.0f, 60.0f})
     {
         const float radians = degrees * 3.14159265358979323846f / 180.0f;
@@ -559,6 +595,8 @@ void Boss_01::PlacePoisonTrap()
     if (m_traps.size() >= 3) m_traps.erase(m_traps.begin());
     m_traps.push_back({candidates[static_cast<std::size_t>(std::rand()) % candidates.size()],
         m_parameters.trapLifetime});
+    // 配置できた時だけ設置音を一度再生する。
+    if (m_trapPlaceSound) m_trapPlaceSound->Play();
 }
 
 void Boss_01::UpdateHazards(float deltaTime)
@@ -638,6 +676,8 @@ void Boss_01::UpdateHazards(float deltaTime)
         if (player && !IsBattleFinished() &&
             (crossed || Overlaps(it->position, m_parameters.trapSize, player)))
         {
+            // 接触した罠はこの後消費されるため、接触音は一度だけ。
+            if (m_trapContactSound) m_trapContactSound->Play();
             m_poisonTarget = player;
             m_poisonRemaining = m_parameters.poisonDuration;
             // 毒は重複させず残り時間だけ更新。接触した罠は消費する。

@@ -47,6 +47,10 @@ public:
     int GetMetsuMax() const { return m_metsuMax; }
 
 protected:
+    // 被弾時にプレイヤー側へ向き直る共通処理。
+    // 独自TakeDamageを持つ派生クラスでは、有効な被弾時に明示的に呼ぶ。
+    void FacePlayerOnDamage(const Vector2d& knockback);
+
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
 

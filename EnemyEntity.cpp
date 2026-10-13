@@ -154,6 +154,9 @@ void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
     vel = knockback;
     m_velocity->Set(vel);
 
+    // 既存のHP・死亡・ノックバック処理はそのまま、振り向きだけを追加。
+    if (damage > 0) FacePlayerOnDamage(knockback);
+
     OnDamaged(damage, knockback);
 }
 
@@ -225,4 +228,30 @@ void EnemyEntity::UpdateAttack(float deltaTime)
 
 void EnemyEntity::UpdateState()
 {
+}
+// 原画の左右が敵ごとに異なるため、向きが変わる場合だけ現在の反転を切り替える。
+void EnemyEntity::FacePlayerOnDamage(const Vector2d& knockback)
+{
+    if (GetState() == Actor::State::Dead || !m_transform) return;
+
+    // 横ノックバックがある場合は、その逆方向が攻撃の来た側。
+    float sourceDirection = -knockback.x;
+    if (sourceDirection == 0.0f && m_scene)
+    {
+        // 横方向の押し出しがない攻撃では、現在のプレイヤー位置を参照する。
+        for (auto* actor : m_scene->GetActors())
+        {
+            if (!actor || actor->GetType() != ActorType::Player ||
+                actor->GetState() == Actor::State::Dead) continue;
+            const auto* player = dynamic_cast<const EntityActor*>(actor);
+            if (player) sourceDirection = player->GetPos().x - GetPos().x;
+            break;
+        }
+    }
+    // 真上・真下や方向不明の場合、現在の向きを維持する。
+    if (sourceDirection == 0.0f) return;
+    const bool faceRight = sourceDirection > 0.0f;
+    if (m_dir == faceRight) return;
+    m_dir = faceRight;
+    if (m_sprite) m_sprite->SetFlipX(!m_sprite->GetFlipX());
 }
