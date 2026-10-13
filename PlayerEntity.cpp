@@ -24,6 +24,11 @@
 #define airWeak1Num 3
 #define squatAttackNum 4
 
+#define OCTONum 0
+#define TIGERNum 1
+#define FROGNum 2
+#define ORCANum 3
+
 //                       offset, width, height, damage, metsu
 //AttackHitbox weak1{ Vector2d(100,0), 300, 200, 70, 15 };
 //AttackHitbox weak2{ Vector2d(100,0), 300, 200, 70, 15 };
@@ -639,31 +644,35 @@ bool PlayerEntity::Init() {
 
 void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
-    UpdateIgnorePlatform();
-    UpdateInvincible(deltaTime);
-
-    UpdateKamae(deltaTime);
-    UpdateExecution(deltaTime);
-
-    UpdateSensor();
     UpdateGravity(deltaTime);
 
-    CheckCanStand();
+    if (Actor::m_state == State::Active) {
+        UpdateIgnorePlatform();
+        UpdateInvincible(deltaTime);
 
-    UpdateState(deltaTime);
+        UpdateKamae(deltaTime);
+        UpdateExecution(deltaTime);
 
-    if (m_anim) m_anim->Update(deltaTime);
+        UpdateSensor();
 
-    // デバッグ用：4キーを押すとHPが0になる
-#ifdef _DEBUG
-    const Input& input = m_scene->GetGame()->GetInput();
-    if (input.GetKey().IsTrigger(Key::NUM_4)) {
-        if (m_hp) {
-            m_hp->Damage(m_hp->GetMaxHP());
-            std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+        CheckCanStand();
+
+        UpdateState(deltaTime);
+
+        if (m_anim) m_anim->Update(deltaTime);
+
+        // デバッグ用：4キーを押すとHPが0になる
+    #ifdef _DEBUG
+        const Input& input = m_scene->GetGame()->GetInput();
+        if (input.GetKey().IsTrigger(Key::NUM_4)) {
+            if (m_hp) {
+                m_hp->Damage(m_hp->GetMaxHP());
+                std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+            }
         }
+    #endif
+
     }
-#endif
 
 }
 
@@ -1344,6 +1353,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
+    if (input.IsTrigger(Action::TIGER) && GetCanJutsu(TIGERNum) && m_isGround) {
+        ChangeState(PlayerState::TIGER);
+        return;
+    }
+
     if (m_isKamae) {
         if (m_isGround) {
             ChangeState(PlayerState::KAMAE);
@@ -1454,6 +1468,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
     if (m_state == PlayerState::WALL_HOLD) {
         UpdateDir(input);
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr) {
             if (!m_isGround) {
                 if (input.IsTrigger(Action::JUMP)) {
