@@ -160,6 +160,7 @@
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
+    <ClCompile Include="DamageTrap.cpp" />
     <ClCompile Include="DropItemEntity.cpp" />
     <ClCompile Include="EffectActor.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
@@ -199,6 +200,7 @@
     <ClCompile Include="SoundComponent.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StatusDownTrap.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
     <ClCompile Include="StoneSBlock.cpp" />
     <ClCompile Include="StructureABlock.cpp" />
@@ -263,6 +265,7 @@
     <ClInclude Include="CollisionComponent.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
+    <ClInclude Include="DamageTrap.h" />
     <ClInclude Include="DropData.h" />
     <ClInclude Include="DropItemEntity.h" />
     <ClInclude Include="EffectActor.h" />
@@ -306,6 +309,7 @@
     <ClInclude Include="SoundComponent.h" />
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
+    <ClInclude Include="StatusDownTrap.h" />
     <ClInclude Include="StoneLBlock.h" />
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />

@@ -213,6 +213,30 @@ public:
 
     void ResetStageState();
 
+    //ステータス増減
+        // ステータスダウン(攻撃力・防御力半減)
+    void ApplyStatusDown(float duration) { m_statusDownTimer = duration; }
+    bool IsStatusDown() const { return m_statusDownTimer > 0.0f; }
+    float GetStatusDownTimer() const { return m_statusDownTimer; }
+    void UpdateStatusDown(float deltaTime)
+    {
+        if (m_statusDownTimer > 0.0f)
+        {
+            m_statusDownTimer -= deltaTime;
+            if (m_statusDownTimer < 0.0f) m_statusDownTimer = 0.0f;
+        }
+    }
+    int ApplyAttackRatio(int damage) const    // 与えるダメージ ×0.5(端数切り捨て、最低1)
+    {
+        if (!IsStatusDown() || damage <= 0) return damage;
+        int d = static_cast<int>(damage * 0.5f);
+        return d < 1 ? 1 : d;
+    }
+    int ApplyDefenseRatio(int damage) const   // 受けるダメージ ×2(防御力半減の扱い)
+    {
+        return IsStatusDown() ? damage * 2 : damage;
+    }
+
     // ===== ドロップアイテム用 =====
     void AddCoin(int value);
     void AddKunai(int value);
@@ -278,6 +302,8 @@ private:
     bool m_endOcto;
     bool m_isHide;
 
+    float m_statusDownTimer = 0.0f;
+
     bool m_getHit;
     float m_getHitTimer;
     float m_invincibleTime;
@@ -336,7 +362,6 @@ private:
     SoundComponent* m_hayabusaAttackSound;
 
     SoundComponent* m_karaburiSound;
-
 
 };
 

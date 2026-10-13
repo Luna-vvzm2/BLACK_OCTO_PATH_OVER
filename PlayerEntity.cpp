@@ -1,4 +1,4 @@
-#include "PlayerEntity.h"
+    #include "PlayerEntity.h"
 #include "EnemyEntity.h"
 #include "EffectActor.h"
 #include "Scene.h"
@@ -640,6 +640,7 @@ void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
+    UpdateStatusDown(deltaTime);    // ’Ç‰Á
 
     UpdateKamae(deltaTime);
     UpdateExecution(deltaTime);
@@ -1134,7 +1135,7 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
                 enemy->Open();
                 continue;
             }
-            enemy->TakeDamage(hitbox.damage, { m_dir ? 150.0f : -150.0f, -300.0f });
+            enemy->TakeDamage(ApplyAttackRatio(hitbox.damage), { m_dir ? 150.0f : -150.0f, -300.0f });
             m_hit = true;
             m_combo++;
 
@@ -2365,6 +2366,8 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     if (m_invincibleTime > 0) return;
     if (m_dashTimer > 0.0f) return;
 
+    damage = ApplyDefenseRatio(damage);   // ’Ç‰Á
+
     m_hp->Damage(damage);
 
     m_velocity->Set(knockback);
@@ -2451,6 +2454,7 @@ void PlayerEntity::ResetStageState()
     m_attack = false;
     m_dashTimer = 0.0f;
     ChangeState(PlayerState::IDLE);
+    m_statusDownTimer = 0.0f;
 }
 
 //======================================
