@@ -645,8 +645,9 @@ bool PlayerEntity::Init() {
 void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
     UpdateGravity(deltaTime);
+    UpdateMove();
 
-    if (Actor::m_state == State::Active) {
+   
         UpdateIgnorePlatform();
         UpdateInvincible(deltaTime);
 
@@ -659,8 +660,11 @@ void PlayerEntity::Update(float deltaTime) {
 
         UpdateState(deltaTime);
 
+        if (Actor::m_state == State::Paused) { m_velocity->SetX(0.0f); }
+
         if (m_anim) m_anim->Update(deltaTime);
 
+        if (Actor::m_state == State::Active) {
         // デバッグ用：4キーを押すとHPが0になる
     #ifdef _DEBUG
         const Input& input = m_scene->GetGame()->GetInput();
@@ -1157,7 +1161,6 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
 
 void PlayerEntity::UpdateState(float deltaTime) {
     PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
-    UpdateMove();
 
     if (m_hp->GetHP() <= 0) {
         if (m_state == PlayerState::DEAD) {
