@@ -15,11 +15,13 @@
 #include "EnemyEntity.h"
 #include "DropItemEntity.h"
 #include "WhiteEnemyEntity.h"
+#include "KooniEnemyEntity.h"
 #include "YellowEnemyEntity.h"
 #include "ArrowEnemyEntity.h"
 #include "HealerEnemyEntity.h"
 #include "ArmorEnemyEntity.h"
 #include "GunnerEnemyEntity.h"
+#include "KasaTenguEnemyEntity.h"
 #include "YoroiBossEntity.h"
 #include "SekienkiBossEntity.h"
 #include "EffectActor.h"
@@ -52,6 +54,7 @@
 #include "EnemySpawner.h"
 #include "SaveManager.h"
 #include "PlayerStatusUI.h"
+#include "boss_01.h"
 
 #include "SpiritEnemyEntity.h"
 
@@ -366,23 +369,23 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 201:
 			{
-				AddActor(new ScarecrowEnemyEntity(this, pos));
+				AddActor(new KooniEnemyEntity(this, pos));
 			}
 			break;
 
 			case 202:
 			{
-				auto* whiteEnemy = EnemySpawner::SpawnEnemy<WhiteEnemyEntity>(this, pos);
+				auto* spiritEnemy = EnemySpawner::SpawnEnemy<SpiritEnemyEntity>(this, pos);
 			} break;
 
 			case 203:
 			{
-				auto* yellowEnemy = EnemySpawner::SpawnEnemy<YellowEnemyEntity>(this, pos);
+				auto* kasaTenguEnemy = EnemySpawner::SpawnEnemy<KasaTenguEnemyEntity>(this, pos);
 			} break;
 
 			case 204:
 			{
-				auto* arrowEnemy = EnemySpawner::SpawnEnemy<ArrowEnemyEntity>(this, pos);
+				AddActor(new Boss_01(this, pos));
 			} break;
 
 			case 208:
@@ -1756,22 +1759,22 @@ bool PlayScene::UpdateStageLoading()
 		{
 		case 201:
 			success =
-				PreloadEnemy<ScarecrowEnemyEntity>(this);
+				PreloadEnemy<KooniEnemyEntity>(this);
 			break;
 
 		case 202:
 			success =
-				PreloadEnemy<WhiteEnemyEntity>(this);
+				PreloadEnemy<SpiritEnemyEntity>(this);
 			break;
 
 		case 203:
 			success =
-				PreloadEnemy<YellowEnemyEntity>(this);
+				PreloadEnemy<KasaTenguEnemyEntity>(this);
 			break;
 
 		case 204:
 			success =
-				PreloadEnemy<ArrowEnemyEntity>(this);
+				PreloadEnemy<Boss_01>(this);
 			break;
 
 		case 205:
