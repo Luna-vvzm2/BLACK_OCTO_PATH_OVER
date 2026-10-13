@@ -61,7 +61,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_kunai(3)
     , m_healItem(0)
 
-    , m_kunaiTimer(0.0f)
+    , m_kunaiTimer(20.0f)
 
     , m_state(PlayerState::IDLE)
 
@@ -70,7 +70,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
 
     , m_dir(true)
     , m_prevDir(true)
-    , m_jumpSpeed(0.0f)
+    , m_jumpSpeed(-620.0f)
     , m_moveSpeed(290.0f)
     , m_moveBaseSpeed(290.0f)
     , m_dashSpeed(600.0f)
@@ -88,8 +88,13 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_attackCol(nullptr)
     , m_weakAttackIdx(0)
     , m_attackTimer(0.0f)
+    , m_jutsuTimer(0.0f)
 
-    , m_IsOcto(false)
+    , m_isOcto(false)
+    , m_isAutoOcto(false)
+    , m_octoTimer(0.0f)
+    , m_endOcto(false)
+    , m_isHide(false)
 
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
@@ -1255,8 +1260,42 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
+    if (m_isOcto) {
+        UpdateOcto(deltaTime);
+
+        if (m_endOcto && m_isGround) {
+            ChangeState(PlayerState::OCTO_END);
+            return;
+        }
+    }
+
+    if (m_state == PlayerState::OCTO_START) {
+        m_jutsuTimer -= deltaTime;
+        if (m_jutsuTimer > 0.0f) {
+            m_anim->Play("Kamae");
+            return;
+        }
+    }
+
+    if (m_state == PlayerState::OCTO_END) {
+        if (!m_anim->IsFinished()) {
+            return;
+        }
+    }
+
     const Input& input = m_scene->GetGame()->GetInput();
-    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_IsOcto) * m_buffRatio;
+    m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * 0.1f * m_isOcto) * m_buffRatio;
+
+    if (input.IsTrigger(Action::OCTO) && m_isGround) {
+        if (!m_isOcto) {
+            ChangeState(PlayerState::OCTO_START);
+            return;
+        }
+        else {
+            ChangeState(PlayerState::OCTO_END);
+            return;
+        }
+    }
 
     if (m_isKamae) {
         if (m_isGround) {
@@ -1860,7 +1899,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::JUMP_START:
     {
         Vector2d vel = m_velocity->Get();
-        vel.y = -600.0f;
+        vel.y = -620.0f;
 
         m_isGround = false;
         m_jumpTime = 0.0f;
@@ -1909,7 +1948,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         m_velocity->SetX(move.x);
 
-        m_anim->Play("roll");
+        m_anim->Play("Hien");
     }   break;
 
     case PlayerState::HIEN:
@@ -2170,6 +2209,39 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("KaryuEnd");
         break;
 
+    case PlayerState::OCTO_START:
+        m_isOcto = true;
+        m_jutsuTimer = 2.0f;
+        m_anim->Play("OctoStart");
+        break;
+
+    case PlayerState::OCTO_AUTO:
+        m_isOcto = true;
+        m_isAutoOcto = true;
+        m_anim->Play("OctoAuto");
+        break;
+
+    case PlayerState::OCTO_END:
+        m_isOcto = false;
+        m_endOcto = false;
+        m_anim->Play("Kamae");  //å„ÇŸÇ«èCê≥
+        break;
+
+    case PlayerState::OCTO_AUTO_END:
+        m_isOcto = false;
+        m_isAutoOcto = false;
+        m_endOcto = false;
+        m_anim->Play("OctoAutoEnd");
+        break;
+
+    case PlayerState::TIGER:
+        m_anim->Play("Tiger");
+        break;
+
+    case PlayerState::ORCA:
+        m_anim->Play("Orca");
+        break;
+
     case PlayerState::DEAD:
         m_anim->Play("dead");
         break;
@@ -2198,13 +2270,29 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     }
 }
 
+void PlayerEntity::UpdateOcto(float deltaTime) {
+    if (m_endOcto) return;
+
+    m_octoTimer += deltaTime;
+
+    if (m_octoTimer >= 1.0f) {
+        SubShadowGauge(5);  //Å@GDDÇ≈ÇÕ1
+        m_octoTimer -= 1.0f;
+    }
+
+    if (GetShadowGauge() <= 0) {
+        m_shadowGauge = 0;
+        m_endOcto = true;
+    }
+}
+
 void PlayerEntity::UpdateKunai(float deltaTime) {
     if (m_kunai >= 3) return;
 
-    m_kunaiTimer += deltaTime;
-    if (m_kunaiTimer >= 20.0f) {
+    m_kunaiTimer -= deltaTime;
+    if (m_kunaiTimer <= 0.0f) {
         m_kunai++;
-        m_kunaiTimer -= 20.0f;
+        m_kunaiTimer += 20.0f;
     }
 }
 
@@ -2250,20 +2338,14 @@ void PlayerEntity::StartAttack(int attackNum) {
     case weak3Num:
     case squatAttackNum:
     {
-        Vector2d pPos = m_transform->GetPosition();
-        m_attackTimer = playerAttackTimer[attackNum];
-        m_attackLockTimer = playerAttackLockTimer[attackNum];
-        CheckAttackHit(AttackHitboxes[attackNum]);
-        pPos.x += (m_dir ? playerEffectPos[attackNum].x : -playerEffectPos[attackNum].x);
-        pPos.y -= playerEffectPos[attackNum].y;
-        SpawnEffect(new EffectActor(m_scene, pPos, playerEffectType[attackNum], !m_dir));
-
         Vector2d vel = m_velocity->Get();
         if (m_sensor.frontNearGround != nullptr) {
             vel.x = m_dir ? m_moveSpeed : -m_moveSpeed;
         }
         m_velocity->Set(vel);
-    }   break;
+    }
+    [[fallthrough]];
+
     case airWeak1Num:
     {
         m_attackTimer = playerAttackTimer[attackNum];
@@ -2300,6 +2382,12 @@ void PlayerEntity::HitTrap() {
 
 void PlayerEntity::AddShadowGauge(int amount) {
     m_shadowGauge = std::clamp(m_shadowGauge + amount, 0, m_shadowGaugeMax);
+    std::cout << "âeÉQÅ[ÉWÅF"  << m_shadowGauge << "\n";
+}
+
+void PlayerEntity::SubShadowGauge(int amount) {
+    m_shadowGauge = std::clamp(m_shadowGauge - amount, 0, m_shadowGaugeMax);
+    std::cout << "âeÉQÅ[ÉWÅF" << m_shadowGauge << "\n";
 }
 
 void PlayerEntity::AddShadowGaugeMax() {
