@@ -10,6 +10,9 @@ public:
     void SetCenter(const Vector2d& center);
     Vector2d GetCenter() const;
 
+    // プレイヤーなどの対象を滑らかに追従する
+    void UpdateFollow(const Vector2d& target, float deltaTime);
+
     // ワールド座標 → 画面座標
     Vector2d WorldToScreen(const Vector2d& worldPos) const;
 
@@ -28,11 +31,11 @@ private:
     float m_screenWidth;
     float m_screenHeight;
     float m_zoom;
+
     Vector2d m_center;
 
     Vector2d m_boundsMin;
     Vector2d m_boundsMax;
-
 
     Vector2d m_tileHalfSize{ 0, 0 };
 

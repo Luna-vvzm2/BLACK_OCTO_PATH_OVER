@@ -22,6 +22,9 @@ struct SensorData
     BlockActor* frontBottom = nullptr;
     BlockActor* frontGround = nullptr;
     BlockActor* frontNearGround = nullptr;
+
+    BlockActor* frontWall = nullptr;
+    BlockActor* upperArea = nullptr;
 };
 
 class EnemyEntity;
@@ -61,18 +64,8 @@ public:
         WEAK_ATTACK2,
         WEAK_ATTACK3,
         ATTACK_END,
-        WEAK_ATTACK4,
 
         WEAK_AIR_ATTACK1,
-        WEAK_AIR_ATTACK2,
-        WEAK_AIR_ATTACK3,
-        HAYABUSA,
-        HAYABUSA_HIT,
-        HAYABUSA_GROUND,
-
-        STRONG_ATTACK1,
-        STRONG_ATTACK_END,
-        STRONG_ATTACK2,
 
         SQUAT_ATTACK,
         WALL_ATTACK,
@@ -92,8 +85,6 @@ public:
         HIEN,
         SENTEN,
         ROLL_LANDING,
-
-        SOU_KUNAI_SENTEN,
 
         WALL_HOLD,
         WALL_JUMP,
@@ -119,21 +110,14 @@ public:
         KARYU_MID,
         KARYU_END,
 
-        DEAD,
-    };
+        OCTO_START,
+        OCTO_AUTO,
+        OCTO_END,
+        OCTO_AUTO_END,
+        TIGER,
+        ORCA,
 
-    enum class AttackType {
-        NONE,
-        WEAK_ATTACK,
-        STRONG_ATTACK,
-        KUNAI,
-        SQUAT_ATTACK,
-        SQUAT_KUNAI,
-        AIR_ATTACK,
-        AIR_KUNAI,
-        WALL_ATTACK,
-        WALL_KUNAI,
-        HAYABUSA,
+        DEAD,
     };
 
     explicit PlayerEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 32,32 });
@@ -162,6 +146,10 @@ public:
 
     void ChangeState(PlayerState newState);
     void UpdateMove();
+    void UpdateShadowGauge(float deltaTime);
+    void UpdateOcto(float deltaTime);
+    void UpdateWallSensor();
+    void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
     void UpdateDash(float deltaTime);
     void StartAttack(int attackNum);
@@ -171,16 +159,16 @@ public:
     CollisionComponent* GetCollision() const { return m_collision; }
     CollisionComponent* GetAttackCol() const { return m_attackCol; }
 
-    void AddJutsuGauge() {
-        m_jutsuGauge++;
-        if (m_jutsuGauge >= 25) {
-            m_jutsuGauge = 25;
-            m_jutsuCharge = true;
-        }
-        printf("jutsuGauge: %d\n", m_jutsuGauge);
-    }
+
+    // 影ゲージの値取得
+    int GetShadowGauge() { return m_shadowGauge; }     
+    int GetShadowGaugeMax() { return m_shadowGaugeMax; }
+
     bool GetJutsuCharge() { return m_jutsuCharge; }
     int GetJutsuGaugeAmount() const { return m_jutsuGauge; }
+
+    bool GetOwnJutsu(int idx);      // 忍術の獲得状況フラグ。　蛸 = 0、虎 = 1、蛙 = 2、鯱 = 3
+    bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx]; }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
@@ -210,7 +198,14 @@ public:
 
     void SpawnKunai();
 
+    bool GetIsOcto() { return m_isOcto; }
+    bool SetIsHide(bool flag) { m_isHide = flag; }
+    bool GetIsHide() { return m_isHide; }
+    void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
+    void AddShadowGauge(int amount);
+    void SubShadowGauge(int amount);
+    void AddShadowGaugeMax();   // 忍術を新しく使えるようになった時に1回呼ぶ
 
     Vector2d GetDrawOffset() const { return m_sprite->GetDrawOffset(); }
     // ★追加: 手裏剣の数を返す関数
@@ -231,8 +226,8 @@ public:
 
     int GetCoin() const { return m_coin; }
     int GetKunai() const { return m_kunai; }
-    int GetHaku() const { return m_haku; }
-    int GetMaxHaku() const { return m_maxHaku; }
+    float GetKunaiTimer() const { return m_kunaiTimer; }    // クナイの回復までの時間
+    int GetHealItem() const { return m_healItem; }  // 回復アイテム所持数
 
 private:
     HPComponent* m_hp;
@@ -243,6 +238,9 @@ private:
 
     int m_combo;
     int m_kunai;
+    int m_healItem;
+
+    float m_kunaiTimer; // クナイの所有数回復用タイマー
 
     PlayerState m_state;
 
@@ -253,6 +251,7 @@ private:
     bool m_prevDir;
     float m_jumpSpeed;    // ジャンプ速度
     float m_moveSpeed;    // 移動速度
+    float m_moveBaseSpeed;    // 移動速度
     float m_dashSpeed;
     float m_dashAirSpeed;
     float m_dashTimer;
@@ -267,26 +266,38 @@ private:
     bool m_attack;
     bool m_hit;           // 自身の攻撃が当たったかどうか
     bool m_HayabusaHit;
-    AttackType m_attackType;
     CollisionComponent* m_attackCol;
 
     int m_weakAttackIdx;
-    int m_strongAttackIdx;
-    int m_airAttackIdx;
 
     float m_attackTimer;
+    float m_jutsuTimer; // 忍術蛸の発動モーションタイマー（仮）
 
     bool m_canAttack;
     float m_attackLockTimer;
 
+    bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
+    bool m_isJutsu[4] = { false , false, false, false };    // 忍術使用中フラグ
+    int m_jutsuCost[4] = { 5, 60, 10, 60 }; // 忍術消費影ゲージ量
+    bool m_isOcto;
+    bool m_isAutoOcto;
+    float m_octoRatio;
+    float m_octoTimer;
+    bool m_endOcto;
+    bool m_isHide;
+
     bool m_getHit;
     float m_getHitTimer;
     float m_invincibleTime;
+    float m_buffRatio;
 
     bool m_canMove;       // 移動可否
     bool m_squat;         // しゃがみ
     bool m_canStand;      // しゃがみ可否
-    bool m_canCharge;
+
+    int m_shadowGauge;
+    int m_shadowGaugeMax;
+    float m_shadowGaugeTimer;
 
     int m_jutsuGauge;
     bool m_jutsuCharge;

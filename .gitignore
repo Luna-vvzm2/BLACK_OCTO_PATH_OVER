@@ -361,9 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/SaveData.h
-/SaveManager.cpp
-/SaveManager.h
+
 
 # vcpkg
 vcpkg_installed/
