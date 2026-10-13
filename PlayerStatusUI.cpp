@@ -3,7 +3,7 @@
 #include "PlayerEntity.h"
 #include "Game.h"
 #include "Renderer.h"
-
+#include <string>
 #include <DxLib.h>
 
 PlayerStatusUI::PlayerStatusUI(
@@ -21,6 +21,14 @@ PlayerStatusUI::PlayerStatusUI(
 bool PlayerStatusUI::Init()
 {
 	if (!UIActor::Init())
+	{
+		return false;
+	}
+
+	m_jutsuIconHandle =
+		LoadGraph("assets/images/uies/ninjutu_icon_sheet.png");
+
+	if (m_jutsuIconHandle == -1)
 	{
 		return false;
 	}
@@ -64,7 +72,7 @@ void PlayerStatusUI::Draw()
 	const int panelY = static_cast<int>(m_y);
 
 	const int panelWidth = 300;
-	const int panelHeight = 115;
+	const int panelHeight = 215;
 
 	DrawBox(
 		panelX,
@@ -103,85 +111,292 @@ void PlayerStatusUI::Draw()
 	);
 
 	// =========================
-	// îEèp
-	// =========================
-
-	const char* jutsuNames[4] =
-	{
-		"Tako",
-		"Tora",
-		"Kaeru",
-		"Shachi"
-	};
+// îEèpÉAÉCÉRÉì
+// =========================
 
 	const float slotSize = 62.0f;
 	const float slotGap = 8.0f;
 
 	for (int i = 0; i < 4; ++i)
 	{
-		float slotX =
+		const float slotX =
 			m_x + 8.0f +
 			i * (slotSize + slotGap);
 
-		float slotY =
+		const float slotY =
 			m_y + 42.0f;
 
-		bool own = m_player->GetOwnJutsu(i);
+		const bool own =
+			m_player->GetOwnJutsu(i);
 
-		int fillColor;
+		int srcX = 0;
+		int srcY = 0;
 
-		if (own)
+		switch (i)
 		{
-			fillColor = GetColor(220, 220, 220);
-		}
-		else
-		{
-			fillColor = GetColor(60, 60, 60);
+		case 0: // ë˚
+			if (own)
+			{
+				srcX = 750;
+				srcY = 400;
+			}
+			else
+			{
+				srcX = 400;
+				srcY = 400;
+			}
+			break;
+
+		case 1: // å’
+			if (own)
+			{
+				srcX = 400;
+				srcY = 750;
+			}
+			else
+			{
+				srcX = 50;
+				srcY = 750;
+			}
+			break;
+
+		case 2: // ä^
+			if (own)
+			{
+				srcX = 400;
+				srcY = 50;
+			}
+			else
+			{
+				srcX = 50;
+				srcY = 50;
+			}
+			break;
+
+		case 3: // ÈÕ
+			if (own)
+			{
+				srcX = 50;
+				srcY = 400;
+			}
+			else
+			{
+				srcX = 750;
+				srcY = 50;
+			}
+			break;
 		}
 
-		DrawBox(
+		DrawRectExtendGraph(
 			static_cast<int>(slotX),
 			static_cast<int>(slotY),
 			static_cast<int>(slotX + slotSize),
 			static_cast<int>(slotY + slotSize),
-			fillColor,
+			srcX,
+			srcY,
+			250,
+			250,
+			m_jutsuIconHandle,
 			TRUE
 		);
+	}
 
-		DrawBox(
-			static_cast<int>(slotX),
-			static_cast<int>(slotY),
-			static_cast<int>(slotX + slotSize),
-			static_cast<int>(slotY + slotSize),
-			GetColor(255, 255, 255),
-			FALSE
-		);
+	// =========================
+// âeÉQÅ[ÉW
+// =========================
 
-		int textColor;
+	const int shadowGauge = m_player->GetShadowGauge();
+	const int shadowGaugeMax = m_player->GetShadowGaugeMax();
 
-		if (own)
-		{
-			textColor = GetColor(0, 0, 0);
-		}
-		else
-		{
-			textColor = GetColor(140, 140, 140);
-		}
+	float shadowRate = 0.0f;
 
+	if (shadowGaugeMax > 0)
+	{
+		shadowRate =
+			static_cast<float>(shadowGauge) /
+			static_cast<float>(shadowGaugeMax);
+	}
+
+	if (shadowRate < 0.0f)
+	{
+		shadowRate = 0.0f;
+	}
+
+	if (shadowRate > 1.0f)
+	{
+		shadowRate = 1.0f;
+	}
+
+	const int shadowBarX = panelX + 10;
+	const int shadowBarY = panelY + 125;
+	const int shadowBarWidth = 280;
+	const int shadowBarHeight = 18;
+
+	renderer->DrawTextL(
+		Vector2d(
+			m_x + 10.0f,
+			m_y + 108.0f
+		),
+		"Shadow",
+		Color(255, 255, 255),
+		font,
+		18,
+		false
+	);
+
+	// ÉQÅ[ÉWîwåi
+	DrawBox(
+		shadowBarX,
+		shadowBarY,
+		shadowBarX + shadowBarWidth,
+		shadowBarY + shadowBarHeight,
+		GetColor(60, 60, 60),
+		TRUE
+	);
+
+	// ÉQÅ[ÉWñ{ëÃ
+	DrawBox(
+		shadowBarX,
+		shadowBarY,
+		shadowBarX +
+		static_cast<int>(shadowBarWidth * shadowRate),
+		shadowBarY + shadowBarHeight,
+		GetColor(180, 180, 180),
+		TRUE
+	);
+
+	// ÉQÅ[ÉWòg
+	DrawBox(
+		shadowBarX,
+		shadowBarY,
+		shadowBarX + shadowBarWidth,
+		shadowBarY + shadowBarHeight,
+		GetColor(255, 255, 255),
+		FALSE
+	);
+
+	renderer->DrawTextL(
+		Vector2d(
+			m_x + 115.0f,
+			m_y + 108.0f
+		),
+		std::to_string(shadowGauge)
+		+ " / "
+		+ std::to_string(shadowGaugeMax),
+		Color(255, 255, 255),
+		font,
+		18,
+		false
+	);
+
+
+	// =========================
+	// ÉNÉiÉCâÒïúÉQÅ[ÉW
+	// =========================
+
+	const int kunai = m_player->GetKunai();
+	const float kunaiTimer = m_player->GetKunaiTimer();
+
+	float kunaiRate = 0.0f;
+
+	if (kunai >= 3)
+	{
+		kunaiRate = 1.0f;
+	}
+	else
+	{
+		kunaiRate = kunaiTimer / 20.0f;
+	}
+
+	if (kunaiRate < 0.0f)
+	{
+		kunaiRate = 0.0f;
+	}
+
+	if (kunaiRate > 1.0f)
+	{
+		kunaiRate = 1.0f;
+	}
+
+	const int kunaiBarX = panelX + 10;
+	const int kunaiBarY = panelY + 172;
+	const int kunaiBarWidth = 280;
+	const int kunaiBarHeight = 18;
+
+	renderer->DrawTextL(
+		Vector2d(
+			m_x + 10.0f,
+			m_y + 155.0f
+		),
+		"Kunai",
+		Color(255, 255, 255),
+		font,
+		18,
+		false
+	);
+
+	// ÉNÉiÉCâÒïúÉQÅ[ÉWîwåi
+	DrawBox(
+		kunaiBarX,
+		kunaiBarY,
+		kunaiBarX + kunaiBarWidth,
+		kunaiBarY + kunaiBarHeight,
+		GetColor(60, 60, 60),
+		TRUE
+	);
+
+	// ÉNÉiÉCâÒïúÉQÅ[ÉWñ{ëÃ
+	DrawBox(
+		kunaiBarX,
+		kunaiBarY,
+		kunaiBarX +
+		static_cast<int>(kunaiBarWidth * kunaiRate),
+		kunaiBarY + kunaiBarHeight,
+		GetColor(180, 180, 180),
+		TRUE
+	);
+
+	// ÉNÉiÉCâÒïúÉQÅ[ÉWòg
+	DrawBox(
+		kunaiBarX,
+		kunaiBarY,
+		kunaiBarX + kunaiBarWidth,
+		kunaiBarY + kunaiBarHeight,
+		GetColor(255, 255, 255),
+		FALSE
+	);
+
+	if (kunai >= 3)
+	{
 		renderer->DrawTextL(
 			Vector2d(
-				slotX + 5.0f,
-				slotY + 19.0f
+				m_x + 110.0f,
+				m_y + 155.0f
 			),
-			jutsuNames[i],
-			Color(
-				own ? 0 : 140,
-				own ? 0 : 140,
-				own ? 0 : 140
-			),
+			"MAX",
+			Color(255, 255, 255),
 			font,
-			16,
+			18,
 			false
 		);
 	}
+	else
+	{
+		const float remainTime = 20.0f - kunaiTimer;
+
+		renderer->DrawTextL(
+			Vector2d(
+				m_x + 110.0f,
+				m_y + 132.0f
+			),
+			std::to_string(
+				static_cast<int>(remainTime)
+			) + "s",
+			Color(255, 255, 255),
+			font,
+			18,
+			false
+		);
+	}
+
 }
