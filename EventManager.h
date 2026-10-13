@@ -240,6 +240,13 @@ public:
 	GetSkillEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager);
 	~GetSkillEvent() override; //デストラクタ
 
+	enum class SkillType
+	{
+		Tiger,
+		Frog,
+		Orca
+	};
+
 	EventType GetType() const override { return EventType::GetSkill; }
 
 	void Init() override; //イベント開始時の処理
@@ -254,6 +261,8 @@ private:
 	Scene* m_scene{ nullptr };
 	EventManager* m_eventManager{ nullptr };
 
+	SkillType m_skillType{ SkillType::Tiger };
+
 	Vector2d m_initPos{ 0.0f, 0.0f };
 	Vector2d m_targetPos{ 500.0f, 0.0f };
 	float m_moveSpeed{ 500.0f }; // カメラの移動速度
@@ -261,6 +270,7 @@ private:
 	float m_viewTimer{ 2.0f };
 
 	bool m_isCameraMoving{ false };
+	bool m_isMoveEnd{ false };
 	bool m_isEnd{ false };
 };
 

@@ -502,7 +502,7 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 }
 
 void PlayScene::Update(float deltaTime) {
-	const Input& menuInput = m_game->GetInput();
+	const Input& input = m_game->GetInput();
 
 	if (m_pauseMenu.IsOpen()) {
 		const PauseMenu::Result result = m_pauseMenu.Update();
@@ -520,11 +520,11 @@ void PlayScene::Update(float deltaTime) {
 	// Events use a held Escape input to skip dialogue; the pause shortcut
 	// must not consume that input. Game over also owns its own menu.
 	if (m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
-		if (m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
+		if (m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
 			m_menu.Toggle();
 			return;
 		}
-		if (!m_menu.IsOpen() && menuInput.IsTrigger(Action::ESCAPE)) {
+		if (!m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
 			m_pauseMenu.Open();
 			return;
 		}
@@ -555,8 +555,6 @@ void PlayScene::Update(float deltaTime) {
 			return;
 		}
 	}
-
-	const Input& input = m_game->GetInput();
 
 	if (input.IsTrigger(Action::MENU))
 	{

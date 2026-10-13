@@ -1228,6 +1228,7 @@ void GetSkillEvent::Init()
 		}
 
 		m_isCameraMoving = true;
+		m_isMoveEnd = false;
 		m_isEnd = false;
 	}
 
@@ -1242,46 +1243,53 @@ void GetSkillEvent::Update(float deltaTime)
 
 	if(playScene)
 	{
-		Camera& camera = playScene->GetCamera();
-		Vector2d camPos = camera.GetCenter();
-		
-		if(camPos != m_targetPos && m_isCameraMoving)
+		if (!m_isMoveEnd)
 		{
-			Vector2d direction = m_targetPos - camPos;
-			float distance = direction.length();
+			Camera& camera = playScene->GetCamera();
+			Vector2d camPos = camera.GetCenter();
 
-			Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// ê≥ãKâªÇµà⁄ìÆë¨ìxÇÇ©ÇØÇÈ
-			if (moveVector.length() >= distance)
+			if (camPos != m_targetPos && m_isCameraMoving)
 			{
-				camera.SetCenter(m_targetPos);
-				m_isCameraMoving = false;
-			}
-			else
-			{
-				camera.SetCenter(camPos + moveVector);
-			}
-		}
-		else
-		{
-			m_viewTimer -= deltaTime;
-			if (!m_isCameraMoving && m_viewTimer <= 0.0f)
-			{
-				Vector2d direction = m_initPos - camPos;
+				Vector2d direction = m_targetPos - camPos;
 				float distance = direction.length();
 
 				Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// ê≥ãKâªÇµà⁄ìÆë¨ìxÇÇ©ÇØÇÈ
 				if (moveVector.length() >= distance)
 				{
-					camera.SetCenter(m_initPos);
-					m_isEnd = true;
+					camera.SetCenter(m_targetPos);
+					m_isCameraMoving = false;
 				}
 				else
 				{
 					camera.SetCenter(camPos + moveVector);
 				}
 			}
-		}
+			else
+			{
+				m_viewTimer -= deltaTime;
+				if (!m_isCameraMoving && m_viewTimer <= 0.0f)
+				{
+					Vector2d direction = m_initPos - camPos;
+					float distance = direction.length();
 
+					Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// ê≥ãKâªÇµà⁄ìÆë¨ìxÇÇ©ÇØÇÈ
+					if (moveVector.length() >= distance)
+					{
+						camera.SetCenter(m_initPos);
+						m_isMoveEnd = true;
+					}
+					else
+					{
+						camera.SetCenter(camPos + moveVector);
+					}
+				}
+			}
+		}
+		else
+		{
+			// ì¸éËèàóù
+			m_isEnd = true;
+		}
 	}
 }
 
