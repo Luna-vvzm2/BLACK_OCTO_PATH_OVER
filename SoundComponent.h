@@ -12,7 +12,7 @@ class SoundComponent : public Component
 public:
 	explicit SoundComponent(
 		Actor* owner,
-		const TCHAR* filePath
+		const TCHAR* filePath = nullptr
 	);
 	~SoundComponent() override;
 
@@ -25,8 +25,11 @@ public:
 		int playType = DX_PLAYTYPE_BACK,
 		bool restart = true
 	);
+	bool Play(const std::string& soundId, bool restart = true);
 	void Stop();
+	void Stop(const std::string& soundId);
 	bool IsPlaying() const;
+	bool IsPlaying(const std::string& soundId) const;
 
 	void SetVolume(int volume);
 	void SetCategory(SoundCategory category);
@@ -42,6 +45,7 @@ private:
 	int m_handle;
 	int m_volume;
 	SoundCategory m_category = SoundCategory::Effect;
+	std::string m_lastSoundId;
 	static std::vector<SoundComponent*> s_components;
 	static int s_voiceVolume;
 };

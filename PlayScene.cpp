@@ -5,7 +5,6 @@
 #include "GameOverScene.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
-#include "SoundComponent.h"
 #include "HPComponent.h"
 #include "Game.h"
 #include "Renderer.h"
@@ -62,7 +61,6 @@ PlayScene::PlayScene(Game* game)
 	m_pauseMenu(game, false),
 	m_player(nullptr),
 	m_camera(static_cast<float>(game->GetWidth()), static_cast<float>(game->GetHeight())),
-	m_stageBgm(nullptr),
 	m_stageIndex(0),
 	m_comboCount(0),
 	m_currentStage(1),
@@ -79,6 +77,7 @@ bool PlayScene::Init() {
 	m_isRunning = true;
 	m_type = Type::Play;
 	m_stageIndex = 0;
+	if (!m_game->GetSoundManager().SetScope(2)) return false;
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
 	
@@ -147,16 +146,6 @@ bool PlayScene::Init() {
 	// Renderer ‚É Camera ‚ðƒZƒbƒg
 	m_game->GetRenderer()->SetCamera(&m_camera);
 
-	m_stageBgm = m_player->AddComponent<SoundComponent>(
-		_T("assets/sounds/bgm.wav")
-	);
-
-	if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->SetCategory(SoundCategory::Bgm);
-		m_stageBgm->SetVolume(90);
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
-	}
 	return true;
 }
 
@@ -417,6 +406,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex) {
 	DeleteGraph(m_bgHandle);
 	DeleteGraph(m_fgHandle);
 	m_stageIndex = index;
+	m_game->GetSoundManager().SetScope(index + 2);
 
 	ClearStageActors();
 	StageInit(index);
@@ -441,11 +431,6 @@ void PlayScene::ChangeStage(int index, int spawnIndex) {
 
 			m_camera.SetCenter(camPos);
 		}
-	}
-	if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->Stop();
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
 	}
 }
 
@@ -649,7 +634,6 @@ void PlayScene::Update(float deltaTime) {
 	{
 		m_shurikenUI->SetCount(m_player->GetShurikenCount());
 	}
-	std::cout << "canMove: " << m_player->GetCanMove() << std::endl;
 }
 		
 void PlayScene::Draw() {

@@ -3,6 +3,7 @@
 #include "Actor.h"
 #include "Scene.h"
 #include "Game.h"
+#include "SoundManager.h"
 
 std::vector<SoundComponent*> SoundComponent::s_components;
 int SoundComponent::s_voiceVolume = 100;
@@ -30,7 +31,7 @@ bool SoundComponent::Init()
 {
 	if (m_filePath.empty())
 	{
-		return false;
+		return true;
 	}
 
 	m_handle = LoadSoundMem(m_filePath.c_str());
@@ -59,17 +60,42 @@ bool SoundComponent::Play(int playType, bool restart)
 	) == 0;
 }
 
+bool SoundComponent::Play(const std::string& soundId, bool restart)
+{
+	if (!m_owner || !m_owner->GetScene()) return false;
+	Game* game = m_owner->GetScene()->GetGame();
+	if (!game || !game->GetSoundManager().Play(soundId, m_category, restart)) return false;
+	m_lastSoundId = soundId;
+	return true;
+}
+
 void SoundComponent::Stop()
 {
 	if (IsLoaded())
 	{
 		StopSoundMem(m_handle);
 	}
+	if (!m_lastSoundId.empty()) Stop(m_lastSoundId);
+}
+
+void SoundComponent::Stop(const std::string& soundId)
+{
+	if (!m_owner || !m_owner->GetScene()) return;
+	Game* game = m_owner->GetScene()->GetGame();
+	if (game) game->GetSoundManager().Stop(soundId);
 }
 
 bool SoundComponent::IsPlaying() const
 {
-	return IsLoaded() && CheckSoundMem(m_handle) == 1;
+	return (IsLoaded() && CheckSoundMem(m_handle) == 1) ||
+		(!m_lastSoundId.empty() && IsPlaying(m_lastSoundId));
+}
+
+bool SoundComponent::IsPlaying(const std::string& soundId) const
+{
+	if (!m_owner || !m_owner->GetScene()) return false;
+	Game* game = m_owner->GetScene()->GetGame();
+	return game && game->GetSoundManager().IsPlaying(soundId);
 }
 
 void SoundComponent::SetVolume(int volume)
@@ -81,6 +107,11 @@ void SoundComponent::SetVolume(int volume)
 
 void SoundComponent::Release()
 {
+	if (!m_lastSoundId.empty())
+	{
+		Stop(m_lastSoundId);
+		m_lastSoundId.clear();
+	}
 	if (!IsLoaded())
 	{
 		return;
@@ -117,6 +148,7 @@ void SoundComponent::RefreshVolume()
 void SoundComponent::RefreshAllVolumes()
 {
     for (SoundComponent* sound : s_components) sound->RefreshVolume();
+	SoundManager::RefreshActiveVolumes();
 }
 
 int SoundComponent::GetVoiceVolume()
