@@ -610,10 +610,10 @@ void PlayerEntity::Update(float deltaTime) {
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
 
-    UpdateJutsuKamae(deltaTime);
+    //UpdateJutsuKamae(deltaTime);
     UpdateKaryu(deltaTime);
 
-    UpdateKamae(deltaTime);
+    //UpdateKamae(deltaTime);
     UpdateExecution(deltaTime);
 
     UpdateSensor();

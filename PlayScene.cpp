@@ -544,18 +544,6 @@ void PlayScene::Update(float deltaTime) {
 		StartFadeToStage(m_nextStage, m_nextSpawnIndex);
 	}
 
-	//イベントのため変更
-	m_playTimer += deltaTime; //クリアシーンのために追加
-	if (m_eventManager->IsRunning())
-	{
-		m_eventManager->Update(deltaTime);
-
-		if (!m_eventManager->IsBattleEvent())
-		{
-			return;
-		}
-	}
-
 	if (input.IsTrigger(Action::MENU))
 	{
 		if (m_player->GetState() != Actor::State::Paused)
@@ -578,6 +566,17 @@ void PlayScene::Update(float deltaTime) {
 	updateActors(m_actors, deltaTime);
 	updateActors(m_UIactors, deltaTime);
 
+	//イベントのため変更
+	m_playTimer += deltaTime; //クリアシーンのために追加
+	if (m_eventManager->IsRunning())
+	{
+		m_eventManager->Update(deltaTime);
+
+		if (!m_eventManager->IsBattleEvent())
+		{
+			return;
+		}
+	}
 	
 	if (m_player) {
 		Vector2d playerPos = m_player->GetComponent<TransformComponent>()->GetPosition();
