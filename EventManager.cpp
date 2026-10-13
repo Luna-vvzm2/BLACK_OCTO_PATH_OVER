@@ -283,95 +283,101 @@ void TalkEvent::Init()
 
 void TalkEvent::Update(float deltaTime)
 {
-	if (m_talkStart)
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
 	{
-		if (m_talkerPosition == ActorPosition::Left)
+		if (m_talkStart)
 		{
-			const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
-			const int speed = 2;
-
-			if (m_talkStep == 0)
+			if (m_talkerPosition == ActorPosition::Left)
 			{
-				m_talkStep = 1;
-			}
+				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
+				const int speed = 2;
 
-			if (m_talkStep == 1)
-			{
-				m_actorLY -= speed;
-
-				if (m_actorLY <= targetMinY)
+				if (m_talkStep == 0)
 				{
-					m_actorLY = targetMinY;
-					m_talkStep = 2;
+					m_talkStep = 1;
+				}
+
+				if (m_talkStep == 1)
+				{
+					m_actorLY -= speed;
+
+					if (m_actorLY <= targetMinY)
+					{
+						m_actorLY = targetMinY;
+						m_talkStep = 2;
+					}
+				}
+
+				else if (m_talkStep == 2)
+				{
+					m_actorLY += speed;
+
+					if (m_actorLY >= targetMinY + 20)
+					{
+						m_talkStart = false;
+						m_talkStep = 0;
+					}
 				}
 			}
 
-			else if (m_talkStep == 2)
+			if (m_talkerPosition == ActorPosition::Right)
 			{
-				m_actorLY += speed;
+				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
+				const int speed = 2;
 
-				if (m_actorLY >= targetMinY + 20)
+				if (m_talkStep == 0)
 				{
-					m_talkStart = false;
-					m_talkStep = 0;
+					m_talkStep = 1;
+				}
+
+				if (m_talkStep == 1)
+				{
+					m_actorRY -= speed;
+
+					if (m_actorRY <= targetMinY)
+					{
+						m_actorRY = targetMinY;
+						m_talkStep = 2;
+					}
+				}
+
+				else if (m_talkStep == 2)
+				{
+					m_actorRY += speed;
+
+					if (m_actorRY >= targetMinY + 20)
+					{
+						m_talkStart = false;
+						m_talkStep = 0;
+					}
 				}
 			}
 		}
 
-		if (m_talkerPosition == ActorPosition::Right)
+		const Input& input = m_scene->GetGame()->GetInput();
+		if (input.IsTrigger(Action::ENTER))
 		{
-			const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
-			const int speed = 2;
-
-			if (m_talkStep == 0)
-			{
-				m_talkStep = 1;
-			}
-
-			if (m_talkStep == 1)
-			{
-				m_actorRY -= speed;
-
-				if (m_actorRY <= targetMinY)
-				{
-					m_actorRY = targetMinY;
-					m_talkStep = 2;
-				}
-			}
-
-			else if (m_talkStep == 2)
-			{
-				m_actorRY += speed;
-
-				if (m_actorRY >= targetMinY + 20)
-				{
-					m_talkStart = false;
-					m_talkStep = 0;
-				}
-			}
-		}
-	}
-	
-	const Input& input = m_scene->GetGame()->GetInput();
-	if (input.IsTrigger(Action::ENTER))
-	{
-		NextText();
-	}
-	if (m_isTextTimerActive)
-	{
-		m_textTimer -= deltaTime;
-		if (m_textTimer <= 0.0f)
-		{
-			m_isTextTimerActive = false;
 			NextText();
 		}
-	}
-
-	if (input.IsDown(Action::ESCAPE)) //スキップ処理
-	{
-		if (input.GetPressFrame(Action::ESCAPE) >= m_skipTimer)
+		if (m_isTextTimerActive)
 		{
-			m_isEnd = true;
+			m_textTimer -= deltaTime;
+			if (m_textTimer <= 0.0f)
+			{
+				m_isTextTimerActive = false;
+				NextText();
+			}
+		}
+
+		if (input.IsDown(Action::ESCAPE)) //スキップ処理
+		{
+			if (input.GetPressFrame(Action::ESCAPE) >= m_skipTimer)
+			{
+				m_isEnd = true;
+			}
 		}
 	}
 }
@@ -471,59 +477,62 @@ void TalkEvent::NextText()
 
 void TalkEvent::Draw()
 {
-	//立ち絵の描画
-	if (m_actorLTextureId != -1 || m_actorRTextureId != -1)
+	if (m_isStart)
 	{
+		//立ち絵の描画
+		if (m_actorLTextureId != -1 || m_actorRTextureId != -1)
 		{
-			if (m_talkerPosition == ActorPosition::Right)
 			{
-				SetDrawBright(100, 100, 100);
+				if (m_talkerPosition == ActorPosition::Right)
+				{
+					SetDrawBright(100, 100, 100);
+				}
+				int actorX = static_cast<int>(m_boxPos.x) - 220;
+
+				DrawExtendGraph(actorX, m_actorLY, actorX + static_cast<int>(m_actorSize.x), m_actorLY + static_cast<int>(m_actorSize.y), m_actorLTextureId, TRUE);
+				SetDrawBright(255, 255, 255);
 			}
-			int actorX = static_cast<int>(m_boxPos.x) - 220;
-			
-			DrawExtendGraph(actorX, m_actorLY, actorX + static_cast<int>(m_actorSize.x), m_actorLY + static_cast<int>(m_actorSize.y), m_actorLTextureId, TRUE);
-			SetDrawBright(255, 255, 255);
+
+			{
+				if (m_talkerPosition == ActorPosition::Left)
+				{
+					SetDrawBright(100, 100, 100);
+				}
+				int actorX = static_cast<int>(m_boxPos.x + m_boxSize.x) - static_cast<int>(m_actorSize.x) + 280;
+
+				DrawExtendGraph(actorX, m_actorRY, actorX + static_cast<int>(m_actorSize.x), m_actorRY + static_cast<int>(m_actorSize.y), m_actorRTextureId, TRUE);
+			}
+
 		}
-	
+		SetDrawBright(255, 255, 255);
+
+		//テキストボックス描画
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+		//テキストボックスの枠線描画
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_nameColor.ToDxColor(), FALSE);
+		int textX = static_cast<int>(m_boxPos.x) + 30;
+		int textY = static_cast<int>(m_boxPos.y) + 30;
+
+		//ChangeFont("HGP 明朝 E");
+		SetFontSize(m_fontSize);
+		DrawString(textX, textY, m_talkText.c_str(), m_textColor.ToDxColor());
+
+		if (m_talkerName.empty()) return;
+
+		if (m_talkerPosition == ActorPosition::Right)
 		{
-			if (m_talkerPosition == ActorPosition::Left)
-			{
-				SetDrawBright(100, 100, 100);
-			}
-			int actorX = static_cast<int>(m_boxPos.x + m_boxSize.x) - static_cast<int>(m_actorSize.x) + 280;
-
-			DrawExtendGraph(actorX, m_actorRY, actorX + static_cast<int>(m_actorSize.x), m_actorRY + static_cast<int>(m_actorSize.y), m_actorRTextureId, TRUE);
+			m_nameX = static_cast<int>(m_boxPos.x);
+		}
+		else
+		{
+			m_nameX = m_nameX2;
 		}
 
+		DrawString(m_nameX, m_nameY, m_talkerName.c_str(), m_nameColor.ToDxColor());
 	}
-	SetDrawBright(255, 255, 255);
-
-	//テキストボックス描画
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-
-	//テキストボックスの枠線描画
-	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_nameColor.ToDxColor(), FALSE);
-	int textX = static_cast<int>(m_boxPos.x) + 30;
-	int textY = static_cast<int>(m_boxPos.y) + 30;
-
-	//ChangeFont("HGP 明朝 E");
-	SetFontSize(m_fontSize);
-	DrawString(textX, textY, m_talkText.c_str(), m_textColor.ToDxColor());
-
-	if (m_talkerName.empty()) return;
-	
-	if (m_talkerPosition == ActorPosition::Right)
-	{
-		m_nameX = static_cast<int>(m_boxPos.x);
-	}
-	else
-	{
-		m_nameX = m_nameX2;
-	}
-
-	DrawString(m_nameX, m_nameY, m_talkerName.c_str(), m_nameColor.ToDxColor());
 }
 
 TutorialEvent::TutorialEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
@@ -573,33 +582,39 @@ void TutorialEvent::Init()
 
 void TutorialEvent::Update(float deltaTime)
 {
-	const Input& input = m_scene->GetGame()->GetInput();
-	if (input.IsTrigger(Action::ENTER))
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
 	{
-		m_currentPage++;
-		if (m_currentPage >= static_cast<int>(m_texts.size()))
-		{
-			m_isEnd = true;
-		}
-		else
-		{
-			ShowText();
-		}
-	}
-	else if (input.IsTrigger(Action::RIGHT))
-	{
-		if (m_currentPage < static_cast<int>(m_texts.size() - 1))
+		const Input& input = m_scene->GetGame()->GetInput();
+		if (input.IsTrigger(Action::ENTER))
 		{
 			m_currentPage++;
-			ShowText();
+			if (m_currentPage >= static_cast<int>(m_texts.size()))
+			{
+				m_isEnd = true;
+			}
+			else
+			{
+				ShowText();
+			}
 		}
-	}
-	else if (input.IsTrigger(Action::LEFT))
-	{
-		if (m_currentPage > 0)
+		else if (input.IsTrigger(Action::RIGHT))
 		{
-			m_currentPage--;
-			ShowText();
+			if (m_currentPage < static_cast<int>(m_texts.size() - 1))
+			{
+				m_currentPage++;
+				ShowText();
+			}
+		}
+		else if (input.IsTrigger(Action::LEFT))
+		{
+			if (m_currentPage > 0)
+			{
+				m_currentPage--;
+				ShowText();
+			}
 		}
 	}
 }
@@ -664,58 +679,61 @@ void TutorialEvent::ShowText()
 
 void TutorialEvent::Draw()
 {
-	//ボックス描画
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-
-	//ボックスの枠線描画
-	DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxBorderColor.ToDxColor(), FALSE, 5);
-	
-
-	//立ち絵の描画
-	static int imgPosX = static_cast<int>((1280.0f - m_imageSize.x) * 0.5f);
-	static int imgPosY = static_cast<int>(m_boxPos.y + 100.0f);
-
-	if (m_explanationImageId != -1)
+	if (m_isStart)
 	{
-		DrawExtendGraph(imgPosX, imgPosY, static_cast<int>(imgPosX + m_imageSize.x), static_cast<int>(imgPosY + m_imageSize.y), m_explanationImageId, TRUE);
-	}
-
-	int textSizeX = 0;
-	int textSizeY = 0;
-	int lineCount = 0;
-
-	//見出しの描画
-	//ChangeFont("HGP 明朝 E");
-	SetFontSize(m_headerFontSize);
-	GetDrawStringSize(&textSizeX, &textSizeY, &lineCount, m_headerText.c_str(), static_cast<int>(m_headerText.length()));
-
-	static int headerTextX = static_cast<int>((1280.0f - textSizeX) * 0.5f);
-	static int headerTextY = static_cast<int>((m_boxPos.y + 30.0f));
-	DrawString(headerTextX, headerTextY, m_headerText.c_str(), m_textColor.ToDxColor());
-
-	//説明文の描画
-	SetFontSize(m_bodyFontSize);
-	static int bodyTextX = imgPosX;
-	static int bodyTextY = static_cast<int>(imgPosY + m_imageSize.y + 30.0f);
-	DrawString(bodyTextX, bodyTextY, m_bodyText.c_str(), m_textColor.ToDxColor());
-
-	//現在ページを表す円の描画
-	int n = static_cast<int>(m_texts.size());
-	int width = (n * 10) + ((n - 1) * 50);
-	int startX = static_cast<int>((1280.0f - width) * 0.5f);
-	int circleY = static_cast<int>(m_boxPos.y + m_boxSize.y + 30);
-	for (int i = 0; i < n; ++i)
-	{
-		int circleX = startX + i * 60;
-
+		//ボックス描画
 		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-		DrawCircle(circleX, circleY, 10, m_boxColor.ToDxColor());
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
 		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-		if (i == m_currentPage)
+
+		//ボックスの枠線描画
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxBorderColor.ToDxColor(), FALSE, 5);
+
+
+		//立ち絵の描画
+		static int imgPosX = static_cast<int>((1280.0f - m_imageSize.x) * 0.5f);
+		static int imgPosY = static_cast<int>(m_boxPos.y + 100.0f);
+
+		if (m_explanationImageId != -1)
 		{
-			DrawCircle(circleX, circleY, 6, m_textColor.ToDxColor());
+			DrawExtendGraph(imgPosX, imgPosY, static_cast<int>(imgPosX + m_imageSize.x), static_cast<int>(imgPosY + m_imageSize.y), m_explanationImageId, TRUE);
+		}
+
+		int textSizeX = 0;
+		int textSizeY = 0;
+		int lineCount = 0;
+
+		//見出しの描画
+		//ChangeFont("HGP 明朝 E");
+		SetFontSize(m_headerFontSize);
+		GetDrawStringSize(&textSizeX, &textSizeY, &lineCount, m_headerText.c_str(), static_cast<int>(m_headerText.length()));
+
+		static int headerTextX = static_cast<int>((1280.0f - textSizeX) * 0.5f);
+		static int headerTextY = static_cast<int>((m_boxPos.y + 30.0f));
+		DrawString(headerTextX, headerTextY, m_headerText.c_str(), m_textColor.ToDxColor());
+
+		//説明文の描画
+		SetFontSize(m_bodyFontSize);
+		static int bodyTextX = imgPosX;
+		static int bodyTextY = static_cast<int>(imgPosY + m_imageSize.y + 30.0f);
+		DrawString(bodyTextX, bodyTextY, m_bodyText.c_str(), m_textColor.ToDxColor());
+
+		//現在ページを表す円の描画
+		int n = static_cast<int>(m_texts.size());
+		int width = (n * 10) + ((n - 1) * 50);
+		int startX = static_cast<int>((1280.0f - width) * 0.5f);
+		int circleY = static_cast<int>(m_boxPos.y + m_boxSize.y + 30);
+		for (int i = 0; i < n; ++i)
+		{
+			int circleX = startX + i * 60;
+
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+			DrawCircle(circleX, circleY, 10, m_boxColor.ToDxColor());
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+			if (i == m_currentPage)
+			{
+				DrawCircle(circleX, circleY, 6, m_textColor.ToDxColor());
+			}
 		}
 	}
 }
@@ -1048,43 +1066,50 @@ void CutInEvent::Init()
 
 void CutInEvent::Update(float deltaTime)
 {
-	if(m_timer <= m_displayTime)
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
 	{
-		if ((m_timer < m_displayTime * 0.1f))
+
+		if (m_timer <= m_displayTime)
 		{
-			m_graphSpeed = 100;
-		}
-		else if ((m_timer >= m_displayTime * 0.1f) && (m_timer <= m_displayTime * 0.75f))
-		{
-			m_graphSpeed = 1;
-			if (m_rBossNamePos.x > 200)
+			if ((m_timer < m_displayTime * 0.1f))
 			{
+				m_graphSpeed = 100;
+			}
+			else if ((m_timer >= m_displayTime * 0.1f) && (m_timer <= m_displayTime * 0.75f))
+			{
+				m_graphSpeed = 1;
+				if (m_rBossNamePos.x > 200)
+				{
+					m_nameSpeed = 100;
+				}
+				else
+				{
+					m_nameSpeed = 1;
+				}
+			}
+			else if (m_timer > m_displayTime * 0.7f)
+			{
+				m_graphSpeed = 100;
 				m_nameSpeed = 100;
 			}
-			else
-			{
-				m_nameSpeed = 1;
-			}
+
+
+			m_bossPos.x -= m_graphSpeed;
+			m_heroPos.x += m_graphSpeed;
+
+			m_rBossNamePos.x -= m_nameSpeed;
+			m_jBossNamePos.x -= m_nameSpeed;
+
+			m_timer++;
 		}
-		else if (m_timer > m_displayTime * 0.7f)
+		else
 		{
-			m_graphSpeed = 100;
-			m_nameSpeed = 100;
+			m_isEnd = true;
+			return;
 		}
-
-
-		m_bossPos.x -= m_graphSpeed;
-		m_heroPos.x += m_graphSpeed;
-
-		m_rBossNamePos.x -= m_nameSpeed;
-		m_jBossNamePos.x -= m_nameSpeed;
-
-		m_timer++;
-	}
-	else
-	{
-		m_isEnd = true;
-		return;
 	}
 }
 
@@ -1152,6 +1177,12 @@ void GetSkillEvent::Init()
 {
 	if (m_eventManager)
 	{
+
+		for (auto actor : m_scene->GetActors())
+		{
+			actor->SetState(Actor::State::Paused);
+		}
+
 		for (const std::string& text : m_texts)
 		{
 			auto tokens = SplitCSV(text);
@@ -1192,11 +1223,9 @@ void GetSkillEvent::Init()
 void GetSkillEvent::Update(float deltaTime)
 {
 	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
-	//PlayerEntity* player = playScene->GetPlayer();
+	m_isStart = playScene->GetPlayer()->OnGround();
 
-	//player->SetCanMove(false);
-
-	if(playScene)
+	if (m_isStart)
 	{
 		if (!m_isMoveEnd)
 		{
@@ -1250,6 +1279,11 @@ void GetSkillEvent::Update(float deltaTime)
 
 void GetSkillEvent::End()
 {
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Active);
+	}
+
 	DeleteTexts();
 }
 

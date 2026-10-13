@@ -82,6 +82,8 @@ protected:
 	void LoadTexts(const std::string& filePath); //テキストファイルの読み込み
 	void DeleteTexts(); //テキストデータの解放
 	std::vector<std::string> m_texts; //表示テキスト
+
+	bool m_isStart;
 };
 
 class TalkEvent : public EventBase

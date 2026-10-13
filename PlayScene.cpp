@@ -558,9 +558,6 @@ void PlayScene::Update(float deltaTime) {
 		StartFadeToStage(m_nextStage, m_nextSpawnIndex);
 	}
 
-	//イベントのため変更
-	m_playTimer += deltaTime; //クリアシーンのために追加
-
 	// 自動セーブ
 	m_autoSaveTimer += deltaTime;
 
