@@ -2,6 +2,7 @@
 #include "Actor.h"
 #include "Vector2d.h"
 
+class PlayerEntity;
 class TransformComponent;
 class VelocityComponent;
 class GravityComponent;
@@ -14,6 +15,7 @@ class KunaiActor : public Actor
 public:
     explicit KunaiActor(
         Scene* scene,
+        PlayerEntity* player,
         const Vector2d& pos,
         bool dir
     );
@@ -26,10 +28,12 @@ public:
         return ActorType::Kunai;
     }
 
-    void CheckBlockCollision();
+    void CheckBlockCollision(Actor* actor);
     void OnBlockHit();
 
 private:
+    PlayerEntity* m_player;
+
     TransformComponent* m_transform;
     VelocityComponent* m_velocity;
     CollisionComponent* m_collision;

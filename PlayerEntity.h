@@ -22,6 +22,9 @@ struct SensorData
     BlockActor* frontBottom = nullptr;
     BlockActor* frontGround = nullptr;
     BlockActor* frontNearGround = nullptr;
+
+    BlockActor* frontWall = nullptr;
+    BlockActor* upperArea = nullptr;
 };
 
 class EnemyEntity;
@@ -145,6 +148,7 @@ public:
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
     void UpdateOcto(float deltaTime);
+    void UpdateWallSensor();
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
     void UpdateDash(float deltaTime);
@@ -266,7 +270,7 @@ private:
     int m_weakAttackIdx;
 
     float m_attackTimer;
-    float m_jutsuTimer;
+    float m_jutsuTimer; // 忍術蛸の発動モーションタイマー（仮）
 
     bool m_canAttack;
     float m_attackLockTimer;
@@ -274,6 +278,7 @@ private:
     bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
     bool m_isOcto;
     bool m_isAutoOcto;
+    float m_octoRatio;
     float m_octoTimer;
     bool m_endOcto;
     bool m_isHide;
