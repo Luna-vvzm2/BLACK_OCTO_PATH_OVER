@@ -531,6 +531,7 @@ void PlayScene::ClearStageActors()
 		case ActorType::Effect:
 		case ActorType::StageExit:
 		case ActorType::StageBack:
+		case ActorType::CheckPoint:
 		case ActorType::TreasureBox:
 			actor->SetState(Actor::State::Dead);
 			break;

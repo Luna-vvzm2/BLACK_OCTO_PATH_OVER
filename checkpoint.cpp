@@ -50,7 +50,8 @@ void Checkpoint::Update(float deltaTime)
     }
 
     const Vector2d playerPosition = player->GetPos();
-    if (std::fabs(playerPosition.x - m_initialPos.x) <= 52.0f &&
+    constexpr float margin = 52.0f;
+    if (std::fabs(playerPosition.x - m_initialPos.x) <= margin &&
         playerPosition.y < m_initialPos.y)
     {
         playScene->SetRespawnPosition(m_initialPos);
