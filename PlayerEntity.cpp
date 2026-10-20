@@ -798,8 +798,10 @@ void PlayerEntity::UpdateKamae(float deltaTime)
     if (m_isKaryu) return;
 
     const Input& input = m_scene->GetGame()->GetInput();
+    const bool sealed = IsNinjutsuSealed() && m_isGround; //••ˆóó‘Ô‚Í\‚¦‚ğ–³‹
 
-    if (input.IsDown(Action::KAMAE))
+
+    if (input.IsDown(Action::KAMAE) && !sealed)
     {
         if (m_squat) {
             if (!m_canStand) {
@@ -1295,8 +1297,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 ChangeState(PlayerState::OCTO_START);
                 return;
             }
-            std::cout << "[Player] ‘û‚Í••ˆó‚³‚ê‚Ä‚¢‚é (sealed, "
-                << m_ninjutsuSealTimer << " sec left)\n";
         }
         else {
             ChangeState(PlayerState::OCTO_END);
