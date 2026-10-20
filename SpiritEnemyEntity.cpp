@@ -7,6 +7,7 @@
 #include "SpriteComponent.h"
 #include "PlayScene.h"
 #include "PlayerEntity.h"
+#include "SoundComponent.h"
 #include "SpiritBulletEntity.h"
 #include "AlertGaugeComponent.h"
 #include <cmath>
@@ -18,6 +19,7 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     : EnemyEntity(scene, pos, Vector2d(80.0f, 80.0f))
     , m_state(Idle)
     , m_animation(nullptr)
+    , m_attackSound(nullptr)
     , m_floatTimer(0.0f)
     , m_attackTimer(0.0f)
     , m_deadTimer(0.0f)
@@ -44,6 +46,8 @@ bool SpiritEnemyEntity::Init()
     // 怨霊本体の当たり判定
     // 仕様：80px × 80px
     m_collision->SetRect(80.0f, 80.0f);
+
+    m_attackSound = AddComponent<SoundComponent>();
 
     // 初期状態
     m_state = Idle;
@@ -262,6 +266,10 @@ void SpiritEnemyEntity::UpdateAI()
             );
 
             m_scene->AddActor(bullet);
+            if (m_attackSound != nullptr)
+            {
+                m_attackSound->Play("enemy_Onryo_attack");
+            }
 
             m_attackTimer = 0.0f;
             m_state = Recovery;

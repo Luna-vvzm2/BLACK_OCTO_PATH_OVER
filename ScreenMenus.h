@@ -33,7 +33,7 @@ public:
     bool IsOpen() const { return m_open; }
     void Toggle();
     Result Update();
-    void Draw() const;
+    void Draw(int alpha = 255) const;
 
 private:
     Game* m_game;

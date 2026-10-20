@@ -12,9 +12,9 @@
 
 namespace
 {
-    void DrawBackdrop(const Game* game)
+    void DrawBackdrop(const Game* game, int alpha = 205)
     {
-        SetDrawBlendMode(DX_BLENDMODE_ALPHA, 205);
+        SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
         DrawBox(0, 0, game->GetWidth(), game->GetHeight(), GetColor(10, 14, 22), TRUE);
         SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 255);
     }
@@ -170,10 +170,14 @@ PauseMenu::Result PauseMenu::Update()
     return Result::Quit;
 }
 
-void PauseMenu::Draw() const
+void PauseMenu::Draw(int alpha) const
 {
-    if (!m_open) return;
-    DrawBackdrop(m_game);
+    if (!m_open || alpha <= 0) return;
+    if (alpha > 255) alpha = 255;
+    DrawBackdrop(m_game, 205 * alpha / 255);
+    int oldBlend, oldAlpha;
+    GetDrawBlendMode(&oldBlend, &oldAlpha);
+    SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
     Renderer* renderer = m_game->GetRenderer();
     renderer->DrawTextC(Vector2d(m_game->GetWidth() * 0.5f, 100), "ポーズ", Color(255, 255, 255), m_game->GatDebugFont(), 46, false);
 
@@ -181,5 +185,6 @@ void PauseMenu::Draw() const
     DrawItem(m_game, "設定画面", 1, m_cursor);
     if (!m_fromStageSelect) DrawItem(m_game, "ステージ選択画面へ", 2, m_cursor);
     DrawItem(m_game, "ゲーム終了", m_fromStageSelect ? 2 : 3, m_cursor);
+    SetDrawBlendMode(oldBlend, oldAlpha);
     m_settings.Draw();
 }
