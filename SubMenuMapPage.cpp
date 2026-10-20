@@ -1,3 +1,4 @@
+/*
 #include "SubMenuMapPage.h"
 #include "SubMenu.h"
 #include "PlayScene.h"
@@ -119,4 +120,4 @@ void SubMenuMapPage::Draw()
     renderer->DrawTextL(Vector2d(itemX + 10.0f, itemY + 8.0f), "【 所持アイテム 】", Color(255, 215, 0), font, 16, false);
     renderer->DrawTextL(Vector2d(itemX + 15.0f, itemY + 35.0f), "回復薬 : 0 / 4", Color(220, 220, 220), font, 16, false);
     renderer->DrawTextL(Vector2d(itemX + 15.0f, itemY + 60.0f), "クナイ   : 0", Color(220, 220, 220), font, 16, false);
-}
+}*/

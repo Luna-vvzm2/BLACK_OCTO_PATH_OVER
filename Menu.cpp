@@ -2,12 +2,16 @@
 
 #include "PlayScene.h"
 #include "Game.h"
+#include "Input.h"
+
+#include <DxLib.h>
+#include <cstring>
 
 Menu::Menu(PlayScene* owner)
-	:
-	m_owner(owner),
-	m_skillMenu(this),
-	m_equipmentMenu(this)
+	: m_owner(owner)
+	, m_mapMenu(this)
+	, m_statusMenu(this)
+	, m_newsMenu(this)
 {
 }
 
@@ -16,57 +20,68 @@ Game* Menu::GetGame() const
 	return m_owner->GetGame();
 }
 
+PlayerEntity* Menu::GetPlayer() const
+{
+	return m_owner->GetPlayer();
+}
+
 void Menu::Initialize()
 {
-    m_skillMenu.Initialize();
-    m_equipmentMenu.Initialize();
+	m_mapMenu.Initialize();
+	m_statusMenu.Initialize();
+	m_newsMenu.Initialize();
+}
+
+void Menu::ChangeTab(int delta)
+{
+	int next = static_cast<int>(m_currentTab) + delta;
+
+	// 端では止まる
+	if (next < 0 || next >= static_cast<int>(Tab::Count))
+	{
+		return;
+	}
+
+	m_currentTab = static_cast<Tab>(next);
+	m_cursor.SetPosition(0, 0);
 }
 
 void Menu::Update(float deltaTime)
 {
-	const Input& input =
-		m_owner->GetGame()->GetInput();
+	const Input& input = GetGame()->GetInput();
 
 	//--------------------
-	// タブ選択中
+	// タブ切替 (PageUp/PageDown, LB/RB)
 	//--------------------
-
-	if (m_cursorArea == MenuCursorArea::Tab)
+	if (input.IsTrigger(Action::PAGE_UP))
 	{
-		if (input.IsTrigger(Action::RIGHT))
-			m_tabCursor = 0;
+		ChangeTab(-1);
+	}
 
-		if (input.IsTrigger(Action::LEFT))
-			m_tabCursor = 1;
-
-		if (input.IsTrigger(Action::DOWN) ||
-			input.IsTrigger(Action::ENTER))
-		{
-			if (m_tabCursor == 0)
-			{
-				m_currentTab = Tab::Skill;
-				m_cursorArea = MenuCursorArea::SkillList;
-			}
-			else 
-			{
-				m_currentTab = Tab::Equipment;//本来はEquipment
-				m_cursorArea = MenuCursorArea::EquipmentList;
-			}
-			return;   
-		}
+	if (input.IsTrigger(Action::PAGE_DOWN))
+	{
+		ChangeTab(+1);
 	}
 
 	//--------------------
-	// 各メニュー更新
+	// 各ページ更新
 	//--------------------
+	switch (m_currentTab)
+	{
+	case Tab::Map:
+		m_mapMenu.Update(deltaTime);
+		break;
 
-	if (m_currentTab == Tab::Skill)
-	{
-		m_skillMenu.Update(deltaTime);
-	}
-	else
-	{
-		m_equipmentMenu.Update(deltaTime);
+	case Tab::Status:
+		m_statusMenu.Update(deltaTime);
+		break;
+
+	case Tab::News:
+		m_newsMenu.Update(deltaTime);
+		break;
+
+	default:
+		break;
 	}
 }
 
@@ -75,18 +90,31 @@ void Menu::Draw()
 	DrawBox(
 		0,
 		0,
-		m_owner->GetGame()->GetWidth(),
-		m_owner->GetGame()->GetHeight(),
+		GetGame()->GetWidth(),
+		GetGame()->GetHeight(),
 		GetColor(20, 20, 20),
 		TRUE
 	);
 
 	DrawTabs();
 
-	if (m_currentTab == Tab::Skill)
-		m_skillMenu.Draw();
-	else
-		m_equipmentMenu.Draw();
+	switch (m_currentTab)
+	{
+	case Tab::Map:
+		m_mapMenu.Draw();
+		break;
+
+	case Tab::Status:
+		m_statusMenu.Draw();
+		break;
+
+	case Tab::News:
+		m_newsMenu.Draw();
+		break;
+
+	default:
+		break;
+	}
 }
 
 //====================
@@ -95,72 +123,59 @@ void Menu::Draw()
 
 void Menu::DrawTabs()
 {
+	static const char* labels[] = { "マップ", "ステータス", "新聞" };
+
 	const int tabY = 20;
 	const int tabW = 180;
 	const int tabH = 50;
 	const int tabGap = 10;
+	const int tabCount = static_cast<int>(Tab::Count);
 
-	// タブ全体の幅
-	const int totalWidth = tabW * 2 + tabGap;
+	const int totalWidth = tabW * tabCount + tabGap * (tabCount - 1);
+	const int startX = (GetGame()->GetWidth() - totalWidth) / 2;
 
-	// 画面中央
-	const int equipX = (m_owner->GetGame()->GetWidth() - totalWidth) / 2;
-	const int skillX = equipX + tabW + tabGap;
-
-	//====================
-	// 装備
-	//====================
-	DrawBox(
-		equipX,
-		tabY,
-		equipX + tabW,
-		tabY + tabH,
-		GetColor(80, 80, 80),
-		TRUE
-	);
-
-	DrawString(
-		equipX + 70,
-		tabY + 15,
-		"装備",
-		GetColor(255, 255, 255)
-	);
-
-	//====================
-	// スキル
-	//====================
-	DrawBox(
-		skillX,
-		tabY,
-		skillX + tabW,
-		tabY + tabH,
-		GetColor(80, 80, 80),
-		TRUE
-	);
-
-	DrawString(
-		skillX + 60,
-		tabY + 15,
-		"スキル",
-		GetColor(255, 255, 255)
-	);
-
-	//====================
-	// タブカーソル
-	//====================
-	if (GetCursorArea() == MenuCursorArea::Tab)
+	for (int i = 0; i < tabCount; i++)
 	{
-		int x = (m_tabCursor == 0) ? skillX : equipX;
+		const int x = startX + i * (tabW + tabGap);
+		const bool active = (i == static_cast<int>(m_currentTab));
 
 		DrawBox(
-			x - 4,
-			tabY - 4,
-			x + tabW + 4,
-			tabY + tabH + 4,
-			GetColor(255, 0, 0),
-			FALSE
+			x,
+			tabY,
+			x + tabW,
+			tabY + tabH,
+			active ? GetColor(110, 110, 110) : GetColor(60, 60, 60),
+			TRUE
 		);
+
+		const int textW = GetDrawStringWidth(
+			labels[i],
+			static_cast<int>(std::strlen(labels[i]))
+		);
+
+		DrawString(
+			x + (tabW - textW) / 2,
+			tabY + 17,
+			labels[i],
+			active ? GetColor(255, 255, 255) : GetColor(170, 170, 170)
+		);
+
+		if (active)
+		{
+			DrawBox(
+				x - 4,
+				tabY - 4,
+				x + tabW + 4,
+				tabY + tabH + 4,
+				GetColor(255, 0, 0),
+				FALSE
+			);
+		}
 	}
+
+	// 操作ヒント
+	DrawString(startX - 110, tabY + 17, "< PgUp / LB", GetColor(130, 130, 130));
+	DrawString(startX + totalWidth + 20, tabY + 17, "PgDn / RB >", GetColor(130, 130, 130));
 }
 
 bool Menu::IsOpen() const
@@ -174,26 +189,13 @@ void Menu::Toggle()
 
 	if (m_isOpen)
 	{
-		m_cursorArea = MenuCursorArea::Tab;
+		// 開いた直後はマップタブ
+		m_currentTab = Tab::Map;
+		m_cursor.SetPosition(0, 0);
 	}
 }
 
-Menu::MenuCursorArea Menu::GetCursorArea() const
+Menu::Tab Menu::GetCurrentTab() const
 {
-	return m_cursorArea;
-}
-
-int Menu::GetTabCursor() const
-{
-	return m_tabCursor;
-}
-
-void Menu::SetCursorArea(MenuCursorArea area)
-{
-	m_cursorArea = area;
-}
-
-int Menu::GetLockedSkillIcon() const
-{
-	return m_lockedSkillIcon;
+	return m_currentTab;
 }

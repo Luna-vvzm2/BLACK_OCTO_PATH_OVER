@@ -1,4 +1,4 @@
-#include "SubMenu.h"
+/*#include "SubMenu.h"
 #include "SubMenuMapPage.h"
 #include "SubMenuStatusPage.h"
 #include "SubMenuNewsPage.h"
@@ -188,4 +188,4 @@ void SubMenu::DrawHeader()
     }
 
     DrawLine(100, 110, 1180, 110, GetColor(150, 150, 160));
-}
+}*/
