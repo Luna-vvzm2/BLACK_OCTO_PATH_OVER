@@ -11,11 +11,15 @@ namespace
     {
         const char* title;
         const char* date;
+        const char* body;
+        const char* image;   // 右上に表示する画像のパス (なければ省略 = nullptr)
     };
 
     const NewsInfo NEWS_LIST[NewsMenu::NewsCount] =
     {
-        { "金城失踪から早10日",       "2000年5月23日" },
+        { "金城失踪から早10日",       "2000年5月23日",
+          "こんにちは。 てすとです。",
+          "assets/images/news/news1.png" },
         { "黒い怪物にご用心",         "1987年10月8日" },
         { "話題のルーキー『金城清誠』", "1995年7月5日" },
         { "大江山近辺から国民を保護",   "1970年6月16日" },
@@ -27,13 +31,28 @@ namespace
 NewsMenu::NewsMenu(Menu* owner)
     : MenuPage(owner)
 {
+    for (int i = 0; i < NewsCount; i++)
+    {
+        m_imageHandle[i] = -1;
+    }
 }
 
 void NewsMenu::Initialize()
 {
+    // 画像の読み込み
+    for (int i = 0; i < NewsCount; i++)
+    {
+        if (m_imageHandle[i] >= 0) continue;   // 二重読み込み防止
+
+        if (NEWS_LIST[i].image != nullptr)
+        {
+            m_imageHandle[i] = LoadGraph(NEWS_LIST[i].image);
+        }
+    }
+
 #ifdef _DEBUG
     // デバッグ時のみ全て入手済みにして表示確認できるようにする
-    for (int i = 0; i < NewsCount; i++)
+    for (int i = 0; i < 3; i++)
     {
         m_owned[i] = true;
     }
@@ -97,7 +116,7 @@ void NewsMenu::Draw()
         }
         else
         {
-            DrawString(listX + 16, y + 34, "未入手", color);
+            DrawString(listX + 16, y + 34, "？？？", color);
         }
     }
 
@@ -135,11 +154,47 @@ void NewsMenu::Draw()
     {
         DrawString(boxX + 30, boxY + 30, NEWS_LIST[sel].title, white);
         DrawString(boxX + 30, boxY + 60, NEWS_LIST[sel].date, GetColor(180, 180, 180));
-        DrawString(boxX + 30, boxY + 120, "（本文未定）", white);
+
+        //----------------------------------
+        // 右上: 画像 (縦横比を保って枠内に収める)
+        //----------------------------------
+        const int imgAreaW = 240;
+        const int imgAreaH = 160;
+        const int imgAreaX = boxX + boxW - 30 - imgAreaW;
+        const int imgAreaY = boxY + 30;
+
+        const int handle = m_imageHandle[sel];
+        if (handle >= 0)
+        {
+            int w = 0;
+            int h = 0;
+            GetGraphSize(handle, &w, &h);
+
+            if (w > 0 && h > 0)
+            {
+                const float sx = static_cast<float>(imgAreaW) / w;
+                const float sy = static_cast<float>(imgAreaH) / h;
+                const float scale = (sx < sy) ? sx : sy;
+
+                const int dw = static_cast<int>(w * scale);
+                const int dh = static_cast<int>(h * scale);
+                const int x = imgAreaX + imgAreaW - dw;   // 右揃え
+
+                DrawExtendGraph(x, imgAreaY, x + dw, imgAreaY + dh, handle, TRUE);
+            }
+        }
+
+        //----------------------------------
+        // 本文 (画像の下から)
+        //----------------------------------
+        if (NEWS_LIST[sel].body != nullptr)
+        {
+            DrawString(boxX + 30, boxY + 210, NEWS_LIST[sel].body, white);
+        }
     }
     else
     {
-        DrawString(boxX + 30, boxY + 30, "未入手", gray);
+        DrawString(boxX + 30, boxY + 30, "？？？", gray);
     }
 }
 

@@ -20,4 +20,5 @@ protected:
 
 private:
     bool m_owned[NewsCount] = {};
+    int  m_imageHandle[NewsCount];   // ‰æ‘œƒnƒ“ƒhƒ‹ (-1 = ‰æ‘œ‚È‚µ)
 };

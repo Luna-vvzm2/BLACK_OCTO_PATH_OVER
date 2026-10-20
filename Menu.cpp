@@ -121,7 +121,7 @@ void Menu::Draw()
 // タブ
 //====================
 
-void Menu::DrawTabs()
+void Menu::DrawTabs() const
 {
 	static const char* labels[] = { "マップ", "ステータス", "新聞" };
 
@@ -174,7 +174,7 @@ void Menu::DrawTabs()
 	}
 
 	// 操作ヒント
-	DrawString(startX - 110, tabY + 17, "< PgUp / LB", GetColor(130, 130, 130));
+	DrawString(startX - 150, tabY + 17, "< PgUp / LB", GetColor(130, 130, 130));
 	DrawString(startX + totalWidth + 20, tabY + 17, "PgDn / RB >", GetColor(130, 130, 130));
 }
 

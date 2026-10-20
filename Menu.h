@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    void DrawTabs();
+    void DrawTabs() const;
     void ChangeTab(int delta);
 
     PlayScene* m_owner;
