@@ -237,6 +237,27 @@ public:
         return IsStatusDown() ? damage * 2 : damage;
     }
 
+    //忍術封印（使用不可の状態）
+    void ApplyNinjutsuSeal(float duration) 
+    { 
+        m_ninjutsuSealTimer = duration;
+        std::cout << "[Player] 忍術封印  for " << duration << " sec\n";
+    }
+    bool IsNinjutsuSealed() const { return m_ninjutsuSealTimer > 0.0f; }
+    float GetNinjustuSealTimer() const { return m_ninjutsuSealTimer; }
+    void UpdateNinjutsuSeal(float deltaTime)
+    {
+        if (m_ninjutsuSealTimer > 0.0f)
+        {
+            m_ninjutsuSealTimer -= deltaTime;
+            if (m_ninjutsuSealTimer <= 0.0f)
+            {
+                m_ninjutsuSealTimer = 0.0f;
+                std::cout << "[Player] 忍術封印 END\n";
+            }
+        }
+    }
+
     // ===== ドロップアイテム用 =====
     void AddCoin(int value);
     void AddKunai(int value);
@@ -301,6 +322,7 @@ private:
     float m_octoTimer;
     bool m_endOcto;
     bool m_isHide;
+    float m_ninjutsuSealTimer = 0.0f; //忍術封印トラップ
 
     float m_statusDownTimer = 0.0f;
 

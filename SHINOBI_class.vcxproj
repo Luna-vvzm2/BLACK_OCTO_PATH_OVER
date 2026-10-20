@@ -187,6 +187,7 @@
     <ClCompile Include="MenuPage.cpp" />
     <ClCompile Include="MoneyUI.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="NinjutsuSealTrap.cpp" />
     <ClCompile Include="PlatformBlock.cpp" />
     <ClCompile Include="PlatformOboroLBlock.cpp" />
     <ClCompile Include="PlatformOboroMBlock.cpp" />
@@ -294,6 +295,7 @@
     <ClInclude Include="MenuPage.h" />
     <ClInclude Include="MoneyUI.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="NinjutsuSealTrap.h" />
     <ClInclude Include="PlatformBlock.h" />
     <ClInclude Include="PlatformOboroLBlock.h" />
     <ClInclude Include="PlatformOboroMBlock.h" />

@@ -640,7 +640,9 @@ void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
-    UpdateStatusDown(deltaTime);    // í«â¡
+            
+    UpdateStatusDown(deltaTime);    
+    UpdateNinjutsuSeal(deltaTime); 
 
     UpdateKamae(deltaTime);
     UpdateExecution(deltaTime);
@@ -1289,8 +1291,12 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (input.IsTrigger(Action::OCTO) && m_isGround) {
         if (!m_isOcto) {
-            ChangeState(PlayerState::OCTO_START);
-            return;
+            if (!IsNinjutsuSealed()) {      //í«â¡ÅFïïàÛíÜÇÕî≠ìÆÇ≈Ç´Ç»Ç¢
+                ChangeState(PlayerState::OCTO_START);
+                return;
+            }
+            std::cout << "[Player] ë˚ÇÕïïàÛÇ≥ÇÍÇƒÇ¢ÇÈ (sealed, "
+                << m_ninjutsuSealTimer << " sec left)\n";
         }
         else {
             ChangeState(PlayerState::OCTO_END);
@@ -2454,7 +2460,6 @@ void PlayerEntity::ResetStageState()
     m_attack = false;
     m_dashTimer = 0.0f;
     ChangeState(PlayerState::IDLE);
-    m_statusDownTimer = 0.0f;
 }
 
 //======================================
