@@ -166,6 +166,7 @@
     <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="EnemyEntity.cpp" />
     <ClCompile Include="EnemyHPBar.cpp" />
+    <ClCompile Include="EnemySpawnTrap.cpp" />
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
@@ -274,6 +275,7 @@
     <ClInclude Include="EnemyEntity.h" />
     <ClInclude Include="EnemyHPBar.h" />
     <ClInclude Include="EnemySpawner.h" />
+    <ClInclude Include="EnemySpawnTrap.h" />
     <ClInclude Include="EquipmentMenu.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="EventTexture.h" />

@@ -46,6 +46,7 @@
 #include "DamageTrap.h"
 #include "StatusDownTrap.h"
 #include "NinjutsuSealTrap.h"
+#include "EnemySpawnTrap.h"
 #include "HPBarUI.h"
 #include "BackGroundUI.h"
 #include "TreasureBox.h"
@@ -358,6 +359,10 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 12: //‰¼ID
 				AddActor(new NinjutsuSealTrap(this, pos, Vector2d(tileSize, tileSize)));
+				break;
+
+			case 13: //‰¼ID
+				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, tileSize)));
 				break;
 
 			case 14:
