@@ -8,7 +8,7 @@
 //#include "SpiritEnemyEntity.h"
 //#include "KasaTenguEnemyEntity.h"
 #include "YellowEnemyEntity.h" //確認用
-#include "WhiteEnemyEntity.h"　//確認用
+#include "WhiteEnemyEntity.h" //確認用
 
 #include "Game.h"
 #include "Renderer.h"
@@ -141,11 +141,7 @@ std::vector<EnemySpawnTrap::EnemyKind> EnemySpawnTrap::ChoosePattern() const
 {
     // 雑魚敵(小鬼・怨霊)をランダムに1体選ぶ
     auto randomNormal = []() {
-#ifdef ENEMY_SPAWN_TRAP_USE_ONRYO
-        return (RandomInt(0, 1) == 0) ? EnemyKind::Kooni : EnemyKind::Onryo;
-#else
-        return EnemyKind::Kooni;
-#endif
+        return (RandomInt(0, 1) == 0) ? EnemyKind::Kooni : EnemyKind::Spirit;
         };
 
     std::vector<EnemyKind> result;
