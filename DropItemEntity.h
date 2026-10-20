@@ -2,6 +2,7 @@
 #include "EntityActor.h"
 #include "DropData.h"
 #include "AnimationComponent.h"
+#include "PlayerEntity.h"
 
 class PlayerEntity;
 
