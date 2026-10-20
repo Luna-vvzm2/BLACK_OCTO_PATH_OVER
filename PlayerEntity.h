@@ -139,6 +139,7 @@ public:
     void UpdateExecution(float deltaTime);
     void CollectExecutionTargets();
     std::vector<EnemyEntity*> CollectEnemiesInScreen();
+    void CollectNearEnemies(int width, int height);
 
     void UpdateScale();
     void UpdateGravity(float deltaTime);
@@ -286,6 +287,8 @@ private:
     bool m_endOcto;
     bool m_isHide;
 
+    float m_tigerTimer;
+
     bool m_getHit;
     float m_getHitTimer;
     float m_invincibleTime;
@@ -309,6 +312,7 @@ private:
     bool m_isKamae;
     bool m_isExecution;
     std::vector<EnemyEntity*> m_executionTargets;
+    EnemyEntity* m_nearTargets[5];
     float m_executionTimer;
 
     bool m_ignorePlatform;

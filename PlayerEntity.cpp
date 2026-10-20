@@ -102,6 +102,8 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_endOcto(false)
     , m_isHide(false)
 
+    , m_tigerTimer(0.0f)
+
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
 
@@ -646,26 +648,25 @@ void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
     UpdateGravity(deltaTime);
     UpdateMove();
-
    
-        UpdateIgnorePlatform();
-        UpdateInvincible(deltaTime);
+    UpdateIgnorePlatform();
+    UpdateInvincible(deltaTime);
 
-        UpdateKamae(deltaTime);
-        UpdateExecution(deltaTime);
+    UpdateKamae(deltaTime);
+    UpdateExecution(deltaTime);
 
-        UpdateSensor();
+    UpdateSensor();
 
-        CheckCanStand();
+    CheckCanStand();
 
-        UpdateState(deltaTime);
+    UpdateState(deltaTime);
 
-        if (Actor::m_state == State::Paused) { m_velocity->SetX(0.0f); }
+    if (Actor::m_state == State::Paused) { m_velocity->SetX(0.0f); }
 
-        if (m_anim) m_anim->Update(deltaTime);
+    if (m_anim) m_anim->Update(deltaTime);
 
-        if (Actor::m_state == State::Active) {
-        // デバッグ用：4キーを押すとHPが0になる
+    if (Actor::m_state == State::Active) {
+    // デバッグ用：4キーを押すとHPが0になる
     #ifdef _DEBUG
         const Input& input = m_scene->GetGame()->GetInput();
         if (input.GetKey().IsTrigger(Key::NUM_4)) {
@@ -950,6 +951,68 @@ std::vector<EnemyEntity*> PlayerEntity::CollectEnemiesInScreen()
     }
 
     return enemies;
+}
+
+void PlayerEntity::CollectNearEnemies(int width, int height)
+{
+    EnemyEntity* enemies[5] = {};
+
+    Vector2d playerPos = m_transform->GetPosition();
+
+    for (Actor* actor : m_scene->GetActors())
+    {
+        if (actor->GetType() != ActorType::Enemy)
+            continue;
+
+        EnemyEntity* enemy = static_cast<EnemyEntity*>(actor);
+        Vector2d enemyPos = enemy->GetPos();
+
+        // プレイヤーの向いている方向にいる敵だけを対象にする
+        if (m_dir) {
+            if (playerPos.x > enemyPos.x) continue;
+        }
+        else {
+            if (playerPos.x < enemyPos.x) continue;
+        }
+
+        // 探索範囲外の敵を除外する
+        if (std::abs(playerPos.x - enemyPos.x) > width) continue;
+        if (std::abs(playerPos.y - enemyPos.y) > height) continue;
+
+        // X方向の距離が近い位置に挿入する
+        int insertIndex = 0;
+
+        while (insertIndex < 5 && enemies[insertIndex] != nullptr)
+        {
+            Vector2d currentPos = enemies[insertIndex]->GetPos();
+
+            if (std::abs(playerPos.x - enemyPos.x)
+                < std::abs(playerPos.x - currentPos.x))
+            {
+                break;
+            }
+
+            insertIndex++;
+        }
+
+        // 5体の候補に入らない場合は無視する
+        if (insertIndex >= 5)
+            continue;
+
+        // 挿入位置より後ろの敵を1つずつ後ろにずらす
+        for (int j = 4; j > insertIndex; j--)
+        {
+            enemies[j] = enemies[j - 1];
+        }
+
+        enemies[insertIndex] = enemy;
+    }
+
+    // 結果を保存する
+    for (int i = 0; i < 5; i++)
+    {
+        m_nearTargets[i] = enemies[i];
+    }
 }
 
 void PlayerEntity::UpdateScale() {
