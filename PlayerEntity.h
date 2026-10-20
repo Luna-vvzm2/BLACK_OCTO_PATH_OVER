@@ -149,6 +149,7 @@ public:
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
     void UpdateOcto(float deltaTime);
+    void UpdateTiger(float deltaTime);
     void UpdateWallSensor();
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
@@ -277,7 +278,7 @@ private:
     bool m_canAttack;
     float m_attackLockTimer;
 
-    bool m_ownJutsu[4] = { true, false, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
+    bool m_ownJutsu[4] = { true, true, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
     bool m_isJutsu[4] = { false , false, false, false };    // ”Epg—p’†ƒtƒ‰ƒO
     int m_jutsuCost[4] = { 5, 60, 10, 60 }; // ”EpÁ”ï‰eƒQ[ƒW—Ê
     bool m_isOcto;
@@ -288,6 +289,8 @@ private:
     bool m_isHide = false;
 
     float m_tigerTimer;
+    bool m_tigerFirstAttack;
+    bool m_tigerSecondAttack;
 
     bool m_getHit;
     float m_getHitTimer;
@@ -312,7 +315,7 @@ private:
     bool m_isKamae;
     bool m_isExecution;
     std::vector<EnemyEntity*> m_executionTargets;
-    EnemyEntity* m_nearTargets[5];
+    EnemyEntity* m_nearTargets[5] = {};
     float m_executionTimer;
 
     bool m_ignorePlatform;
