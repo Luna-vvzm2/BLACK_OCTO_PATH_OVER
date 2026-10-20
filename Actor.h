@@ -20,7 +20,8 @@ enum class ActorType {
 	TreasureBox,
 	Trap,
 	UI,
-	DropItem
+	DropItem,
+	CheckPoint
 };
 
 class Actor {

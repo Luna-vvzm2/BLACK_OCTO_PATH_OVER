@@ -873,6 +873,7 @@ void PlayScene::Draw()
 			return
 				type == ActorType::Block ||
 				type == ActorType::Trap ||
+				type == ActorType::CheckPoint ||
 				type == ActorType::StageExit ||
 				type == ActorType::StageBack ||
 				dynamic_cast<DropItemEntity*>(actor) != nullptr;

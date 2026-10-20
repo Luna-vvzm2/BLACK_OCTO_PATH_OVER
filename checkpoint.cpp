@@ -7,10 +7,8 @@
 
 #include <cmath>
 
-Checkpoint::Checkpoint(Scene* scene, const Vector2d& position)
-    : Actor(scene)
-    , m_position(position)
-    , m_sprite(nullptr)
+Checkpoint::Checkpoint(Scene* scene, const Vector2d& pos)
+    : EntityActor(scene, pos)
     , m_isActivated(false)
 {
 }
@@ -18,14 +16,14 @@ Checkpoint::Checkpoint(Scene* scene, const Vector2d& position)
 bool Checkpoint::Init()
 {
     auto* transform = AddComponent<TransformComponent>();
-    m_sprite = AddComponent<SpriteComponent>("assets/images/blocks/checkpointPassive.png");
+    m_sprite = AddComponent<SpriteComponent>(GetTexturePath());
 
     if (!transform || !m_sprite)
     {
         return false;
     }
 
-    transform->SetPosition(m_position);
+    transform->SetPosition(m_initialPos);
     m_sprite->SetSize(104.0f, 104.0f);
     return true;
 }
@@ -52,14 +50,13 @@ void Checkpoint::Update(float deltaTime)
     }
 
     const Vector2d playerPosition = player->GetPos();
-    constexpr float activationDistance = 52.0f;
-    if (std::fabs(playerPosition.x - m_position.x) <= activationDistance &&
-        std::fabs(playerPosition.y - m_position.y) <= activationDistance)
+    if (std::fabs(playerPosition.x - m_initialPos.x) <= 52.0f &&
+        playerPosition.y < m_initialPos.y)
     {
-        playScene->SetRespawnPosition(m_position);
+        playScene->SetRespawnPosition(m_initialPos);
     }
 
-    const bool isCurrentCheckpoint = playScene->IsRespawnPosition(m_position);
+    const bool isCurrentCheckpoint = playScene->IsRespawnPosition(m_initialPos);
     if (isCurrentCheckpoint != m_isActivated)
     {
         const char* texturePath = isCurrentCheckpoint
