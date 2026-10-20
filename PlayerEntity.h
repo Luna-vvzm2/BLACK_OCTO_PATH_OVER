@@ -200,8 +200,8 @@ public:
     void SpawnKunai();
 
     bool GetIsOcto() { return m_isOcto; }
-    bool SetIsHide(bool flag) { m_isHide = flag; }
-    bool GetIsHide() { return m_isHide; }
+    void SetIsHide(bool flag) { m_isHide = flag; }
+    bool GetIsHide() const { return m_isHide && m_isOcto; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);
@@ -285,7 +285,7 @@ private:
     float m_octoRatio;
     float m_octoTimer;
     bool m_endOcto;
-    bool m_isHide;
+    bool m_isHide = false;
 
     float m_tigerTimer;
 

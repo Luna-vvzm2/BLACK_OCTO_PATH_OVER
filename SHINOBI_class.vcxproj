@@ -179,6 +179,10 @@
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
+    <ClCompile Include="GameOverMenuUI.cpp" />
+    <ClCompile Include="GunnerEnemyEntity.cpp" />
+    <ClCompile Include="HealerEnemyEntity.cpp" />
+    <ClCompile Include="HideBlock.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameOverUI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -291,6 +295,10 @@
     <ClInclude Include="EventTexture.h" />
     <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameOverUI.h" />
+    <ClInclude Include="GameOverMenuUI.h" />
+    <ClInclude Include="GunnerEnemyEntity.h" />
+    <ClInclude Include="HealerEnemyEntity.h" />
+    <ClInclude Include="HideBlock.h" />
     <ClInclude Include="HitboxData.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
