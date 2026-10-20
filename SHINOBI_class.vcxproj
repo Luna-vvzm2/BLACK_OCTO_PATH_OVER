@@ -179,9 +179,6 @@
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
-    <ClCompile Include="GameOverMenuUI.cpp" />
-    <ClCompile Include="GunnerEnemyEntity.cpp" />
-    <ClCompile Include="HealerEnemyEntity.cpp" />
     <ClCompile Include="HideBlock.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameOverUI.cpp">
