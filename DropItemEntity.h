@@ -24,6 +24,8 @@ public:
 	DropState m_state = DropState::Spawn;
 
 	float m_spawnTimer = 0.0f;
+	float m_followTime = 0.5f;
+	float m_followSpeed = 2.0f;
 
 	virtual bool Init() override;
 	virtual void Update(float deltaTime) override;

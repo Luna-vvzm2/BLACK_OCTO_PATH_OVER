@@ -111,8 +111,6 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
     SetPos(pos);
 
-    // EnemyEntity::Update() ‚ÍŒÄ‚Î‚È‚¢
-    // EntityActor::Update() ‚à‚±‚±‚Å‚ÍŒÄ‚Î‚È‚¢
 }
 
 void SpiritEnemyEntity::UpdateAI()

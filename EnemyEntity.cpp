@@ -67,7 +67,7 @@ bool EnemyEntity::Init() {
     m_dropTable.clear();
     m_dropTable.push_back({ ItemType::Coin, 0.0f });
     m_dropTable.push_back({ ItemType::Kunai,0.0f });
-    m_dropTable.push_back({ ItemType::Heal,0.15f });
+    m_dropTable.push_back({ ItemType::Heal,1.15f });
     return true;
 
 }
