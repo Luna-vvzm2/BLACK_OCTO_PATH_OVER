@@ -339,19 +339,23 @@ bool PlayScene::StageInit(int stageNo) {
 				break;
 
 			case 10:    // ‰¼ID
-				AddActor(new DamageTrap(this, pos, Vector2d(tileSize, tileSize)));
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new DamageTrap(this, pos, Vector2d(tileSize,50.0f)));
 				break;
 
 			case 11:   // ‰¼ID
-				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, tileSize)));
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 12: //‰¼ID
-				AddActor(new NinjutsuSealTrap(this, pos, Vector2d(tileSize, tileSize)));
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new NinjutsuSealTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 13: //‰¼ID
-				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, tileSize)));
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 14:
@@ -1363,6 +1367,7 @@ void PlayScene::StartFadeToStage(int idx, int spawnIndex)
 	// ‚·‚Å‚É‘JˆÚ’†‚È‚ç–³Ž‹
 	if (m_fadeState != FadeState::None) return;
 
+	m_game->GetSoundManager().Play("select_game_start");
 	m_pendingStageIndex = idx;
 	m_nextSpawnIndex = spawnIndex;
 	m_fadeState = FadeState::FadeOut;

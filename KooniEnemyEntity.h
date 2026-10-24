@@ -53,6 +53,8 @@ private:
     bool m_faceRight;
     bool m_attackHit;
     bool m_attackRecoveryStarted;
+    //’Ç‰Á
+    bool IsPlayerInSearchRange() const override;
     std::string m_currentTexturePath;
     SoundComponent* m_attackSound;
 };

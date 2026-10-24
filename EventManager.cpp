@@ -293,7 +293,7 @@ void TalkEvent::Update(float deltaTime)
 			if (m_talkerPosition == ActorPosition::Left)
 			{
 				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
-				const int speed = 2;
+				const int speed = 1;
 
 				if (m_talkStep == 0)
 				{
@@ -326,7 +326,7 @@ void TalkEvent::Update(float deltaTime)
 			if (m_talkerPosition == ActorPosition::Right)
 			{
 				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
-				const int speed = 2;
+				const int speed = 1;
 
 				if (m_talkStep == 0)
 				{
@@ -489,7 +489,7 @@ void TalkEvent::Draw()
 				}
 				int actorX = static_cast<int>(m_boxPos.x) - 220;
 
-				DrawExtendGraph(actorX, m_actorLY, actorX + static_cast<int>(m_actorSize.x), m_actorLY + static_cast<int>(m_actorSize.y), m_actorLTextureId, TRUE);
+				DrawExtendGraph(actorX, m_actorLY + 50, actorX + static_cast<int>(m_actorSize.x), m_actorLY + static_cast<int>(m_actorSize.y) + 50, m_actorLTextureId, TRUE);
 				SetDrawBright(255, 255, 255);
 			}
 
@@ -500,7 +500,7 @@ void TalkEvent::Draw()
 				}
 				int actorX = static_cast<int>(m_boxPos.x + m_boxSize.x) - static_cast<int>(m_actorSize.x) + 280;
 
-				DrawExtendGraph(actorX, m_actorRY, actorX + static_cast<int>(m_actorSize.x), m_actorRY + static_cast<int>(m_actorSize.y), m_actorRTextureId, TRUE);
+				DrawExtendGraph(actorX, m_actorRY + 50, actorX + static_cast<int>(m_actorSize.x), m_actorRY + static_cast<int>(m_actorSize.y) + 50, m_actorRTextureId, TRUE);
 			}
 
 		}

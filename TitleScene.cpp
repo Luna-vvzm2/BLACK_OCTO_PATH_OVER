@@ -38,12 +38,21 @@ void TitleScene::Update(float deltaTime) {
 	}
 
     const Input& input = m_game->GetInput();
-    if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + 2) % 3;
-    if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % 3;
+    if (input.IsTrigger(Action::UP)) {
+        m_cursor = (m_cursor + 2) % 3;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
+    if (input.IsTrigger(Action::DOWN)) {
+        m_cursor = (m_cursor + 1) % 3;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
 
     if (input.IsTrigger(Action::ENTER)) {
         if (m_cursor == 0) m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
-        else if (m_cursor == 1) m_settings.Open();
+        else if (m_cursor == 1) {
+            m_game->GetSoundManager().Play("select_default");
+            m_settings.Open();
+        }
         else m_game->RequestQuit();
     }
 }

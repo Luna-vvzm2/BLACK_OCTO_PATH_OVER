@@ -191,6 +191,7 @@ void Menu::Toggle()
 
 	if (m_isOpen)
 	{
+		GetGame()->GetSoundManager().Play("map_check");
 		// 開いた直後はマップタブ
 		m_currentTab = Tab::Map;
 		m_cursor.SetPosition(0, 0);

@@ -81,6 +81,7 @@ bool Game::Init(const std::string& title, UINT width, UINT height, UINT color, c
 		std::cerr << "Sound.csv could not be loaded; continuing without CSV sounds\n";
 	}
 
+	m_soundManager.Play("game_in");
 	ChangeScene(std::make_unique<TitleScene>(this));
 	ProccessPendingActions();
 
