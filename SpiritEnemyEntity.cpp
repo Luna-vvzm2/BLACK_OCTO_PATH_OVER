@@ -132,6 +132,23 @@ void SpiritEnemyEntity::UpdateAI()
         return;
     }
 
+    // プレイヤーが隠れている場合は攻撃・追跡を中断する
+    if (player->GetIsHide())
+    {
+        // 移動を停止
+        SetVel(Vector2d::Zero());
+
+        // 攻撃状態と回復状態のタイマーをリセット
+        m_attackTimer = 0.0f;
+        
+        // 目標地点を破棄
+        m_hasTargetPosition = false;
+
+        // 待機状態に戻す
+        m_state = Idle;
+
+        return;
+    }
     Vector2d myPos = GetPos();
     Vector2d playerPos = player->GetPos();
 
