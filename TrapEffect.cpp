@@ -6,13 +6,14 @@ namespace
 {
     constexpr float FRAME_TIME = 1.0f / 20.0f;   // 「フレーム数」の1フレームの長さ
 
-    // 画像の表示サイズ(1.0 = シート1コマの元のサイズ)と、位置の補正
+    // 画像の表示サイズ(1.0 = シート1コマの元のサイズ)
+
     constexpr float EFFECT_SCALE = 1.0f;
 
     // ---- 起動前(ループ)----
     const char* LOOP_SHEET_PATH = "assets/images/effects/loop_sheet.png";
     constexpr float LOOP_OFFSET_X = 0.0f;
-    constexpr float LOOP_OFFSET_Y = 30.0f;
+    constexpr float LOOP_OFFSET_Y = 0.0f;
     constexpr int LOOP_SHEET_COLS = 3;
     constexpr int LOOP_SHEET_ROWS = 3;
     const std::vector<int> LOOP_FRAME_COUNTS = { 2, 2, 2, 3, 3, 3, 3, 2 };   // 各コマの表示フレーム数
@@ -20,7 +21,7 @@ namespace
     // ---- 起動時(1回)----
     const char* ON_SHEET_PATH = "assets/images/effects/on_sheet.png";
     constexpr float ON_OFFSET_X = 0.0f;
-    constexpr float ON_OFFSET_Y = 0.0f;
+    constexpr float ON_OFFSET_Y = -30.0f;
     constexpr int ON_SHEET_COLS = 3;
     constexpr int ON_SHEET_ROWS = 3;
     const std::vector<int> ON_FRAME_COUNTS = { 3, 2, 2, 2, 1, 1, 1 };        // 各コマの表示フレーム数

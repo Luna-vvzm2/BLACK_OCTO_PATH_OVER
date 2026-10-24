@@ -25,9 +25,7 @@ bool DamageTrap::Init() {
     if (!EntityActor::Init()) return false;
 
     if (m_collision) {
-        constexpr float COLLISION_HEIGHT = 50.0f;   
-        m_collision->SetRect(m_initialSize.x, COLLISION_HEIGHT);
-        m_collision->SetOffset(Vector2d(0.0f, (m_initialSize.y - COLLISION_HEIGHT) * 0.5f));
+        m_collision->SetRect(m_initialSize.x, m_initialSize.y); // 当たり判定のサイズ
     }
 
     m_effect.Init(m_sprite, GetTransform());   // 起動前のエフェクト(ループ)を開始
