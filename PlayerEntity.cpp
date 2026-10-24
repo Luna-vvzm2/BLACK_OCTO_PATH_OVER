@@ -2975,6 +2975,15 @@ void PlayerEntity::AddHaku(int value)
         m_haku = m_maxHaku;
 }
 
+void PlayerEntity::GetHeal(int value)
+{
+    m_healItem += value;
+    if (m_healItem < 0)
+        m_healItem = 0;
+
+    if (m_healItem > m_maxHeal)
+        m_healItem = m_maxHeal;
+}
 void PlayerEntity::HealHP(int value)
 {
     if (!m_hp) return;

@@ -271,6 +271,7 @@ public:
     void AddCoin(int value);
     void AddKunai(int value);
     void AddHaku(int value);
+    void GetHeal(int value);
     void HealHP(int value);
 
     int GetCoin() const { return m_coin; }
@@ -382,7 +383,7 @@ private:
     int m_coin;
     int m_haku;
     int m_maxHaku;
-
+    int m_maxHeal = 4;
     std::string GetTexturePath() const override;
 
     //ƒTƒEƒ“ƒhŠÖŒW
