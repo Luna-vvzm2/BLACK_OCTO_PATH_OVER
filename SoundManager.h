@@ -19,7 +19,7 @@ public:
 
     bool LoadCsv(const std::string& csvPath);
     bool SetScope(int scope);
-    bool Play(const std::string& soundId, SoundCategory category = SoundCategory::Effect, bool restart = true);
+    bool Play(const std::string& soundId, bool restart = true);
     void Stop(const std::string& soundId);
     bool IsPlaying(const std::string& soundId) const;
     void Update(float deltaTime);

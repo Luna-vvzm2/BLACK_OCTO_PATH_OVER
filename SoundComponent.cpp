@@ -64,7 +64,7 @@ bool SoundComponent::Play(const std::string& soundId, bool restart)
 {
 	if (!m_owner || !m_owner->GetScene()) return false;
 	Game* game = m_owner->GetScene()->GetGame();
-	if (!game || !game->GetSoundManager().Play(soundId, m_category, restart)) return false;
+	if (!game || !game->GetSoundManager().Play(soundId, restart)) return false;
 	m_lastSoundId = soundId;
 	return true;
 }

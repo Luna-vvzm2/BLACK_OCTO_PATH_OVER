@@ -9,7 +9,7 @@ ShurikenUI::ShurikenUI(Scene* scene, float x, float y)
     SetPosition(x, y);
 
     // 小さな手裏剣アイコンを読み込む
-    m_icon = AddComponent<SpriteComponent>("assets/images/uies/kunai.png", false);
+    m_icon = AddComponent<SpriteComponent>("assets/images/icon/kunaiItem.png", false);
 }
 
 void ShurikenUI::SetCount(int count)
@@ -19,35 +19,19 @@ void ShurikenUI::SetCount(int count)
 
 void ShurikenUI::Draw()
 {
-    if (!m_isVisible) return;
+    if (!m_isVisible || !m_icon || m_icon->GetHandle() < 0) return;
 
     Renderer* renderer = m_scene->GetGame()->GetRenderer();
     const std::string& font = m_scene->GetGame()->GatDebugFont();
+    const int x = static_cast<int>(GetX());
+    const int y = static_cast<int>(GetY());
+    const int itemSize = 78;
 
-    // --- ① 手裏剣アイコンを描画 ---
-    float scale = 0.4f; // 小さめ
-    Vector2d iconPos(GetX(), GetY());
+    DrawExtendGraph(x, y, x + itemSize, y + itemSize, m_icon->GetHandle(), TRUE);
 
-    renderer->DrawSpriteEx(
-        iconPos,
-        scale, scale,
-        0.0f,
-        m_icon->GetHandle(),
-        true,
-        Vector2d(0, 0),
-        255,
-        false, false, false
-    );
-
-    // --- ② 数字を描画（アイコンの右に表示） ---
-    std::string text = std::to_string(m_count);
-
-    renderer->DrawTextL(
-        Vector2d(GetX() + 40, GetY() + 10), // アイコンの右に配置
-        text,
-        Color(255, 255, 255),
-        font,
-        32,
-        false
-    );
+    const std::string count = std::to_string(m_count);
+    renderer->DrawTextL(Vector2d(GetX() + 60.0f, GetY() + 15.0f),
+        count, Color(20, 20, 20), font, 38, false);
+    renderer->DrawTextL(Vector2d(GetX() + 58.0f, GetY() + 13.0f),
+        count, Color(255, 255, 255), font, 38, false);
 }

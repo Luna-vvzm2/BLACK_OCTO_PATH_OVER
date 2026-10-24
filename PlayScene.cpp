@@ -133,7 +133,7 @@ bool PlayScene::Init() {
 	AddUIActor(hpBar);
 	m_hpBarUI = hpBar;
 	
-	ShurikenUI* shuriken = new ShurikenUI(this, 18, 60);
+	ShurikenUI* shuriken = new ShurikenUI(this, 18, 135);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
 
@@ -141,8 +141,8 @@ bool PlayScene::Init() {
 	m_playerStatusUI = new PlayerStatusUI(
 		this,
 		m_player,
-		20.0f,
-		160.0f
+		18.0f,
+		135.0f
 	);
 
 	AddUIActor(m_playerStatusUI);
@@ -543,13 +543,24 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 void PlayScene::Update(float deltaTime) {
 	const Input& input = m_game->GetInput();
 
+	if (m_fadeState != FadeState::None) {
+		UpdateFade(deltaTime);
+		updateActors(m_UIactors, deltaTime);
+		return;
+	}
+
 	if (m_pauseMenu.IsOpen()) {
 		const PauseMenu::Result result = m_pauseMenu.Update();
+		if (result == PauseMenu::Result::Resume) {
+			// PauseMenu closes itself on Resume; keep it drawn while fading out.
+			m_pauseMenu.Open();
+			StartFadeToPause(false);
+		}
 		if (result == PauseMenu::Result::StageSelect)
 		{
 			//Game* game = GetGame(); 
 			//m_game->PushScene(std::make_unique<GameOverScene>(game));
-			m_game->PushScene(std::make_unique<StageSelectScene>(m_game));
+			m_game->PushScene(std::make_unique<StageSelectScene>(m_game, this));
 		}
 
 		else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
@@ -564,17 +575,9 @@ void PlayScene::Update(float deltaTime) {
 			return;
 		}
 		if (!m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
-			m_pauseMenu.Open();
+			StartFadeToPause(true);
 			return;
 		}
-	}
-
-	// ====== フェード遷移中はゲームロジックを止める ======
-	if (m_fadeState != FadeState::None) {
-		UpdateFade(deltaTime);
-		// フェード中も UI（ゲームオーバーメニュー等）は動かしたいならここで
-		updateActors(m_UIactors, deltaTime);
-		return; // 通常更新はスキップ
 	}
 
 	if (m_requestStageChange)
@@ -1207,17 +1210,13 @@ void PlayScene::Draw()
 	// フェード
 	// =====================================================
 
-	if (m_fadeState == FadeState::Loading)
-	{
-		DrawLoadingScreen();
-	}
-	else
-	{
-		DrawFadeOverlay();
-	}
-
-	DrawFadeOverlay();
-	m_pauseMenu.Draw();
+	if (m_fadeState == FadeState::Loading) DrawLoadingScreen();
+	int pauseAlpha = 255;
+	if (m_fadeState == FadeState::PauseFadeIn)
+		pauseAlpha = static_cast<int>(255.0f * m_fadeTimer / FADE_IN_DURATION);
+	else if (m_fadeState == FadeState::PauseFadeOut)
+		pauseAlpha = static_cast<int>(255.0f * (1.0f - m_fadeTimer / FADE_OUT_DURATION));
+	m_pauseMenu.Draw(pauseAlpha);
 
 	// =====================================================
 	// デバッグ
@@ -1252,10 +1251,6 @@ void PlayScene::Draw()
 		);
 	}
 
-	// ←ここを追加
-	DrawFadeOverlay();
-	m_pauseMenu.Draw();
-
 	renderer->DrawTextL(
 		Vector2d(
 			static_cast<float>(m_game->GetWidth()) - 150.0f,
@@ -1269,6 +1264,7 @@ void PlayScene::Draw()
 	);
 
 #endif
+	DrawFadeOverlay();
 }
 
 bool PlayScene::IsActorAlive(Actor* actor) const
@@ -1336,6 +1332,12 @@ void PlayScene::ShowGameOverMenu()
 
 void PlayScene::OnResume()
 {
+	if (m_returnToPauseMenu)
+	{
+		m_returnToPauseMenu = false;
+		return;
+	}
+
 	RespawnPlayer();
 
 	if (m_pauseMenu.IsOpen())
@@ -1376,12 +1378,37 @@ void PlayScene::StartFadeToStage(int idx, int spawnIndex)
 	}
 }
 
+void PlayScene::StartFadeToPause(bool opening)
+{
+	if (m_fadeState != FadeState::None) return;
+	if (opening) m_pauseMenu.Open();
+	m_fadeState = opening ? FadeState::PauseFadeIn : FadeState::PauseFadeOut;
+	m_fadeTimer = 0.0f;
+}
+
 void PlayScene::UpdateFade(float deltaTime)
 {
 	m_fadeTimer += deltaTime;
 
 	switch (m_fadeState)
 	{
+	case FadeState::PauseFadeOut:
+		if (m_fadeTimer >= FADE_OUT_DURATION)
+		{
+			m_pauseMenu.Toggle();
+			m_fadeState = FadeState::None;
+			m_fadeTimer = 0.0f;
+		}
+		break;
+
+	case FadeState::PauseFadeIn:
+		if (m_fadeTimer >= FADE_IN_DURATION)
+		{
+			m_fadeState = FadeState::None;
+			m_fadeTimer = 0.0f;
+		}
+		break;
+
 	case FadeState::FadeOut:
 	{
 		if (m_fadeTimer >= FADE_OUT_DURATION)

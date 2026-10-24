@@ -4,6 +4,7 @@
 
 
 class AnimationComponent;
+class SoundComponent;
 
 class SpiritEnemyEntity : public EnemyEntity
 {
@@ -34,6 +35,7 @@ private:
 	State m_state = Idle;
 
 	AnimationComponent* m_animation = nullptr;
+	SoundComponent* m_attackSound = nullptr;
 
 	float m_floatTimer = 0.0f;
 	float m_attackTimer = 0.0f;

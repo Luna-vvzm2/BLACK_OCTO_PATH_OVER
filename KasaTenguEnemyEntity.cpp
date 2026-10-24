@@ -80,7 +80,7 @@ KasaTenguEnemyEntity::KasaTenguEnemyEntity(Scene* scene, const Vector2d& pos)
     , m_attackHit1(false)
     , m_attackHit2(false)
     , m_attackRecoveryStarted(false)
-    , m_hitSound(nullptr)
+    , m_attackSound(nullptr)
 {
 }
 
@@ -98,9 +98,7 @@ bool KasaTenguEnemyEntity::Init()
     }
 
     m_anim->SetSprite(m_sprite);
-    m_hitSound = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/weakAttack1.wav")   // ‰¼
-    );
+    m_attackSound = AddComponent<SoundComponent>();
 
     m_anim->AddClip("idle", MakeClip(3, KASATENGU_IDLE_FRAME_TIME, true));
     m_anim->AddClip("move", MakeClip(3, KASATENGU_MOVE_FRAME_TIME, true));
@@ -322,12 +320,20 @@ void KasaTenguEnemyEntity::UpdateAttack(float deltaTime, PlayerEntity* player)
 
     if (!m_attackHit1 && m_stateTimer >= KASATENGU_ATTACK1_HIT_TIME)
     {
+        if (m_attackSound != nullptr)
+        {
+            m_attackSound->Play("enemy_Kasatengu_attack");
+        }
         TryHitPlayer(player, 1);
         m_attackHit1 = true;
     }
 
     if (!m_attackHit2 && m_stateTimer >= KASATENGU_ATTACK2_HIT_TIME)
     {
+        if (m_attackSound != nullptr)
+        {
+            m_attackSound->Play("enemy_Kasatengu_attack");
+        }
         TryHitPlayer(player, 2);
         m_attackHit2 = true;
     }
@@ -380,10 +386,6 @@ void KasaTenguEnemyEntity::TryHitPlayer(PlayerEntity* player, int stage)
     {
         const float knockbackX = m_faceRight ? KASATENGU_ATTACK_KNOCKBACK : -KASATENGU_ATTACK_KNOCKBACK;
         player->TakeDamage(attackDamage, Vector2d(knockbackX, 0.0f));
-        if (m_hitSound != nullptr)
-        {
-            m_hitSound->Play();
-        }
     }
 }
 

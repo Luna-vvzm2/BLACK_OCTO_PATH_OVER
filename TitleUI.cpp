@@ -7,7 +7,7 @@ TitleUI::TitleUI(Scene* scene)
 	: UIActor(scene)
 {
 	m_transform = AddComponent<TransformComponent>();
-	m_title = AddComponent<SpriteComponent>("assets/images/uies/title.png", false);
+	m_title = AddComponent<SpriteComponent>("assets/images/title/titletest.png", false);
 	if (!m_title) {
 		std::cerr << "画像読み込み失敗\n";
 	}
@@ -34,16 +34,18 @@ void TitleUI::Draw() {
 	if (!transform) return;
 
 	Vector2d pos = transform->GetPosition();
-	int w, h;
-	GetGraphSize(m_title->GetHandle(), &w, &h);
+	if (m_title->GetHandle() < 0) return;
+	int w = 0, h = 0;
+	if (GetGraphSize(m_title->GetHandle(), &w, &h) < 0 || w <= 0 || h <= 0) return;
 
-	int ScaleX = 1;
-	int ScaleY = ScaleX;
+	const Game* game = m_scene->GetGame();
+	const float scaleX = static_cast<float>(game->GetWidth()) / w;
+	const float scaleY = static_cast<float>(game->GetHeight()) / h;
 
 	// スクリーン座標描画（カメラ影響なし）
 	m_scene->GetGame()->GetRenderer()->DrawSpriteEx(
-		pos, (float)ScaleX, (float)ScaleY, 0.0f, m_title->GetHandle(),
-		true, Vector2d(0, 0), 255, false, false, false
+		pos, scaleX, scaleY, 0.0f, m_title->GetHandle(),
+		false, Vector2d(0, 0), 255, false, false, false
 	);
 }
 
