@@ -10,6 +10,7 @@ namespace
 
 NinjutsuSealTrap::NinjutsuSealTrap(Scene* scene, const Vector2d& pos, const Vector2d& size)
 	:EntityActor(scene, pos, size)
+	, m_triggered(false)
 	,m_duration(NINJUTSU_SEAL_DURATION)
 {
 }
@@ -18,10 +19,13 @@ bool NinjutsuSealTrap::Init()
 {
 	if (!EntityActor::Init()) return false;
 
-	if(m_collision)
-	{
-		m_collision->SetRect(m_initialSize.x, m_initialSize.y);
+	if (m_collision) {
+		constexpr float COLLISION_HEIGHT = 50.0f;
+		m_collision->SetRect(m_initialSize.x, COLLISION_HEIGHT);
+		m_collision->SetOffset(Vector2d(0.0f, (m_initialSize.y - COLLISION_HEIGHT) * 0.5f));
 	}
+
+	m_effect.Init(m_sprite, GetTransform());   // 起動前のエフェクト(ループ)を開始
 
 	return true;
 }
@@ -29,6 +33,15 @@ bool NinjutsuSealTrap::Init()
 void NinjutsuSealTrap::Update(float deltaTime)
 {
 	EntityActor::Update(deltaTime);
+	m_effect.Update(deltaTime);
+
+	// 起動後は、起動エフェクトの再生が終わったら消える
+	if (m_triggered) {
+		if (m_effect.IsActivateFinished()) {
+			Destroy();
+		}
+		return;
+	}
 
 	PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
 	if (!playScene) return;
@@ -44,6 +57,7 @@ void NinjutsuSealTrap::Update(float deltaTime)
 	{
 		std::cout << "[NinjutsuSealTrap] 起動 " << m_duration << " sec\n";   
 		player->ApplyNinjutsuSeal(m_duration);
-		Destroy();
+		m_triggered = true;
+		m_effect.PlayActivate();   // 起動時のエフェクトを再生(終わったら消える)
 	}
 }

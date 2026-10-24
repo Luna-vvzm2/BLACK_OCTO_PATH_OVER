@@ -72,14 +72,19 @@ bool EnemySpawnTrap::Init() {
     if (!EntityActor::Init()) return false;
 
     if (m_collision) {
-        m_collision->SetRect(m_initialSize.x, m_initialSize.y); // 当たり判定のサイズ
+        constexpr float COLLISION_HEIGHT = 50.0f;
+        m_collision->SetRect(m_initialSize.x, COLLISION_HEIGHT);
+        m_collision->SetOffset(Vector2d(0.0f, (m_initialSize.y - COLLISION_HEIGHT) * 0.5f));
     }
+
+    m_effect.Init(m_sprite, GetTransform());   // 起動前のエフェクト(ループ)を開始
 
     return true;
 }
 
 void EnemySpawnTrap::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
+    m_effect.Update(deltaTime);
 
     PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
     if (!playScene) return;
@@ -132,6 +137,8 @@ void EnemySpawnTrap::Trigger(PlayerEntity* player)
 
         m_spawnPoints.push_back(point);
     }
+
+    m_effect.PlayActivate();   // 罠の起動時のエフェクトを再生
 
     m_phase = Phase::Effect;
     m_effectTimer = 0.0f;
@@ -243,22 +250,3 @@ void EnemySpawnTrap::SpawnAll(PlayScene* playScene)
 
     m_spawnPoints.clear();
 }
-
-/*void EnemySpawnTrap::Draw()
-{
-    EntityActor::Draw();
-
-    // 登場エフェクト(仮): 出現位置に、広がる円を表示する
-    if (m_phase != Phase::Effect || GetScene() == nullptr) return;
-
-    Renderer* renderer = GetScene()->GetGame()->GetRenderer();
-    if (!renderer) return;
-
-    const float t = std::min(m_effectTimer / SPAWN_EFFECT_TIME, 1.0f);
-    for (const SpawnPoint& point : m_spawnPoints)
-    {
-        // 小鬼・怨霊は紫、笠天狗(エリート)は赤で区別する
-        const Color color = (point.kind == EnemyKind::KasaTengu) ? Color(255, 64, 64) : Color(170, 80, 255);
-        renderer->DrawCircle(point.pos, SPAWN_EFFECT_RADIUS * t, color, false);
-    }
-}*/

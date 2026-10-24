@@ -25,14 +25,19 @@ bool DamageTrap::Init() {
     if (!EntityActor::Init()) return false;
 
     if (m_collision) {
-        m_collision->SetRect(m_initialSize.x, m_initialSize.y); // 当たり判定のサイズ
+        constexpr float COLLISION_HEIGHT = 50.0f;   
+        m_collision->SetRect(m_initialSize.x, COLLISION_HEIGHT);
+        m_collision->SetOffset(Vector2d(0.0f, (m_initialSize.y - COLLISION_HEIGHT) * 0.5f));
     }
+
+    m_effect.Init(m_sprite, GetTransform());   // 起動前のエフェクト(ループ)を開始
 
     return true;
 }
 
 void DamageTrap::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
+    m_effect.Update(deltaTime);
 
     // 爆発後は演出が終わるまで待って消える
     if (m_exploded) {
@@ -63,22 +68,9 @@ void DamageTrap::Explode(PlayerEntity* player)
 {
     m_exploded = true;
     m_explosionTimer = 0.0f;
+    m_effect.PlayActivate();   // 起動時のエフェクトを再生
 
     // 罠の中心から見て外向きにノックバック
     const float dir = (player->GetPos().x >= GetPos().x) ? 1.0f : -1.0f;
     player->TakeDamage(m_damage, Vector2d(dir * DAMAGE_TRAP_KNOCKBACK, 0.0f));
-}
-
-void DamageTrap::Draw()
-{
-    EntityActor::Draw();
-
-    // 爆発演出(仮): イラスト・エフェクトが入るまでは広がる円で表示する
-    if (!m_exploded || GetScene() == nullptr) return;
-
-    Renderer* renderer = GetScene()->GetGame()->GetRenderer();
-    if (!renderer) return;
-
-    const float t = m_explosionTimer / DAMAGE_TRAP_EXPLOSION_TIME;
-    renderer->DrawCircle(GetPos(), DAMAGE_TRAP_BLAST_RADIUS * t, Color(255, 128, 0), false);
 }

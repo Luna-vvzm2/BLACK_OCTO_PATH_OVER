@@ -208,6 +208,7 @@
     <ClCompile Include="StructureABlock.cpp" />
     <ClCompile Include="StructureBBlocke.cpp" />
     <ClCompile Include="Trap.cpp" />
+    <ClCompile Include="TrapEffect.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
     <ClCompile Include="WhiteEnemyEntity.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -319,6 +320,7 @@
     <ClInclude Include="StructureABlock.h" />
     <ClInclude Include="StructureBBlock.h" />
     <ClInclude Include="Trap.h" />
+    <ClInclude Include="TrapEffect.h" />
     <ClInclude Include="TreasureBox.h" />
     <ClInclude Include="WhiteEnemyEntity.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

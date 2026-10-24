@@ -1,6 +1,7 @@
 #pragma once
 #include "EntityActor.h"
 #include "Vector2d.h"
+#include "TrapEffect.h"
 
 class CollisionComponent;
 class PlayerEntity;
@@ -13,7 +14,6 @@ public:
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void Draw() override;
 
     ActorType GetType() const override { return ActorType::Trap; }
     std::string GetTexturePath() const override { return "assets/images/blocks/burned1.png"; }
@@ -24,4 +24,5 @@ private:
     int m_damage;              // プレイヤーに与えるダメージ
     bool m_exploded;           // 爆発済みか
     float m_explosionTimer;    // 爆発してからの経過時間
+    TrapEffect m_effect;
 };
