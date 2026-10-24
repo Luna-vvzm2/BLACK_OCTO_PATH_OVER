@@ -230,6 +230,7 @@
     <ClCompile Include="StructureABlock.cpp" />
     <ClCompile Include="StructureBBlocke.cpp" />
     <ClCompile Include="Trap.cpp" />
+    <ClCompile Include="TrapEffect.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
     <ClCompile Include="KooniEnemyEntity.cpp" />
     <ClCompile Include="EntityActor.cpp" />
@@ -348,6 +349,7 @@
     <ClInclude Include="StructureABlock.h" />
     <ClInclude Include="StructureBBlock.h" />
     <ClInclude Include="Trap.h" />
+    <ClInclude Include="TrapEffect.h" />
     <ClInclude Include="TreasureBox.h" />
     <ClInclude Include="KooniEnemyEntity.h" />
     <ClInclude Include="EntityActor.h" />

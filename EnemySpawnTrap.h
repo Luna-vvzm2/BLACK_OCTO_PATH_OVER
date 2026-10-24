@@ -1,6 +1,7 @@
 #pragma once
 #include "EntityActor.h"
 #include "Vector2d.h"
+#include "TrapEffect.h"
 
 #include <vector>
 
@@ -21,7 +22,6 @@ public:
 
     bool Init() override;
     void Update(float deltaTime) override;
-    //void Draw() override;
 
     ActorType GetType() const override { return ActorType::Trap; }
     std::string GetTexturePath() const override { return "assets/images/blocks/burned1.png"; }   // 仮: 素材が入るまで既存の罠と同じ
@@ -44,4 +44,5 @@ private:
     Phase m_phase;
     float m_effectTimer;                    // 登場エフェクトの経過時間
     std::vector<SpawnPoint> m_spawnPoints;  // 出現させる敵と位置
+    TrapEffect m_effect;
 };

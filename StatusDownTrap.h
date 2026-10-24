@@ -1,6 +1,7 @@
 #pragma once
 #include "EntityActor.h"
 #include "Vector2d.h"
+#include "TrapEffect.h"
 
 class CollisionComponent;
 class PlayerEntity;
@@ -19,4 +20,6 @@ public:
 
 private:
     float m_duration;   // ステータスダウンの効果時間(秒)
+    bool m_triggered;
+    TrapEffect m_effect;
 };
