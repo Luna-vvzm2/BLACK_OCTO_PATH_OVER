@@ -2,6 +2,7 @@
 
 #include "Game.h"
 #include "PlayScene.h"
+#include "TitleScene.h"
 #include "Input.h"
 #include "Renderer.h"
 #include "Color.h"
@@ -10,7 +11,7 @@
 #include <memory>
 
 StageSelectScene::StageSelectScene(Game* game)
-    : Scene(game), m_pauseMenu(game, true) {}
+    : Scene(game) {}
 
 bool StageSelectScene::Init()
 {
@@ -21,17 +22,13 @@ bool StageSelectScene::Init()
 
 void StageSelectScene::Update(float)
 {
-    if (m_pauseMenu.IsOpen())
-    {
-        const PauseMenu::Result result = m_pauseMenu.Update();
-        if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
-        return;
-    }
-
     const Input& input = m_game->GetInput();
     if (input.IsTrigger(Action::ESCAPE))
     {
-        m_pauseMenu.Open();
+        if (m_game->CanPopScene())
+            m_game->PopScene();
+        else
+            m_game->ChangeScene(std::make_unique<TitleScene>(m_game));
         return;
     }
 
@@ -75,6 +72,7 @@ void StageSelectScene::Draw()
     }
 
     renderer->DrawTextC(Vector2d(centerX, 560), "Enter／B: ステージ1開始", Color(235, 235, 235), font, 24, false);
-    renderer->DrawTextC(Vector2d(centerX, 605), "Esc／START: ポーズ", Color(190, 190, 190), font, 22, false);
-    m_pauseMenu.Draw();
+    renderer->DrawTextC(Vector2d(centerX, 605),
+        m_game->CanPopScene() ? "Esc／START: ゲームへ戻る" : "Esc／START: タイトルへ戻る",
+        Color(190, 190, 190), font, 22, false);
 }

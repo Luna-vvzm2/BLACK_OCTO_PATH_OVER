@@ -172,6 +172,8 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
         }
         columns.push_back(static_cast<size_t>(found - header.begin()));
     }
+    const auto categoryHeader = std::find(header.begin(), header.end(), "Category");
+    const size_t categoryColumn = static_cast<size_t>(categoryHeader - header.begin());
 
     std::unordered_map<std::string, Sound> parsed;
     int rowNumber = 1;
@@ -185,6 +187,7 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
         Sound sound;
         const std::string& relativeFilePath = values[columns[1]];
         const std::string& loop = values[columns[7]];
+        int category = static_cast<int>(SoundCategory::Effect);
         sound.loop = loop == "true" || loop == "TRUE" || loop == "1";
         if (id.empty() || relativeFilePath.empty() ||
             !ParseInt(values[columns[2]], sound.scope) || sound.scope < 0 ||
@@ -193,6 +196,8 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
             !ParseTime(values[columns[5]], sound.startMs) ||
             !ParseTime(values[columns[6]], sound.endMs) ||
             !ParseInt(values[columns[8]], sound.loopFadeFrames) || sound.loopFadeFrames < 0 ||
+            (categoryColumn < header.size() &&
+                (!ParseInt(values[categoryColumn], category) || category < 0 || category > 2)) ||
             (loop != "true" && loop != "false" && loop != "TRUE" &&
              loop != "FALSE" && loop != "0" && loop != "1") ||
             relativeFilePath.find("..") != std::string::npos ||
@@ -202,6 +207,7 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
             std::cerr << "SoundManager: invalid CSV row " << rowNumber << '\n';
             return false;
         }
+        sound.category = static_cast<SoundCategory>(category);
         sound.filePath = (assetRoot / std::filesystem::u8path(relativeFilePath)).u8string();
         if (!parsed.emplace(id, std::move(sound)).second)
         {
@@ -295,14 +301,13 @@ bool SoundManager::Start(Sound& sound, int slot)
     return PlaySoundMem(handle, DX_PLAYTYPE_BACK, FALSE) == 0;
 }
 
-bool SoundManager::Play(const std::string& soundId, SoundCategory category, bool restart)
+bool SoundManager::Play(const std::string& soundId, bool restart)
 {
     auto found = m_sounds.find(soundId);
     if (found == m_sounds.end() || found->second.handles[0] == -1) return false;
     Sound& sound = found->second;
     if (sound.playing && !restart) return true;
     Stop(sound);
-    sound.category = category;
     sound.active = 0;
     sound.elapsedMs = static_cast<double>(sound.startMs);
     sound.playing = Start(sound, 0);

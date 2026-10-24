@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-enum class SoundCategory { Effect, Bgm, Voice };
+// Sound.csv Category: 0 = BGM, 1 = SE, 2 = Voice.
+enum class SoundCategory { Bgm = 0, Effect = 1, Voice = 2 };
 
 class SoundComponent : public Component
 {

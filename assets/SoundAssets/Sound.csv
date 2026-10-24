@@ -1,4 +1,4 @@
-﻿SoundId,FilePath,LoadScope,Volume,Pan,SourceStart,SourceEnd,Loop,LoopFadeFrames
-"enemy_Kooni_attack","SoundAssets\enemy_Kooni_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,6
-"enemy_Kasatengu_attack","..\..\Downloads\10.06〆切\10.06〆切\enemy_Kasatengu_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,6
-"enemy_Onryo_attack","..\..\Downloads\10.06〆切\10.06〆切\enemy_Onryo_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,6
+﻿SoundId,FilePath,LoadScope,Volume,Pan,SourceStart,SourceEnd,Loop,LoopFadeFrames,Category
+"enemy_Kooni_attack","SoundAssets\enemy_Kooni_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,0,1
+"enemy_Kasatengu_attack","SoundAssets\enemy_Kasatengu_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,0,1
+"enemy_Onryo_attack","SoundAssets\enemy_Onryo_attack.wav",0,255,0,"0:00:00:00","0:00:00:12",false,0,1
