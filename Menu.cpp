@@ -7,7 +7,8 @@ Menu::Menu(PlayScene* owner)
 	:
 	m_owner(owner),
 	m_skillMenu(this),
-	m_equipmentMenu(this)
+	m_equipmentMenu(this),
+	m_keyConfigMenu(this)
 {
 }
 
@@ -16,57 +17,76 @@ Game* Menu::GetGame() const
 	return m_owner->GetGame();
 }
 
+void Menu::SaveSettings()
+{
+	if (m_owner)
+	{
+		m_owner->SaveCurrentSettings();
+	}
+}
+
+
 void Menu::Initialize()
 {
-    m_skillMenu.Initialize();
-    m_equipmentMenu.Initialize();
+	m_skillMenu.Initialize();
+	m_equipmentMenu.Initialize();
+	m_keyConfigMenu.Initialize();
 }
 
 void Menu::Update(float deltaTime)
 {
-	const Input& input =
-		m_owner->GetGame()->GetInput();
-
-	//--------------------
-	// タブ選択中
-	//--------------------
+	const Input& input = m_owner->GetGame()->GetInput();
 
 	if (m_cursorArea == MenuCursorArea::Tab)
 	{
-		if (input.IsTrigger(Action::RIGHT))
-			m_tabCursor = 0;
+		if (input.IsMenuTrigger(Action::RIGHT))
+		{
+			m_tabCursor = (m_tabCursor + 1) % 3;
+		}
 
 		if (input.IsTrigger(Action::LEFT))
-			m_tabCursor = 1;
+		{
+			m_tabCursor = (m_tabCursor + 2) % 3;
+		}
 
 		if (input.IsTrigger(Action::DOWN) ||
 			input.IsTrigger(Action::ENTER))
 		{
-			if (m_tabCursor == 0)
+			switch (m_tabCursor)
 			{
+			case 0:
 				m_currentTab = Tab::Skill;
 				m_cursorArea = MenuCursorArea::SkillList;
-			}
-			else 
-			{
-				m_currentTab = Tab::Equipment;//本来はEquipment
-				m_cursorArea = MenuCursorArea::EquipmentList;
-			}
-			return;   
-		}
-	}
+				break;
 
-	//--------------------
-	// 各メニュー更新
-	//--------------------
+			case 1:
+				m_currentTab = Tab::Equipment;
+				m_cursorArea = MenuCursorArea::EquipmentList;
+				break;
+
+			case 2:
+				m_currentTab = Tab::KeyConfig;
+				m_cursorArea = MenuCursorArea::KeyConfigList;
+				break;
+			}
+
+			return;
+		}
+
+		return;
+	}
 
 	if (m_currentTab == Tab::Skill)
 	{
 		m_skillMenu.Update(deltaTime);
 	}
-	else
+	else if (m_currentTab == Tab::Equipment)
 	{
 		m_equipmentMenu.Update(deltaTime);
+	}
+	else
+	{
+		m_keyConfigMenu.Update(deltaTime);
 	}
 }
 
@@ -84,9 +104,17 @@ void Menu::Draw()
 	DrawTabs();
 
 	if (m_currentTab == Tab::Skill)
+	{
 		m_skillMenu.Draw();
-	else
+	}
+	else if (m_currentTab == Tab::Equipment)
+	{
 		m_equipmentMenu.Draw();
+	}
+	else
+	{
+		m_keyConfigMenu.Draw();
+	}
 }
 
 //====================
@@ -100,57 +128,41 @@ void Menu::DrawTabs()
 	const int tabH = 50;
 	const int tabGap = 10;
 
-	// タブ全体の幅
-	const int totalWidth = tabW * 2 + tabGap;
+	const int totalWidth = tabW * 3 + tabGap * 2;
 
-	// 画面中央
-	const int equipX = (m_owner->GetGame()->GetWidth() - totalWidth) / 2;
-	const int skillX = equipX + tabW + tabGap;
+	const int startX =
+		(m_owner->GetGame()->GetWidth() - totalWidth) / 2;
 
-	//====================
-	// 装備
-	//====================
-	DrawBox(
-		equipX,
-		tabY,
-		equipX + tabW,
-		tabY + tabH,
-		GetColor(80, 80, 80),
-		TRUE
-	);
+	const int skillX = startX;
+	const int equipmentX = startX + tabW + tabGap;
+	const int keyConfigX = equipmentX + tabW + tabGap;
 
-	DrawString(
-		equipX + 70,
-		tabY + 15,
-		"装備",
-		GetColor(255, 255, 255)
-	);
+	auto drawTab = [&](int x, const char* label, int textOffset)
+		{
+			DrawBox(
+				x,
+				tabY,
+				x + tabW,
+				tabY + tabH,
+				GetColor(80, 80, 80),
+				TRUE
+			);
 
-	//====================
-	// スキル
-	//====================
-	DrawBox(
-		skillX,
-		tabY,
-		skillX + tabW,
-		tabY + tabH,
-		GetColor(80, 80, 80),
-		TRUE
-	);
+			DrawString(
+				x + textOffset,
+				tabY + 15,
+				label,
+				GetColor(255, 255, 255)
+			);
+		};
 
-	DrawString(
-		skillX + 60,
-		tabY + 15,
-		"スキル",
-		GetColor(255, 255, 255)
-	);
+	drawTab(skillX, "スキル", 60);
+	drawTab(equipmentX, "装備", 70);
+	drawTab(keyConfigX, "操作設定", 45);
 
-	//====================
-	// タブカーソル
-	//====================
-	if (GetCursorArea() == MenuCursorArea::Tab)
+	if (m_cursorArea == MenuCursorArea::Tab)
 	{
-		int x = (m_tabCursor == 0) ? skillX : equipX;
+		int x = startX + m_tabCursor * (tabW + tabGap);
 
 		DrawBox(
 			x - 4,
@@ -196,4 +208,11 @@ void Menu::SetCursorArea(MenuCursorArea area)
 int Menu::GetLockedSkillIcon() const
 {
 	return m_lockedSkillIcon;
+}
+
+bool Menu::IsCapturingKey() const
+{
+	return m_isOpen &&
+		m_currentTab == Tab::KeyConfig &&
+		m_keyConfigMenu.IsWaitingForKey();
 }

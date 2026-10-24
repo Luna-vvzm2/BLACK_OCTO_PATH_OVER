@@ -97,6 +97,35 @@ bool PlayScene::Init() {
 		m_playTimer = m_saveData.playTime;
 	}
 
+
+
+	// 保存されている操作設定を復元
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		// キー割り当てを復元
+		if (!m_saveData.keyBindings[i].empty())
+		{
+			input.SetKeyBindings(
+				action,
+				m_saveData.keyBindings[i]
+			);
+		}
+
+		// 操作方式を復元
+		if (m_saveData.inputModes[i] == 0 ||
+			m_saveData.inputModes[i] == 1)
+		{
+			input.SetInputMode(
+				action,
+				static_cast<InputMode>(m_saveData.inputModes[i])
+			);
+		}
+	}
+
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
 	
@@ -606,10 +635,11 @@ void PlayScene::Update(float deltaTime) {
 
 	const Input& input = m_game->GetInput();
 
-	if (input.IsTrigger(Action::MENU))
+	if (input.IsMenuTrigger(Action::MENU) &&
+		!m_menu.IsCapturingKey())
 	{
 		if (m_player->GetState() != Actor::State::Paused)
-		m_menu.Toggle();
+			m_menu.Toggle();
 
 		return;
 	}
@@ -1906,5 +1936,25 @@ void PlayScene::AutoSave()
 		m_saveData.kunaiCount = m_player->GetKunai();
 	}
 
+	// 現在の操作設定を保存データに反映
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		m_saveData.keyBindings[i] =
+			input.GetKeyBindings(action);
+
+		m_saveData.inputModes[i] =
+			static_cast<int>(input.GetInputMode(action));
+	}
+
 	SaveManager::Save(m_saveData);
+}
+
+// 操作設定画面から即時保存するための公開関数
+void PlayScene::SaveCurrentSettings()
+{
+	AutoSave();
 }

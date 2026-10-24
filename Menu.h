@@ -3,6 +3,7 @@
 #include "SkillMenu.h"
 #include "EquipmentMenu.h"
 #include "MenuCursor.h"
+#include "KeyConfigMenu.h"
 
 class PlayScene;
 class Game;
@@ -18,11 +19,14 @@ public:
 
     void Draw();
 
+    void SaveSettings();
+
     enum class MenuCursorArea
     {
         Tab,
         SkillList,
-        EquipmentList
+        EquipmentList,
+        KeyConfigList
     };
 
     Game* GetGame() const;
@@ -35,6 +39,8 @@ public:
     int GetTabCursor() const;
 
     int GetLockedSkillIcon() const;
+
+    bool IsCapturingKey() const;
 
     MenuCursor& GetCursor()
     {
@@ -53,6 +59,8 @@ private:
     SkillMenu m_skillMenu;
     EquipmentMenu m_equipmentMenu;
 
+    KeyConfigMenu m_keyConfigMenu;
+
     int m_tabCursor = 0;
     int m_lockedSkillIcon = -1;
 
@@ -61,7 +69,8 @@ private:
     enum class Tab
     {
         Skill,
-        Equipment
+        Equipment,
+        KeyConfig
     };
 
     Tab m_currentTab = Tab::Skill;

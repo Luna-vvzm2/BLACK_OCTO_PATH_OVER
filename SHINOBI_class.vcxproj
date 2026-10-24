@@ -180,6 +180,7 @@
     <ClCompile Include="HouseBlock.cpp" />
     <ClCompile Include="JutsuChargeUI.cpp" />
     <ClCompile Include="KaryuTextUI.cpp" />
+    <ClCompile Include="KeyConfigMenu.cpp" />
     <ClCompile Include="KunaiActor.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MenuCursor.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="HouseBlock.h" />
     <ClInclude Include="JutsuChargeUI.h" />
     <ClInclude Include="KaryuTextUI.h" />
+    <ClInclude Include="KeyConfigMenu.h" />
     <ClInclude Include="KunaiActor.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="MenuCursor.h" />

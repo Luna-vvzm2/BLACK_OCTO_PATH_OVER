@@ -27,6 +27,7 @@ public:
 	const Renderer* GetRenderer() const { return m_renderer.get(); }
 	Renderer* GetRenderer() { return m_renderer.get(); }
 	const Input& GetInput() const { return m_input; }
+	Input& GetInput() { return m_input; }
 	const std::string& GatGameFont() const { return m_gameFont; }
 	const std::string& GatDebugFont() const { return m_debugFont; }
 

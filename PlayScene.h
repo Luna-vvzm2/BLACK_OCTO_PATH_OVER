@@ -78,6 +78,9 @@ public:
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
 
+	// 現在のゲーム情報と操作設定を保存する
+	void SaveCurrentSettings();
+
 	int m_bgHandle;
 	int m_fgHandle;
 private:
