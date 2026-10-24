@@ -36,6 +36,10 @@
 #include "StructureABlock.h"
 #include "StructureBBlock.h"
 #include "Trap.h"
+#include "DamageTrap.h"
+#include "StatusDownTrap.h"
+#include "NinjutsuSealTrap.h"
+#include "EnemySpawnTrap.h"
 #include "HPBarUI.h"
 #include "BackGroundUI.h"
 #include "TreasureBox.h"
@@ -327,6 +331,22 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 9:
 				AddActor(new Trap(this, pos, Vector2d(192, 192)));
+				break;
+
+			case 10:    // ‰¼ID
+				AddActor(new DamageTrap(this, pos, Vector2d(tileSize, tileSize)));
+				break;
+
+			case 11:   // ‰¼ID
+				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, tileSize)));
+				break;
+
+			case 12: //‰¼ID
+				AddActor(new NinjutsuSealTrap(this, pos, Vector2d(tileSize, tileSize)));
+				break;
+
+			case 13: //‰¼ID
+				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, tileSize)));
 				break;
 
 			case 14:

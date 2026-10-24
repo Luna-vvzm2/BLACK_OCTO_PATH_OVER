@@ -651,6 +651,9 @@ void PlayerEntity::Update(float deltaTime) {
    
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
+            
+    UpdateStatusDown(deltaTime);    
+    UpdateNinjutsuSeal(deltaTime); 
 
     UpdateKamae(deltaTime);
     UpdateExecution(deltaTime);
@@ -809,8 +812,10 @@ void PlayerEntity::UpdateKamae(float deltaTime)
     if (m_isKaryu) return;
 
     const Input& input = m_scene->GetGame()->GetInput();
+    const bool sealed = IsNinjutsuSealed() && m_isGround; //••ˆóó‘Ô‚Í\‚¦‚ð–³Ž‹
 
-    if (input.IsDown(Action::KAMAE))
+
+    if (input.IsDown(Action::KAMAE) && !sealed)
     {
         if (m_squat) {
             if (!m_canStand) {
@@ -1211,7 +1216,7 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
                 enemy->Open();
                 continue;
             }
-            enemy->TakeDamage(hitbox.damage, { m_dir ? 150.0f : -150.0f, -300.0f });
+            enemy->TakeDamage(ApplyAttackRatio(hitbox.damage), { m_dir ? 150.0f : -150.0f, -300.0f });
             m_hit = true;
             m_combo++;
 
@@ -1410,8 +1415,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (input.IsTrigger(Action::OCTO) && m_isGround) {
         if (!m_isOcto) {
-            ChangeState(PlayerState::OCTO_START);
-            return;
+            if (!IsNinjutsuSealed()) {      //’Ç‰ÁF••ˆó’†‚Í”­“®‚Å‚«‚È‚¢
+                ChangeState(PlayerState::OCTO_START);
+                return;
+            }
         }
         else {
             ChangeState(PlayerState::OCTO_END);
@@ -2687,6 +2694,8 @@ void PlayerEntity::StartAttack(int attackNum) {
 void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     if (m_invincibleTime > 0) return;
     if (m_dashTimer > 0.0f) return;
+
+    damage = ApplyDefenseRatio(damage);   // ’Ç‰Á
 
     m_hp->Damage(damage);
 

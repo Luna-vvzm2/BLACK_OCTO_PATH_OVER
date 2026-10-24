@@ -171,11 +171,13 @@
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
+    <ClCompile Include="DamageTrap.cpp" />
     <ClCompile Include="DropItemEntity.cpp" />
     <ClCompile Include="EffectActor.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="EnemyEntity.cpp" />
     <ClCompile Include="EnemyHPBar.cpp" />
+    <ClCompile Include="EnemySpawnTrap.cpp" />
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
@@ -203,6 +205,7 @@
     <ClCompile Include="MenuPage.cpp" />
     <ClCompile Include="MoneyUI.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="NinjutsuSealTrap.cpp" />
     <ClCompile Include="PlatformBlock.cpp" />
     <ClCompile Include="PlatformOboroLBlock.cpp" />
     <ClCompile Include="PlatformOboroMBlock.cpp" />
@@ -218,6 +221,7 @@
     <ClCompile Include="SpiritEnemyEntity.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StatusDownTrap.cpp" />
     <ClCompile Include="StageSelectScene.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
     <ClCompile Include="StoneSBlock.cpp" />
@@ -280,6 +284,7 @@
     <ClInclude Include="CollisionComponent.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
+    <ClInclude Include="DamageTrap.h" />
     <ClInclude Include="DropData.h" />
     <ClInclude Include="DropItemEntity.h" />
     <ClInclude Include="EffectActor.h" />
@@ -287,6 +292,7 @@
     <ClInclude Include="EnemyEntity.h" />
     <ClInclude Include="EnemyHPBar.h" />
     <ClInclude Include="EnemySpawner.h" />
+    <ClInclude Include="EnemySpawnTrap.h" />
     <ClInclude Include="EquipmentMenu.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="EventTexture.h" />
@@ -312,6 +318,7 @@
     <ClInclude Include="MenuPage.h" />
     <ClInclude Include="MoneyUI.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="NinjutsuSealTrap.h" />
     <ClInclude Include="PlatformBlock.h" />
     <ClInclude Include="PlatformOboroLBlock.h" />
     <ClInclude Include="PlatformOboroMBlock.h" />
@@ -330,6 +337,7 @@
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
     <ClInclude Include="StageSelectScene.h" />
+    <ClInclude Include="StatusDownTrap.h" />
     <ClInclude Include="StoneLBlock.h" />
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />
