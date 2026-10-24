@@ -17,6 +17,7 @@
 #include "Input.h"
 #include "Game.h"
 #include <Windows.h>
+#include <DxLib.h>
 
 #define weak1Num 0
 #define weak2Num 1
@@ -683,6 +684,29 @@ void PlayerEntity::Update(float deltaTime) {
 
     }
 
+}
+
+// ======================================
+// 主人公の描画
+// タコ使用中は約30%暗くする
+// ======================================
+void PlayerEntity::Draw()
+{
+    // タコを使用していない場合は通常描画
+    if (!m_isOcto)
+    {
+        EntityActor::Draw();
+        return;
+    }
+
+    // 明るさを約70%にする（約30%暗くする）
+    SetDrawBright(178, 178, 178);
+
+    // 主人公を描画
+    EntityActor::Draw();
+
+    // 明るさを元に戻す
+    SetDrawBright(255, 255, 255);
 }
 
 void PlayerEntity::UpdateIgnorePlatform()
