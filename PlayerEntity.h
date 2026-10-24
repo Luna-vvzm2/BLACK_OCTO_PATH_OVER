@@ -148,7 +148,9 @@ public:
     void ChangeState(PlayerState newState);
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
+    void UpdateJutsuInterval(float deltaTime);
     void UpdateOcto(float deltaTime);
+    void UpdateTiger(float deltaTime);
     void UpdateWallSensor();
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
@@ -169,7 +171,7 @@ public:
     int GetJutsuGaugeAmount() const { return m_jutsuGauge; }
 
     bool GetOwnJutsu(int idx);      // ”Ep‚ÌŠl“¾ó‹µƒtƒ‰ƒOB@‘û = 0AŒÕ = 1AŠ^ = 2AéÍ = 3
-    bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx]; }
+    bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx] && m_jutsuInterval[idx] <= 0.0f; }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
@@ -322,9 +324,11 @@ private:
     bool m_canAttack;
     float m_attackLockTimer;
 
-    bool m_ownJutsu[4] = { true, false, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
+    bool m_ownJutsu[4] = { true, true, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
     bool m_isJutsu[4] = { false , false, false, false };    // ”EpŽg—p’†ƒtƒ‰ƒO
     int m_jutsuCost[4] = { 5, 60, 10, 60 }; // ”EpÁ”ï‰eƒQ[ƒW—Ê
+    float m_jutsuInterval[4] = {};
+    float m_jutsuMaxInterval[4] = { 1.0f, 30.0f, 100.0f, 30.0f };
     bool m_isOcto;
     bool m_isAutoOcto;
     float m_octoRatio;
@@ -334,6 +338,8 @@ private:
     float m_ninjutsuSealTimer = 0.0f; //”Ep••ˆóƒgƒ‰ƒbƒv
 
     float m_tigerTimer;
+    bool m_tigerFirstAttack;
+    bool m_tigerSecondAttack;
 
     float m_statusDownTimer = 0.0f;
 
@@ -360,7 +366,7 @@ private:
     bool m_isKamae;
     bool m_isExecution;
     std::vector<EnemyEntity*> m_executionTargets;
-    EnemyEntity* m_nearTargets[5];
+    EnemyEntity* m_nearTargets[5] = {};
     float m_executionTimer;
 
     bool m_ignorePlatform;

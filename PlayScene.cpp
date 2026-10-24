@@ -1224,7 +1224,7 @@ void PlayScene::Draw()
 	if (m_player)
 	{
 		Vector2d Pos = m_player->GetPos();
-		Vector2d offset = { 0.0f, 50.0f };
+		Vector2d offset = { 60.0f, 50.0f };
 
 		if (m_player->GetDir())
 		{

@@ -103,6 +103,8 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_isHide(false)
 
     , m_tigerTimer(0.0f)
+    , m_tigerFirstAttack(false)
+    , m_tigerSecondAttack(false)
 
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
@@ -165,7 +167,6 @@ bool PlayerEntity::Init() {
 
     //m_sprite = AddComponent<SpriteComponent>();
     m_sprite->LoadTextureDiv("assets/images/entities/players/musashi_sheet.png", 20, 14);
-    m_sprite->LoadTextureDiv("kari/player.png", 6, 4);
 
     m_anim = AddComponent<AnimationComponent>();
     m_anim->SetSprite(m_sprite);
@@ -669,16 +670,16 @@ void PlayerEntity::Update(float deltaTime) {
     if (m_anim) m_anim->Update(deltaTime);
 
     if (Actor::m_state == State::Active) {
-    // デバッグ用：4キーを押すとHPが0になる
-    #ifdef _DEBUG
-        const Input& input = m_scene->GetGame()->GetInput();
-        if (input.GetKey().IsTrigger(Key::NUM_4)) {
-            if (m_hp) {
-                m_hp->Damage(m_hp->GetMaxHP());
-                std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+        // デバッグ用：4キーを押すとHPが0になる
+        #ifdef _DEBUG
+            const Input& input = m_scene->GetGame()->GetInput();
+            if (input.GetKey().IsTrigger(Key::NUM_4)) {
+                if (m_hp) {
+                    m_hp->Damage(m_hp->GetMaxHP());
+                    std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+                }
             }
-        }
-    #endif
+        #endif
 
     }
 
@@ -731,7 +732,12 @@ void PlayerEntity::UpdateSensor() {
     m_sensor.frontUpper = CheckSensor({ dir * 130.0f, -60.0f });
     m_sensor.frontBottom = CheckSensor({ dir * 130.0f, 40.0f });
     m_sensor.frontGround = CheckSensor({ dir * 130.0f, 80.0f });
-    m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 80.0f });
+    if (m_squat) {
+        m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 50.0f });
+    }
+    else {
+        m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 80.0f });
+    }
 }
 
 
@@ -1247,6 +1253,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     UpdateShadowGauge(deltaTime);
+    UpdateJutsuInterval(deltaTime);
     UpdateKunai(deltaTime);
 
     if (m_state == PlayerState::HIT_TRAP) {
@@ -1344,9 +1351,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
+    if (m_state == PlayerState::TIGER)
+    {
+        UpdateTiger(deltaTime);
+        if (m_tigerTimer < 1.8f) return;
+    }
+
     const Input& input = m_scene->GetGame()->GetInput();
 
-    if (m_isOcto) {
+    if (m_isJutsu[OCTONum]) {
         UpdateOcto(deltaTime);
 
         if (m_endOcto) {
@@ -1360,6 +1373,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
                     return;
                 }
             }
+        }
+
+        if (m_isAutoOcto && m_isGround) {
+            ChangeState(PlayerState::OCTO_END);
+            return;
         }
     }
 
@@ -1414,8 +1432,8 @@ void PlayerEntity::UpdateState(float deltaTime) {
     m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * m_octoRatio * m_isOcto) * m_buffRatio;
 
     if (input.IsTrigger(Action::OCTO) && m_isGround) {
-        if (!m_isOcto) {
-            if (!IsNinjutsuSealed()) {      //追加：封印中は発動できない
+        if (!m_isJutsu[OCTONum]) {
+            if (GetCanJutsu(OCTONum)) {
                 ChangeState(PlayerState::OCTO_START);
                 return;
             }
@@ -1426,7 +1444,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::TIGER) && GetCanJutsu(TIGERNum) && m_isGround) {
+    if (input.IsTrigger(Action::TIGER) 
+        && GetCanJutsu(TIGERNum) 
+        && m_isGround) {
         ChangeState(PlayerState::TIGER);
         return;
     }
@@ -1859,7 +1879,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr){
-            if (m_isOcto) {
+            if (m_isJutsu[OCTONum]) {
                 if (input.IsDown(Action::JUMP)) {
                     ChangeState(PlayerState::WALL_CLIMB);
                     return;
@@ -1869,7 +1889,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
                     return;
                 }
             }
-            else if (m_shadowGauge >= 5) {
+            else if (GetCanJutsu(OCTONum) && !m_ignorePlatform) {
                 ChangeState(PlayerState::OCTO_AUTO);
                 return;
             }
@@ -2516,15 +2536,22 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
-        m_isOcto = true;
+        m_isJutsu[OCTONum] = true;
         m_jutsuTimer = 2.0f;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+        SubShadowGauge(5);
+
         m_anim->Play("OctoStart");
         break;
 
     case PlayerState::OCTO_AUTO:
     {
-        m_isOcto = true;
+        m_isJutsu[OCTONum] = true;
         m_isAutoOcto = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+        SubShadowGauge(5);
 
         Vector2d vel = m_velocity->Get();
         vel.x = 0.0f;
@@ -2539,24 +2566,45 @@ void PlayerEntity::ChangeState(PlayerState newState)
     }   break;
 
     case PlayerState::OCTO_END:
-        m_isOcto = false;
+        m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
         m_anim->Play("Kamae");  //後ほど修正
         break;
 
     case PlayerState::OCTO_AUTO_END:
-        m_isOcto = false;
+        m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
         m_anim->Play("OctoAutoEnd");
         break;
 
     case PlayerState::TIGER:
-        m_anim->Play("Tiger");
+    {
+        // 忍術の使用
+        SubShadowGauge(60);
+
+        // 2撃目のタイマーとフラグを初期化
+        m_tigerTimer = 0.0f;
+        m_tigerFirstAttack = false;
+        m_tigerSecondAttack = false;
+        m_canMove = false;
+        m_invincibleTime = 1.0f;
+        m_isJutsu[TIGERNum] = true;
+        m_jutsuInterval[TIGERNum] = m_jutsuMaxInterval[TIGERNum];
+
+        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[0], !m_dir);
+        effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
+
+        SpawnEffect(effect);
+
+        m_anim->Play("squatAttack");  // 後ほどTigerに修正
         break;
+    }
 
     case PlayerState::ORCA:
+        m_jutsuInterval[ORCANum] = m_jutsuMaxInterval[ORCANum];
+
         m_anim->Play("Orca");
         break;
 
@@ -2593,6 +2641,19 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     }
 }
 
+void PlayerEntity::UpdateJutsuInterval(float deltaTime) {
+    for (int i = 0; i < 4; i++) {
+        if (m_jutsuInterval[i] > 0.0f) {
+            if (m_jutsuInterval[i] < 100.0f) {
+                m_jutsuInterval[i] -= deltaTime;
+                if (m_jutsuInterval[i] < 0.0f) {
+                    m_jutsuInterval[i] = 0.0f;
+                }
+            }
+        }
+    }
+}
+
 void PlayerEntity::UpdateOcto(float deltaTime) {
     if (m_endOcto) return;
 
@@ -2606,6 +2667,77 @@ void PlayerEntity::UpdateOcto(float deltaTime) {
     if (GetShadowGauge() <= 0) {
         m_shadowGauge = 0;
         m_endOcto = true;
+    }
+}
+
+void PlayerEntity::UpdateTiger(float deltaTime)
+{
+    m_tigerTimer += deltaTime;
+    m_invincibleTime = 1.0f;
+
+    if (!m_tigerFirstAttack && m_tigerTimer >= 0.25f)
+    {
+        m_tigerFirstAttack = true;
+        // 前方の敵を近い順に取得
+        CollectNearEnemies(700, 500);
+
+        // 一番近い敵が存在する場合、1撃目を行う
+        EnemyEntity* target = m_nearTargets[0];
+
+        if (target != nullptr && !target->IsDead())
+        {
+            Vector2d knockback{
+                m_dir ? 150.0f : -150.0f,
+                -100.0f
+            };
+
+            target->TakeDamage(80, knockback);
+            m_combo++;
+        }
+    }
+
+    // 0.25秒経過したら2撃目を判定する
+    if (!m_tigerSecondAttack && m_tigerTimer >= 1.25f)
+    {
+        // 先にフラグを立て、2撃目が重複しないようにする
+        m_tigerSecondAttack = true;
+
+        EnemyEntity* target = m_nearTargets[0];
+        PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+        // 対象が存在し、まだ生存している場合のみ攻撃する
+        if (target != nullptr &&
+            playScene != nullptr && playScene->IsActorAlive(target)) {
+            if (target->GetHP()->GetHP() > 0) {
+                Vector2d knockback{
+                    m_dir ? 150.0f : -150.0f,
+                    -100.0f
+                };
+
+                target->TakeDamage(120, knockback, true);
+                m_combo++;
+
+                auto effect = new EffectActor(m_scene, target->GetPos(), playerEffectType[0], !m_dir);
+                effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
+
+                SpawnEffect(effect);
+            }
+        }
+    }
+
+    // アニメーション終了時に忍術を終了する
+    if (m_tigerTimer > 1.8f)
+    {
+        m_canMove = true;
+        m_tigerSecondAttack = false;
+        m_invincibleTime = 0.0f;
+        m_isJutsu[TIGERNum] = false;
+
+        for (int i = 0; i < 5; i++)
+        {
+            m_nearTargets[i] = nullptr;
+        }
+
     }
 }
 
