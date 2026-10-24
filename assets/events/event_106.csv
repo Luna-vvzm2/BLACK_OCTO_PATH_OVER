@@ -1,0 +1,11 @@
+type,name,time,pos,Lpath,Rpath,text
+TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,止まれ、そこの者。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,！　誰だ。
+TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,暫し動向を見させてもらったが、<br>ひどく怪しい術を使うものだな。
+TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,一体どういう原理なんだ、それは？　<br>妖魔と契約でもしたのか？
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,まずい、俺の忍術は門外不出のもの……
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,尾行されてるだなんて気付かなかった、<br>この人には全く気配がない！
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,え～っと、それは……その。<br>訳あって言えない、が……
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,でも俺は決して怪しい者じゃない。<br>なあ、信じてくれないか？
+TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,そんな騙しが効くと思うな！
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,くっ、こうなればもう大人しくなってもらうしか……！
