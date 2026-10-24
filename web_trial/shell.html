@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>C++ ブラウザー動作テスト</title>
+  <style>
+    body { margin: 0; background: #0a101c; color: #edf3ff; font: 17px/1.7 system-ui,sans-serif; }
+    main { max-width: 960px; margin: 32px auto; padding: 0 20px; }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    p { color: #b8c8dd; }
+    canvas { width: 100%; height: auto; display: block; border: 1px solid #364964; border-radius: 8px; }
+    button { background: #60dfcc; color: #101827; border: 0; padding: 10px 20px; border-radius: 6px; font: inherit; cursor: pointer; }
+    button:disabled { opacity: .4; }
+    footer { display: flex; align-items: center; gap: 24px; margin-top: 18px; }
+  </style>
+</head>
+<body><main>
+  <h1>C++をブラウザーで動かす</h1>
+  <p>画面をクリックして、矢印キー または WASD で四角を動かしてください。</p>
+  <canvas id="canvas" width="960" height="540" tabindex="0" aria-label="四角の移動テスト"></canvas>
+  <footer><button id="reset" disabled>中央に戻す</button><span id="position">X: — / Y: —</span></footer>
+  <p id="status" role="status">WebAssemblyを読み込んでいます…</p>
+  <p>最初の検証：C++で位置と入力を処理し、JavaScriptでCanvasに描画します。ゲーム本体・DxLibの移植はまだ含んでいません。</p>
+</main>
+<script>
+  var Module = {
+    onRuntimeInitialized() {
+      document.getElementById('status').textContent = '起動しました。C++ → WebAssembly の動作確認用です。';
+      document.getElementById('reset').disabled = false;
+    },
+    onAbort(reason) { document.getElementById('status').textContent = '起動できませんでした: ' + reason; },
+    printErr(text) { console.error(text); }
+  };
+  document.getElementById('reset').addEventListener('click', () => {
+    Module._reset_position();
+    document.getElementById('canvas').focus();
+  });
+</script>
+{{{ SCRIPT }}}
+</body></html>

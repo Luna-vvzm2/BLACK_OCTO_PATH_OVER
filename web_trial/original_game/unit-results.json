@@ -1,0 +1,442 @@
+[
+  {
+    "file": "Actor.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "AnimationComponent.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "ArmorEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "ArrowEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "BackGroundUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "BlockActor.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "BossEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Camera.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "ClearBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "ClearPlatformBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "ClearScene.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "ClearUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "CollisionComponent.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Component.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "DropItemEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EffectActor.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EnemyBullet.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EnemyHPBar.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EquipmentMenu.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EventManager.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EventTexture.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "GameOverMenuUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "GunnerEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "HealerEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "HitboxData.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "HouseBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "JutsuChargeUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "KaryuTextUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "KunaiActor.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Menu.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "MenuCursor.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "MenuPage.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "MoneyUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Mouse.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "PlatformBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "PlatformOboroLBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "PlatformOboroMBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "PlatformOboroSBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "PlayerStatusUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "SaveManager.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "ScarecrowEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "SekienkiBossEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "ShurikenUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "SkillMenu.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "SoundComponent.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "StageBackActor.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "StageExitActor.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "StoneLBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "StoneSBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "StructureABlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "StructureBBlocke.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "Trap.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "TreasureBox.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "WhiteEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "EntityActor.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Game.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "GravityComponent.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "GroundBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "HPBerUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "HPComponent.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Input.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Joypad.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Key.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Main.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "MapData.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "PlayerEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "PlayScene.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Renderer.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "Scene.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "SpriteComponent.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "TextureManager.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "TitleScene.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "TitleUI.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "TransformComponent.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "UIActor.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "VelocityComponent.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "WhiteShurikenBullet.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "WoodLBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "WoodSBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "YaguraLBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "YaguraLLBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "YaguraMBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "YaguraSBlock.cpp",
+    "exit_code": 0,
+    "first_error": null
+  },
+  {
+    "file": "YellowEnemyEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "YoroiBossEntity.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "SkillMenuActor.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  },
+  {
+    "file": "boss_02.cpp",
+    "exit_code": 1,
+    "first_error": "'windows.h' file not found\r"
+  }
+]

@@ -122,6 +122,7 @@ bool PlayScene::Init() {
 	AddActor(m_player);
 
 
+
 	// ゲーム開始時のカメラ位置をプレイヤーに合わせる
 	Vector2d initialCameraPos = m_playerSpawnPoints[0];
 	initialCameraPos.y -= 150.0f;

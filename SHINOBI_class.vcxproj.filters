@@ -601,4 +601,8 @@
       <Filter>リソース ファイル</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="boss_02.cpp" />
+    <ClInclude Include="boss_02.h" />
+  </ItemGroup>
 </Project>

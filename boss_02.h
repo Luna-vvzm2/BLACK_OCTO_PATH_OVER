@@ -1,13 +1,13 @@
-#pragma once
+﻿#pragma once
 #include "BossEntity.h"
 #include <functional>
 #include <vector>
 
-// Ginjo: base status, idle, approach and defeat only (60 motion frames/second).
+// Ginjo: status, jet approach, two-hit attacks and defeat (60 motion frames/second).
 class Boss_02 : public BossEntity
 {
 public:
-    enum class Behavior { Idle, Move, Defeated };
+    enum class Behavior { Idle, Move, DoubleStrike, FastDoubleStrike, Recovery, Defeated };
     struct Parameters
     {
         int maxHP = 3000;
@@ -21,6 +21,22 @@ public:
         float approachDelaySeconds = 1.2f;
         float knockbackSeconds = 0.4f;
         bool showDebugShapes = true;
+        // Spec: thrust then sweep. Frame windows/vertical offsets are provisional.
+        float attackReach = 100.0f;
+        float thrustHeight = 15.0f;
+        float sweepHeight = 100.0f;
+        float attackOffsetY = 0.0f;
+        float firstHitStartFrame = 24.0f;
+        float firstHitEndFrame = 32.0f;
+        float secondHitStartFrame = 72.0f;
+        float secondHitEndFrame = 84.0f;
+        int firstHitDamage = 15;
+        int secondHitDamage = 20;
+        int fastFirstHitDamage = 20;
+        int fastSecondHitDamage = 25;
+        float recoverySeconds = 0.8f;
+        float fastRecoverySeconds = 1.5f;
+        Vector2d attackKnockback = { 150.0f, -100.0f }; // Provisional; player handles invulnerability.
     };
 
     explicit Boss_02(Scene* scene, const Vector2d& pos = Vector2d::Zero());
@@ -40,6 +56,12 @@ public:
     // Keep textures alive until this actor is removed. No automatic asset loading.
     bool SetAnimationFrames(const std::vector<int>& idle, const std::vector<int>& move,
         const std::vector<int>& defeated, bool sourceFacesRight = true);
+    // After SetAnimationFrames: 30 borrowed handles each, assigned outside attacks.
+    // Empty fast list reuses normal sprites at 2x speed.
+    bool SetAttackAnimationFrames(const std::vector<int>& normal,
+        const std::vector<int>& fast = {});
+    // Optional sound hook: stage=1 (thrust), 2 (sweep). Called once per swing, even on a miss.
+    std::function<void(int stage, bool fast)> OnAttackStrike = {};
     // Notification after the full 14-frame defeat animation. Do not delete here;
     // queue scene changes instead. Scene removes this actor on its normal cleanup.
     std::function<void()> OnBattleFinished = {};
@@ -47,11 +69,24 @@ public:
 
 protected:
     void UpdateAI(float deltaTime) override;
-    void UpdateAttack(float) override {} // Reserved for the next task.
+    void UpdateAttack(float deltaTime) override;
 
 private:
     void ChangeBehavior(Behavior behavior);
     void PlayBehaviorAnimation();
+    void ConfigureAttackAnimations();
+    void StartDoubleStrike();
+    bool IsAttacking() const;
+    void TryHitPlayer(int stage);
+    Vector2d GetAttackCenter() const;
+    std::vector<int> m_baseAnimationFrames = {};
+    std::vector<int> m_attackFrames = {};
+    std::vector<int> m_fastAttackFrames = {};
+    bool m_hitPlayer[2] = { false, false };
+    bool m_strikeNotified[2] = { false, false };
+    bool m_fastAttack = false;
+    int m_activeStrike = 0;
+    float m_previousAttackTime = 0.0f;
     Parameters m_parameters;
     Behavior m_behavior = Behavior::Idle;
     float m_behaviorTime = 0.0f;
