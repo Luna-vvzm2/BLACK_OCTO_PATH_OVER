@@ -207,10 +207,6 @@
     <ClCompile Include="StoneSBlock.cpp" />
     <ClCompile Include="StructureABlock.cpp" />
     <ClCompile Include="StructureBBlocke.cpp" />
-    <ClCompile Include="SubMenu.cpp" />
-    <ClCompile Include="SubMenuMapPage.cpp" />
-    <ClCompile Include="SubMenuNewsPage.cpp" />
-    <ClCompile Include="SubMenuStatusPage.cpp" />
     <ClCompile Include="Trap.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
     <ClCompile Include="WhiteEnemyEntity.cpp">
@@ -320,10 +316,6 @@
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />
     <ClInclude Include="StructureBBlock.h" />
-    <ClInclude Include="SubMenu.h" />
-    <ClInclude Include="SubMenuMapPage.h" />
-    <ClInclude Include="SubMenuNewsPage.h" />
-    <ClInclude Include="SubMenuStatusPage.h" />
     <ClInclude Include="Trap.h" />
     <ClInclude Include="TreasureBox.h" />
     <ClInclude Include="WhiteEnemyEntity.h">
