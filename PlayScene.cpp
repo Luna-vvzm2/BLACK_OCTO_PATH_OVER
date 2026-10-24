@@ -575,7 +575,7 @@ void PlayScene::Update(float deltaTime) {
 		{
 			//Game* game = GetGame(); 
 			//m_game->PushScene(std::make_unique<GameOverScene>(game));
-			m_game->PushScene(std::make_unique<StageSelectScene>(m_game));
+			m_game->PushScene(std::make_unique<StageSelectScene>(m_game, this));
 		}
 
 		else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
@@ -1347,6 +1347,12 @@ void PlayScene::ShowGameOverMenu()
 
 void PlayScene::OnResume()
 {
+	if (m_returnToPauseMenu)
+	{
+		m_returnToPauseMenu = false;
+		return;
+	}
+
 	RespawnPlayer();
 
 	if (m_pauseMenu.IsOpen())

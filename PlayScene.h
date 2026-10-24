@@ -79,6 +79,7 @@ public:
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
 	void OnResume() override;
+	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
 	int m_bgHandle;
 	int m_fgHandle;
@@ -94,6 +95,7 @@ private:
 
 	Menu m_menu;
 	PauseMenu m_pauseMenu;
+	bool m_returnToPauseMenu = false;
 
 	Camera m_camera;
 

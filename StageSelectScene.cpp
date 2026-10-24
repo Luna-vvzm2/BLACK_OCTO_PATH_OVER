@@ -10,8 +10,8 @@
 #include <DxLib.h>
 #include <memory>
 
-StageSelectScene::StageSelectScene(Game* game)
-    : Scene(game) {}
+StageSelectScene::StageSelectScene(Game* game, PlayScene* previousPlayScene)
+    : Scene(game), m_previousPlayScene(previousPlayScene) {}
 
 bool StageSelectScene::Init()
 {
@@ -26,7 +26,11 @@ void StageSelectScene::Update(float)
     if (input.IsTrigger(Action::ESCAPE))
     {
         if (m_game->CanPopScene())
+        {
+            if (m_previousPlayScene)
+                m_previousPlayScene->ReturnToPauseMenu();
             m_game->PopScene();
+        }
         else
             m_game->ChangeScene(std::make_unique<TitleScene>(m_game));
         return;
@@ -73,6 +77,6 @@ void StageSelectScene::Draw()
 
     renderer->DrawTextC(Vector2d(centerX, 560), "Enter／B: ステージ1開始", Color(235, 235, 235), font, 24, false);
     renderer->DrawTextC(Vector2d(centerX, 605),
-        m_game->CanPopScene() ? "Esc／START: ゲームへ戻る" : "Esc／START: タイトルへ戻る",
+        m_game->CanPopScene() ? "Esc／START: ポーズへ戻る" : "Esc／START: タイトルへ戻る",
         Color(190, 190, 190), font, 22, false);
 }

@@ -182,12 +182,27 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
         ++rowNumber;
         if (line.empty() || line == "\r") continue;
         const auto values = SplitCsv(line);
-        if (values.size() < header.size()) return false;
+        if (std::any_of(columns.begin(), columns.end(),
+            [&values](size_t column) { return column >= values.size(); }))
+        {
+            std::cerr << "SoundManager: missing required value on CSV row " << rowNumber << '\n';
+            return false;
+        }
         const auto& id = values[columns[0]];
         Sound sound;
         const std::string& relativeFilePath = values[columns[1]];
         const std::string& loop = values[columns[7]];
         int category = static_cast<int>(SoundCategory::Effect);
+        if (categoryColumn < header.size() && categoryColumn < values.size())
+        {
+            int parsedCategory = category;
+            if (ParseInt(values[categoryColumn], parsedCategory) &&
+                parsedCategory >= 0 && parsedCategory <= 2)
+                category = parsedCategory;
+            else
+                std::cerr << "SoundManager: invalid Category on CSV row " << rowNumber
+                    << ", using SE\n";
+        }
         sound.loop = loop == "true" || loop == "TRUE" || loop == "1";
         if (id.empty() || relativeFilePath.empty() ||
             !ParseInt(values[columns[2]], sound.scope) || sound.scope < 0 ||
@@ -196,8 +211,6 @@ bool SoundManager::LoadCsv(const std::string& csvPath)
             !ParseTime(values[columns[5]], sound.startMs) ||
             !ParseTime(values[columns[6]], sound.endMs) ||
             !ParseInt(values[columns[8]], sound.loopFadeFrames) || sound.loopFadeFrames < 0 ||
-            (categoryColumn < header.size() &&
-                (!ParseInt(values[categoryColumn], category) || category < 0 || category > 2)) ||
             (loop != "true" && loop != "false" && loop != "TRUE" &&
              loop != "FALSE" && loop != "0" && loop != "1") ||
             relativeFilePath.find("..") != std::string::npos ||
