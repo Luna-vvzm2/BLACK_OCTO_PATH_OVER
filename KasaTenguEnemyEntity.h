@@ -54,6 +54,8 @@ private:
     bool m_attackHit1;
     bool m_attackHit2;
     bool m_attackRecoveryStarted;
+    //’Ç‰Á
+    bool IsPlayerInSearchRange() const override;
     std::string m_currentTexturePath;
     SoundComponent* m_hitSound;
 };

@@ -101,7 +101,11 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
 
     // 警戒ゲージを更新
-    UpdateAlertGauge(deltaTime);
+    if (UseAlertGauge())
+    {
+        UpdateAlertGauge(deltaTime);
+    }
+
 
     // 怨霊は重力を使用しない
     Vector2d pos = GetPos();
@@ -145,8 +149,10 @@ void SpiritEnemyEntity::UpdateAI()
 
         SetVel(Vector2d(0.0f, floatSpeed));
 
-        // プレイヤーを検知したらMoveへ
-        if (absDistanceX <= m_detectRange)
+        float distanceY = std::abs(playerPos.y - myPos.y);
+
+        if (absDistanceX <= SEARCH_RANGE_X &&
+            distanceY <= SEARCH_RANGE_Y)
         {
             m_state = Move;
         }
@@ -161,7 +167,7 @@ void SpiritEnemyEntity::UpdateAI()
             std::sin(m_floatTimer) * 10.0f
         ));
 
-        // 警戒ゲージが100になったら戦闘開始
+        
         if (m_alertGauge != nullptr &&
             m_alertGauge->GetGauge() > 0.0f)
         {

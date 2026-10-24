@@ -369,8 +369,8 @@ bool EnemyEntity::IsPlayerInSearchRange() const
     float distanceX = std::abs(playerPos.x - enemyPos.x);
     float distanceY = std::abs(playerPos.y - enemyPos.y);
 
-    return distanceX <= 100.0f &&
-        distanceY <= 250.0f;
+    return distanceX <= SEARCH_RANGE_X &&
+        distanceY <= SEARCH_RANGE_Y;
 }
 
 void EnemyEntity::UpdateAlertGauge(float deltaTime)
