@@ -132,6 +132,7 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,19 +150,18 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\DxLib_VC3_24f\DxLib_VC\プロジェクトに追加すべきファイル_VC用</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\DxLib_VC3_24f\DxLib_VC\プロジェクトに追加すべきファイル_VC用</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="AlertGaugeComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
-    <ClCompile Include="ArmorEnemyEntity.cpp" />
-    <ClCompile Include="ArrowEnemyEntity.cpp" />
     <ClCompile Include="BackGroundUI.cpp" />
     <ClCompile Include="BlockActor.cpp" />
     <ClCompile Include="BossEntity.cpp" />
@@ -173,14 +173,17 @@
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
+    <ClCompile Include="DamageTrap.cpp" />
     <ClCompile Include="DropItemEntity.cpp" />
     <ClCompile Include="EffectActor.cpp" />
     <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="EnemyEntity.cpp" />
     <ClCompile Include="EnemyHPBar.cpp" />
+    <ClCompile Include="EnemySpawnTrap.cpp" />
     <ClCompile Include="EquipmentMenu.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="EventTexture.cpp" />
+    <ClCompile Include="HideBlock.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameOverUI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -188,8 +191,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GunnerEnemyEntity.cpp" />
-    <ClCompile Include="HealerEnemyEntity.cpp" />
     <ClCompile Include="HitboxData.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -206,15 +207,14 @@
     <ClCompile Include="MenuPage.cpp" />
     <ClCompile Include="MoneyUI.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="NinjutsuSealTrap.cpp" />
     <ClCompile Include="PlatformBlock.cpp" />
     <ClCompile Include="PlatformOboroLBlock.cpp" />
     <ClCompile Include="PlatformOboroMBlock.cpp" />
     <ClCompile Include="PlatformOboroSBlock.cpp" />
     <ClCompile Include="PlayerStatusUI.cpp" />
     <ClCompile Include="SaveManager.cpp" />
-    <ClCompile Include="ScarecrowEnemyEntity.cpp" />
     <ClCompile Include="ScreenMenus.cpp" />
-    <ClCompile Include="SekienkiBossEntity.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
@@ -223,6 +223,7 @@
     <ClCompile Include="SpiritEnemyEntity.cpp" />
     <ClCompile Include="StageBackActor.cpp" />
     <ClCompile Include="StageExitActor.cpp" />
+    <ClCompile Include="StatusDownTrap.cpp" />
     <ClCompile Include="StageSelectScene.cpp" />
     <ClCompile Include="StoneLBlock.cpp" />
     <ClCompile Include="StoneSBlock.cpp" />
@@ -230,9 +231,6 @@
     <ClCompile Include="StructureBBlocke.cpp" />
     <ClCompile Include="Trap.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
-    <ClCompile Include="WhiteEnemyEntity.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="KooniEnemyEntity.cpp" />
     <ClCompile Include="EntityActor.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -262,22 +260,20 @@
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIActor.cpp" />
     <ClCompile Include="VelocityComponent.cpp" />
-    <ClCompile Include="WhiteShurikenBullet.cpp" />
     <ClCompile Include="WoodLBlock.cpp" />
     <ClCompile Include="WoodSBlock.cpp" />
     <ClCompile Include="YaguraLBlock.cpp" />
     <ClCompile Include="YaguraLLBlock.cpp" />
     <ClCompile Include="YaguraMBlock.cpp" />
     <ClCompile Include="YaguraSBlock.cpp" />
-    <ClCompile Include="YellowEnemyEntity.cpp" />
-    <ClCompile Include="YoroiBossEntity.cpp" />
+    <ClCompile Include="Mapmenu.cpp" />
+    <ClCompile Include="StatusMenu.cpp" />
+    <ClCompile Include="NewsMenu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="AlertGaugeComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
-    <ClInclude Include="ArmorEnemyEntity.h" />
-    <ClInclude Include="ArrowEnemyEntity.h" />
     <ClInclude Include="BackGroundUI.h" />
     <ClInclude Include="BlockActor.h" />
     <ClInclude Include="BossEntity.h" />
@@ -293,6 +289,7 @@
     <ClInclude Include="CollisionComponent.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="Component.h" />
+    <ClInclude Include="DamageTrap.h" />
     <ClInclude Include="DropData.h" />
     <ClInclude Include="DropItemEntity.h" />
     <ClInclude Include="EffectActor.h" />
@@ -300,13 +297,16 @@
     <ClInclude Include="EnemyEntity.h" />
     <ClInclude Include="EnemyHPBar.h" />
     <ClInclude Include="EnemySpawner.h" />
+    <ClInclude Include="EnemySpawnTrap.h" />
     <ClInclude Include="EquipmentMenu.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="EventTexture.h" />
     <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameOverUI.h" />
+    <ClInclude Include="GameOverMenuUI.h" />
     <ClInclude Include="GunnerEnemyEntity.h" />
     <ClInclude Include="HealerEnemyEntity.h" />
+    <ClInclude Include="HideBlock.h" />
     <ClInclude Include="HitboxData.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -323,6 +323,8 @@
     <ClInclude Include="MenuPage.h" />
     <ClInclude Include="MoneyUI.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="NinjutsuSealTrap.h" />
+    <ClInclude Include="NewsData.h" />
     <ClInclude Include="PlatformBlock.h" />
     <ClInclude Include="PlatformOboroLBlock.h" />
     <ClInclude Include="PlatformOboroMBlock.h" />
@@ -330,11 +332,8 @@
     <ClInclude Include="PlayerStatusUI.h" />
     <ClInclude Include="SaveData.h" />
     <ClInclude Include="SaveManager.h" />
-    <ClInclude Include="ScarecrowEnemyEntity.h" />
     <ClInclude Include="ScreenMenus.h" />
-    <ClInclude Include="SekienkiBossEntity.h" />
     <ClInclude Include="ShurikenUI.h" />
-    <ClInclude Include="SkillData.h" />
     <ClInclude Include="SkillMenu.h" />
     <ClInclude Include="SoundComponent.h" />
     <ClInclude Include="SoundManager.h" />
@@ -343,15 +342,13 @@
     <ClInclude Include="StageBackActor.h" />
     <ClInclude Include="StageExitActor.h" />
     <ClInclude Include="StageSelectScene.h" />
+    <ClInclude Include="StatusDownTrap.h" />
     <ClInclude Include="StoneLBlock.h" />
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />
     <ClInclude Include="StructureBBlock.h" />
     <ClInclude Include="Trap.h" />
     <ClInclude Include="TreasureBox.h" />
-    <ClInclude Include="WhiteEnemyEntity.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="KooniEnemyEntity.h" />
     <ClInclude Include="EntityActor.h" />
     <ClInclude Include="Game.h" />
@@ -379,15 +376,15 @@
     <ClInclude Include="UIActor.h" />
     <ClInclude Include="Vector2d.h" />
     <ClInclude Include="VelocityComponent.h" />
-    <ClInclude Include="WhiteShurikenBullet.h" />
     <ClInclude Include="WoodLBlock.h" />
     <ClInclude Include="WoodSBlock.h" />
     <ClInclude Include="YaguraLBlock.h" />
     <ClInclude Include="YaguraLLBlock.h" />
     <ClInclude Include="YaguraMBlock.h" />
     <ClInclude Include="YaguraSBlock.h" />
-    <ClInclude Include="YellowEnemyEntity.h" />
-    <ClInclude Include="YoroiBossEntity.h" />
+    <ClInclude Include="Mapmenu.h" />
+    <ClInclude Include="Statusmenu.h" />
+    <ClInclude Include="NewsMenu.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\maps\stage1\map.csv" />

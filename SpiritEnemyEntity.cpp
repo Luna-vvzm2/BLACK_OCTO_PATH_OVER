@@ -10,6 +10,7 @@
 #include "SoundComponent.h"
 #include "SpiritBulletEntity.h"
 #include "AlertGaugeComponent.h"
+
 #include <cmath>
 
 SpiritEnemyEntity::SpiritEnemyEntity(
@@ -39,7 +40,7 @@ bool SpiritEnemyEntity::Init()
     {
         return false;
     }
-
+    SetEnemyRank(EnemyRank::Small);
     // 怨霊のHP
     m_hp = AddComponent<HPComponent>(80);
 
@@ -62,6 +63,60 @@ bool SpiritEnemyEntity::Init()
     m_hasTargetPosition = false;
 
     return true;
+}
+
+
+void SpiritEnemyEntity::Update(float deltaTime)
+{
+    if (GetState() == Actor::State::Dead)
+    {
+        return;
+    }
+
+    // 浮遊用タイマー
+    m_floatTimer += deltaTime;
+
+    // 攻撃中のタイマー
+    if (m_state == Attack)
+    {
+        m_attackTimer += deltaTime;
+
+        // 攻撃モーション終了
+        if (m_attackTimer >= 0.96f)
+        {
+            m_attackTimer = 0.0f;
+            m_state = Recovery;
+        }
+    }
+    // 攻撃後の硬直
+    else if (m_state == Recovery)
+    {
+        m_attackTimer += deltaTime;
+
+        if (m_attackTimer >= 1.2f)
+        {
+            m_attackTimer = 0.0f;
+            m_state = Move;
+        }
+    }
+
+    // AIを更新
+    UpdateAI();
+
+
+    // 警戒ゲージを更新
+    UpdateAlertGauge(deltaTime);
+
+    // 怨霊は重力を使用しない
+    Vector2d pos = GetPos();
+    Vector2d vel = GetVel();
+
+    pos += vel * deltaTime;
+
+    SetPos(pos);
+
+    // EnemyEntity::Update() は呼ばない
+    // EntityActor::Update() もここでは呼ばない
 }
 
 void SpiritEnemyEntity::UpdateAI()
@@ -106,7 +161,7 @@ void SpiritEnemyEntity::UpdateAI()
 
     case Move:
     {
-        // 警戒中はその場で浮遊するだけ
+        // 警戒中はその場で浮遊
         SetVel(Vector2d(
             0.0f,
             std::sin(m_floatTimer) * 10.0f
@@ -114,15 +169,11 @@ void SpiritEnemyEntity::UpdateAI()
 
         // 警戒ゲージが100になったら戦闘開始
         if (m_alertGauge != nullptr &&
-            m_alertGauge->IsCombat())
+            m_alertGauge->GetGauge() > 0.0f)
         {
-            SetVel(Vector2d(
-                0.0f,
-                std::sin(m_floatTimer) * 10.0f
-            ));
-
             m_state = CombatMove;
             m_attackTimer = 0.0f;
+            m_hasTargetPosition = false;
         }
     }
     break;
@@ -298,88 +349,24 @@ void SpiritEnemyEntity::UpdateAI()
     }
 }
 
-void SpiritEnemyEntity::Update(float deltaTime)
+bool SpiritEnemyEntity::IsPlayerInSearchRange() const
 {
-    if (GetState() == Actor::State::Dead)
-    {
-        return;
-    }
-
-    // 浮遊用タイマー
-    m_floatTimer += deltaTime;
-
-    // 攻撃中のタイマー
-    if (m_state == Attack)
-    {
-        m_attackTimer += deltaTime;
-
-        // 攻撃モーション終了
-        if (m_attackTimer >= 0.96f)
-        {
-            m_attackTimer = 0.0f;
-            m_state = Recovery;
-        }
-    }
-    // 攻撃後の硬直
-    else if (m_state == Recovery)
-    {
-        m_attackTimer += deltaTime;
-
-        if (m_attackTimer >= 1.2f)
-        {
-            m_attackTimer = 0.0f;
-            m_state = Move;
-        }
-    }
-
-    // AIを更新
-    UpdateAI();
-
-    // 怨霊専用の警戒ゲージを更新
-    UpdateSpiritAlertGauge(deltaTime);
-
-    // 怨霊は重力を使用しない
-    Vector2d pos = GetPos();
-    Vector2d vel = GetVel();
-
-    pos += vel * deltaTime;
-
-    SetPos(pos);
-
-    // EnemyEntity::Update() は呼ばない
-    // EntityActor::Update() もここでは呼ばない
-}
-
-void SpiritEnemyEntity::UpdateSpiritAlertGauge(float deltaTime)
-{
-    if (m_alertGauge == nullptr)
-    {
-        return;
-    }
-
-    m_alertGaugeTimer += deltaTime;
-
-    if (m_alertGaugeTimer < 1.0f)
-    {
-        return;
-    }
-
-    m_alertGaugeTimer = 0.0f;
-
     PlayScene* playScene =
         dynamic_cast<PlayScene*>(m_scene);
 
     if (playScene == nullptr)
     {
-        return;
+        return false;
     }
 
     PlayerEntity* player = playScene->GetPlayer();
 
     if (player == nullptr || player->IsDead())
     {
-        return;
+        return false;
     }
+
+    if (player->GetIsHide()) { return false; }
 
     Vector2d enemyPos = GetPos();
     Vector2d playerPos = player->GetPos();
@@ -390,26 +377,10 @@ void SpiritEnemyEntity::UpdateSpiritAlertGauge(float deltaTime)
     float distanceY =
         std::abs(playerPos.y - enemyPos.y);
 
-    // 怨霊の感知範囲：700px
-    // 上下方向は500pxを基準にする
-    bool inRange =
-        distanceX <= m_detectRange &&
+    return distanceX <= m_detectRange &&
         distanceY <= 250.0f;
-
-    if (inRange)
-    {
-        m_alertGauge->AddGauge(4.0f);
-    }
-    else
-    {
-        m_alertGauge->AddGauge(-1.0f);
-    }
-
-    std::cout
-        << "Spirit Alert Gauge = "
-        << m_alertGauge->GetGauge()
-        << std::endl;
 }
+
 
 void SpiritEnemyEntity::Draw()
 {

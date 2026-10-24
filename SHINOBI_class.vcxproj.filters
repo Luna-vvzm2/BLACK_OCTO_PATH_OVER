@@ -150,9 +150,6 @@
     <ClCompile Include="KooniEnemyEntity.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="YellowEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
-    </ClCompile>
     <ClCompile Include="ArmorEnemyEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
     </ClCompile>
@@ -172,9 +169,6 @@
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
     </ClCompile>
     <ClCompile Include="SekienkiBossEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="YoroiBossEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
     </ClCompile>
     <ClCompile Include="KunaiActor.cpp">
@@ -264,9 +258,6 @@
     <ClCompile Include="PlatformOboroMBlock.cpp">
       <Filter>ソース ファイル\Actor\Block</Filter>
     </ClCompile>
-    <ClCompile Include="EquipmentMenu.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Menu.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -274,9 +265,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="MenuPage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SkillMenu.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Trap.cpp">
@@ -319,6 +307,36 @@
       <Filter>ソース ファイル\Scene</Filter>
     </ClCompile>
     <ClCompile Include="GameOverUI.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="DamageTrap.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusDownTrap.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="NinjutsuSealTrap.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenu.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuMapPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuNewsPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuStatusPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Mapmenu.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusMenu.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="NewsMenu.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -434,9 +452,6 @@
     <ClInclude Include="KooniEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="YellowEnemyEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="ArrowEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -456,9 +471,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="SekienkiBossEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="YoroiBossEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="KunaiActor.h">
@@ -548,13 +560,7 @@
     <ClInclude Include="PlatformOboroMBlock.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="SkillMenu.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Menu.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SkillData.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="EquipmentMenu.h">
@@ -612,6 +618,39 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GameOverScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="DamageTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusDownTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NinjutsuSealTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NewsData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuMapPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuNewsPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuStatusPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Mapmenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Statusmenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NewsMenu.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

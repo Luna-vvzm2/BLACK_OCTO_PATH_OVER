@@ -178,6 +178,8 @@ bool KasaTenguEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     const Vector2d difference = player->GetPos() - GetPos();
     return std::fabs(difference.x) <= KASATENGU_SIGHT_RANGE_X &&
         std::fabs(difference.y) <= KASATENGU_SIGHT_RANGE_Y;
@@ -387,7 +389,7 @@ void KasaTenguEnemyEntity::TryHitPlayer(PlayerEntity* player, int stage)
     }
 }
 
-void KasaTenguEnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
+void KasaTenguEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
     if (m_hp == nullptr || m_status == Status::Defeated)
     {

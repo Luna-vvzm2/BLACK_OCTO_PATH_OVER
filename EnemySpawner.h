@@ -3,6 +3,7 @@
 #include "EnemyEntity.h"
 #include "EnemyHPBar.h"
 #include <type_traits>
+#include "HPComponent.h"
 
 class EnemySpawner
 {

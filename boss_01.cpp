@@ -317,7 +317,7 @@ void Boss_01::UpdateAttack(float deltaTime)
     }
 }
 
-void Boss_01::TakeDamage(int damage, const Vector2d& knockback)
+void Boss_01::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
     if (!m_initialized || IsBattleFinished() || damage <= 0 || m_hp->IsInvincible()) return;
     // 強い一撃でもHP600で踏みとどまり、通常敵の死亡・消去へ進ませない。

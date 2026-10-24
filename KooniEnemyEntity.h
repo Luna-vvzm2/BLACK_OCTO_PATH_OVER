@@ -28,7 +28,7 @@ public:
 
     bool Init() override;
     void Update(float deltaTime) override;
-    void TakeDamage(int damage, const Vector2d& knockback) override;
+    void TakeDamage(int damage, const Vector2d& knockback, bool attackDir = false) override;
 
     int GetMaxHP() const override { return 150; }
     Status GetStatus() const { return m_status; }

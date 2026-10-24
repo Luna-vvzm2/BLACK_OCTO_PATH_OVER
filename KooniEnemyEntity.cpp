@@ -173,6 +173,8 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     const Vector2d difference = player->GetPos() - GetPos();
     return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X &&
         std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
@@ -367,7 +369,7 @@ void KooniEnemyEntity::TryHitPlayer(PlayerEntity* player)
     }
 }
 
-void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
+void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
     if (m_hp == nullptr || m_status == Status::Defeated)
     {

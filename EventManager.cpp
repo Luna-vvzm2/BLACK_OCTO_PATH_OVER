@@ -11,14 +11,6 @@
 #include "Game.h"
 #include "Camera.h"
 #include "Actor.h"
-#include "WhiteEnemyEntity.h"
-#include "YellowEnemyEntity.h"
-#include "ArrowEnemyEntity.h"
-#include "HealerEnemyEntity.h"
-#include "ArmorEnemyEntity.h"
-#include "GunnerEnemyEntity.h"
-#include "YoroiBossEntity.h"
-#include "SekienkiBossEntity.h"
 #include "HPComponent.h"
 #include "EnemySpawner.h"
 
@@ -982,44 +974,7 @@ void BattleEvent::EnemySpawn()
 	switch (m_enemyType)
 	{
 	case 1:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<WhiteEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 2:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<YellowEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 3:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<ArrowEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 4:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<HealerEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 5:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<ArmorEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 6:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<GunnerEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 7:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<YoroiBossEntity>(playScene, spawnPos,"assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-	}break;
-
-	case 8:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<SekienkiBossEntity>(playScene, spawnPos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-	}break;
+		break;
 
 	default:
 		std::cerr << "–³Œø‚È’l‚Ì‚½‚ß“G‚ð¶¬‚Å‚«‚Ü‚¹‚ñB\n";
