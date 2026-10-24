@@ -1,12 +1,20 @@
 #pragma once
 
+#include <string>
+
 class Game;
+
+namespace MenuVisual
+{
+    void DrawOption(Game* game, const std::string& label, float x, float y,
+        int fontSize, bool selected, bool enabled = true);
+}
 
 // Shared settings UI. It can be opened from the title or from a pause menu.
 class SettingsMenu
 {
 public:
-    explicit SettingsMenu(Game* game);
+    explicit SettingsMenu(Game* game, bool overGame = false);
 
     void Open();
     bool IsOpen() const { return m_open; }
@@ -17,6 +25,7 @@ private:
     enum class Page { Root, Volume, Controls };
 
     Game* m_game;
+    bool m_overGame = false;
     Page m_page = Page::Root;
     bool m_open = false;
     int m_cursor = 0;

@@ -6,6 +6,7 @@
 #include "Input.h"
 #include "Renderer.h"
 #include "Color.h"
+#include "ScreenMenus.h"
 
 #include <DxLib.h>
 #include <memory>
@@ -57,26 +58,21 @@ void StageSelectScene::Draw()
 {
     Renderer* renderer = m_game->GetRenderer();
     const auto& font = m_game->GatDebugFont();
-    const float centerX = m_game->GetWidth() * 0.5f;
+    const float width = static_cast<float>(m_game->GetWidth());
+    const float height = static_cast<float>(m_game->GetHeight());
 
-    DrawBox(0, 0, m_game->GetWidth(), m_game->GetHeight(), GetColor(20, 26, 36), TRUE);
-    renderer->DrawTextC(Vector2d(centerX, 95), "ステージ選択", Color(255, 255, 255), font, 48, false);
+    DrawBox(0, 0, m_game->GetWidth(), m_game->GetHeight(), GetColor(210, 210, 208), TRUE);
+    renderer->DrawTextL(Vector2d(width * 0.13f, height * 0.10f),
+        "ステージ選択", Color(8, 8, 8), font, 56, false);
 
-    const char* labels[] = { "ステージ 1", "ステージ 2", "ステージ 3" };
+    const char* labels[] = { "ステージ1  開始", "ステージ2  未開放", "ステージ3  未開放" };
     for (int i = 0; i < 3; ++i)
-    {
-        const float x = 135.0f + i * 345.0f;
-        const bool available = i == 0;
-        renderer->DrawRect(Vector2d(x, 265), 320, 205,
-            available ? Color(55, 92, 85) : Color(55, 55, 60), true, false);
-        renderer->DrawTextC(Vector2d(x + 160, 330), labels[i],
-            available ? Color(255, 220, 110) : Color(135, 135, 135), font, 32, false);
-        renderer->DrawTextC(Vector2d(x + 160, 395), available ? "開始可能" : "未開放",
-            available ? Color(255, 255, 255) : Color(135, 135, 135), font, 24, false);
-    }
+        MenuVisual::DrawOption(m_game, labels[i], width * 0.18f,
+            height * (0.34f + i * 0.16f), 46, i == 0, i == 0);
 
-    renderer->DrawTextC(Vector2d(centerX, 560), "Enter／B: ステージ1開始", Color(235, 235, 235), font, 24, false);
-    renderer->DrawTextC(Vector2d(centerX, 605),
+    renderer->DrawTextL(Vector2d(width * 0.18f, height * 0.86f),
+        "Enter／B: ステージ1開始", Color(35, 35, 35), font, 23, false);
+    renderer->DrawTextL(Vector2d(width * 0.18f, height * 0.92f),
         m_game->CanPopScene() ? "Esc／START: ポーズへ戻る" : "Esc／START: タイトルへ戻る",
-        Color(190, 190, 190), font, 22, false);
+        Color(35, 35, 35), font, 23, false);
 }
