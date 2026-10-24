@@ -173,6 +173,8 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     const Vector2d difference = player->GetPos() - GetPos();
     return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X &&
         std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;

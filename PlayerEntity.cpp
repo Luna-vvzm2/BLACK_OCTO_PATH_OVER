@@ -1063,6 +1063,9 @@ void PlayerEntity::CheckCanStand()
 
         auto block = static_cast<BlockActor*>(actor);
 
+        if (block->GetBlockType() == BlockType::Hide)   // ’Ç‰Á
+            continue;
+
         CollisionComponent* blockCol = block->GetCollision();
 
         Vector2d blockPos = block->GetPos();
@@ -1097,6 +1100,9 @@ BlockActor* PlayerEntity::CheckSensor(const Vector2d& offset, const Vector2d& si
             continue;
 
         auto block = static_cast<BlockActor*>(actor);
+
+        if (block->GetBlockType() == BlockType::Hide)   // ’Ç‰Á
+            continue;
 
         Vector2d blockPos = block->GetPos();
         CollisionComponent* col = block->GetCollision();
