@@ -137,7 +137,7 @@ bool PlayScene::Init() {
 	AddUIActor(hpBar);
 	m_hpBarUI = hpBar;
 	
-	ShurikenUI* shuriken = new ShurikenUI(this, 18, 60);
+	ShurikenUI* shuriken = new ShurikenUI(this, 18, 135);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
 
@@ -145,8 +145,8 @@ bool PlayScene::Init() {
 	m_playerStatusUI = new PlayerStatusUI(
 		this,
 		m_player,
-		20.0f,
-		160.0f
+		18.0f,
+		135.0f
 	);
 
 	AddUIActor(m_playerStatusUI);

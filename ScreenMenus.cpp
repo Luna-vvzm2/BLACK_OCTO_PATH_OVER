@@ -48,19 +48,13 @@ namespace MenuVisual
             game->GatDebugFont(), fontSize, false);
         if (!active) return;
 
+        static const int markerHandle = LoadGraph("assets/images/icon/kunai.png");
+        if (markerHandle < 0) return;
         const float scale = static_cast<float>(fontSize) / 53.0f;
-        const int markerX = static_cast<int>(x - 85.0f * scale);
-        const int markerY = static_cast<int>(y);
-        const unsigned int markerColor = GetColor(38, 29, 26);
-        DrawCircle(markerX + static_cast<int>(5 * scale), markerY + static_cast<int>(scale),
-            static_cast<int>(7 * scale), markerColor, TRUE);
-        DrawLine(markerX + static_cast<int>(10 * scale), markerY + static_cast<int>(6 * scale),
-            markerX + static_cast<int>(35 * scale), markerY + static_cast<int>(34 * scale),
-            markerColor, static_cast<int>(7 * scale));
-        DrawTriangle(markerX + static_cast<int>(31 * scale), markerY + static_cast<int>(27 * scale),
-            markerX + static_cast<int>(64 * scale), markerY + static_cast<int>(60 * scale),
-            markerX + static_cast<int>(37 * scale), markerY + static_cast<int>(48 * scale),
-            markerColor, TRUE);
+        const int size = static_cast<int>(100.0f * scale);
+        const int left = static_cast<int>(x - 100.0f * scale);
+        const int top = static_cast<int>(y - 15.0f * scale);
+        DrawExtendGraph(left, top, left + size, top + size, markerHandle, TRUE);
     }
 }
 SettingsMenu::SettingsMenu(Game* game, bool overGame) : m_game(game), m_overGame(overGame) {}
