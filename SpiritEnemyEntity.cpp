@@ -358,6 +358,8 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     Vector2d enemyPos = GetPos();
     Vector2d playerPos = player->GetPos();
 

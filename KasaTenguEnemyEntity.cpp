@@ -180,6 +180,8 @@ bool KasaTenguEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     const Vector2d difference = player->GetPos() - GetPos();
     return std::fabs(difference.x) <= KASATENGU_SIGHT_RANGE_X &&
         std::fabs(difference.y) <= KASATENGU_SIGHT_RANGE_Y;
