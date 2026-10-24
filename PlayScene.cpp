@@ -1363,6 +1363,7 @@ void PlayScene::StartFadeToStage(int idx, int spawnIndex)
 	// ‚·‚Å‚É‘JˆÚ’†‚È‚ç–³Ž‹
 	if (m_fadeState != FadeState::None) return;
 
+	m_game->GetSoundManager().Play("select_game_start");
 	m_pendingStageIndex = idx;
 	m_nextSpawnIndex = spawnIndex;
 	m_fadeState = FadeState::FadeOut;

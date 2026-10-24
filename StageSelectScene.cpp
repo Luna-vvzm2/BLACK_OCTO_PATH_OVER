@@ -41,6 +41,7 @@ void StageSelectScene::Update(float)
     // yet have separate content, so their cards stay locked.
     if (input.IsTrigger(Action::ENTER)) 
     {
+        m_game->GetSoundManager().Play("select_game_start");
         if (m_game->CanPopScene())
         {
 

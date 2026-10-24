@@ -73,26 +73,38 @@ void SettingsMenu::Update()
 
     if (input.IsTrigger(Action::ESCAPE))
     {
+        m_game->GetSoundManager().Play("select_default");
         if (m_page == Page::Root) m_open = false;
         else { m_page = Page::Root; m_cursor = 0; }
         return;
     }
 
     const int count = m_page == Page::Volume ? 5 : (m_page == Page::Root ? 3 : 1);
-    if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + count - 1) % count;
-    if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % count;
+    if (input.IsTrigger(Action::UP)) {
+        m_cursor = (m_cursor + count - 1) % count;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
+    if (input.IsTrigger(Action::DOWN)) {
+        m_cursor = (m_cursor + 1) % count;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
 
     if (m_page == Page::Volume && m_cursor < 4)
     {
         const int step = input.IsTrigger(Action::RIGHT) ? 5 : (input.IsTrigger(Action::LEFT) ? -5 : 0);
         if (step != 0)
         {
+            const int before = m_cursor == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(m_cursor);
             if (m_cursor == 3) SoundComponent::AdjustVoiceVolume(step);
             else m_game->AdjustVolume(m_cursor, step);
+            const int after = m_cursor == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(m_cursor);
+            if (after != before) m_game->GetSoundManager().Play("select_default");
         }
     }
 
     if (!input.IsTrigger(Action::ENTER)) return;
+    if (m_page == Page::Volume && m_cursor < 4) return;
+    m_game->GetSoundManager().Play("select_default");
 
     if (m_page == Page::Root)
     {
@@ -193,9 +205,16 @@ PauseMenu::Result PauseMenu::Update()
     }
 
     const int count = m_fromStageSelect ? 3 : 4;
-    if (input.IsTrigger(Action::UP)) m_cursor = (m_cursor + count - 1) % count;
-    if (input.IsTrigger(Action::DOWN)) m_cursor = (m_cursor + 1) % count;
+    if (input.IsTrigger(Action::UP)) {
+        m_cursor = (m_cursor + count - 1) % count;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
+    if (input.IsTrigger(Action::DOWN)) {
+        m_cursor = (m_cursor + 1) % count;
+        m_game->GetSoundManager().Play("game_select_mode");
+    }
     if (!input.IsTrigger(Action::ENTER)) return Result::None;
+    m_game->GetSoundManager().Play("select_default");
 
     if (m_cursor == 0) { m_open = false; return Result::Resume; }
     if (m_cursor == 1) { m_settings.Open(); return Result::None; }
