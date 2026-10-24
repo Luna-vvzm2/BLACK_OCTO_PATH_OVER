@@ -2962,6 +2962,7 @@ void PlayerEntity::AddKunai(int value)
 {
     m_kunai += value;
     if (m_kunai < 0) m_kunai = 0;
+    if (m_kunai > 3) m_kunai = 3;
 }
 
 void PlayerEntity::AddHaku(int value)

@@ -173,6 +173,7 @@ public:
 
     bool GetOwnJutsu(int idx);      // ”Ep‚ÌŠl“¾ó‹µƒtƒ‰ƒOB@‘û = 0AŒÕ = 1AŠ^ = 2AéÍ = 3
     bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx] && m_jutsuInterval[idx] <= 0.0f; }
+    float GetJutsuInterval(int idx) { return m_jutsuInterval[idx]; }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
