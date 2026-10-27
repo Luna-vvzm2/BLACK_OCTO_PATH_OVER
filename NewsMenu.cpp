@@ -49,14 +49,6 @@ void NewsMenu::Initialize()
             m_imageHandle[i] = LoadGraph(NEWS_LIST[i].image);
         }
     }
-
-#ifdef _DEBUG
-    // デバッグ時のみ全て入手済みにして表示確認できるようにする
-    for (int i = 0; i < 3; i++)
-    {
-        m_owned[i] = true;
-    }
-#endif
 }
 
 void NewsMenu::SetOwned(int index, bool owned)

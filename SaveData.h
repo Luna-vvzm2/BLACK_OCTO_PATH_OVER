@@ -18,4 +18,6 @@ struct SaveData
     // Šè— Œ•”
     int kunaiCount = 10;
 
+    // “üèÏ‚İ‚ÌV•·(V•·ID 1~6 ¨ “Yš 0~5)
+    std::array<bool, 6> newsOwned{ true, false, false, false, false, false };
 };

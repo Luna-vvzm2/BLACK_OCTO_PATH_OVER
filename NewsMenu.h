@@ -10,8 +10,12 @@ public:
     void Update(float deltaTime) override;
     void Draw() override;
 
-    // “üèó‹µ‚Ìİ’è (Œã‚ÅSaveData‚Æ˜AŒg—\’è)
+    // “üèó‹µ‚Ìİ’è
     void SetOwned(int index, bool owned);
+    bool IsOwned(int index) const
+    {
+        return index >= 0 && index < NewsCount && m_owned[index];
+    }
 
     static constexpr int NewsCount = 6;
 
