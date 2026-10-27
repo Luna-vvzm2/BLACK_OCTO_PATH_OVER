@@ -175,6 +175,24 @@ public:
     bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx] && m_jutsuInterval[idx] <= 0.0f; }
     float GetJutsuInterval(int idx) { return m_jutsuInterval[idx]; }
 
+    // ”Ep‚ªg—p’†‚©‚ğæ“¾‚·‚é
+    bool GetIsJutsu(int idx) const
+    {
+        if (idx < 0 || idx >= 4)
+            return false;
+
+        return m_isJutsu[idx];
+    }
+
+    // ”Ep‚ÌÅ‘åƒN[ƒ‹ƒ^ƒCƒ€‚ğæ“¾‚·‚é
+    float GetJutsuMaxInterval(int idx) const
+    {
+        if (idx < 0 || idx >= 4)
+            return 0.0f;
+
+        return m_jutsuMaxInterval[idx];
+    }
+
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
     void SetCanMove(bool canMove) { m_canMove = canMove; }
