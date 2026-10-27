@@ -1265,6 +1265,40 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
             );*/
         }
     }
+
+    // =====================================
+// 攻撃命中時のヒット演出
+// =====================================
+    if (m_hit)
+    {
+        PlayScene* playScene =
+            dynamic_cast<PlayScene*>(m_scene);
+
+        if (playScene)
+        {
+            // ダメージの大きい攻撃は演出を強める
+            const bool isStrong = hitbox.damage >= 140;
+
+            if (isStrong)
+            {
+                // 強攻撃：かなり激しく揺れる
+                playScene->RequestHitEffect(
+                    0.08f,  // ヒットストップ
+                    0.22f,  // 揺れる時間
+                    25.0f   // 揺れの強さ
+                );
+            }
+            else
+            {
+                // 弱攻撃：しっかり揺れる
+                playScene->RequestHitEffect(
+                    0.04f,
+                    0.15f,
+                    12.0f
+                );
+            }
+        }
+    }
 }
 
 void PlayerEntity::UpdateState(float deltaTime) {
