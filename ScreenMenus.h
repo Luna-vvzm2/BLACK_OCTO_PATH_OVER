@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Input.h"
+
 #include <string>
 
 class Game;
@@ -21,14 +23,29 @@ public:
     void Update();
     void Draw() const;
 
+    bool IsCapturingKey() const;
+
 private:
     enum class Page { Root, Volume, Controls };
+
+    struct BindingRow
+    {
+        Action action;
+        const char* label;
+    };
+
+    static const std::vector<BindingRow>& GetRows();
+    void SaveSettings();
+    static void LoadSave(Game* game);
 
     Game* m_game;
     bool m_overGame = false;
     Page m_page = Page::Root;
     bool m_open = false;
     int m_cursor = 0;
+
+    int m_keyConfigCursor = 0;
+    bool m_waitingForKey = false;
 };
 
 class PauseMenu
