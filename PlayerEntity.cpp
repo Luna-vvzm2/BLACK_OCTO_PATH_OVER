@@ -44,11 +44,11 @@
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(0,0), 450, 100, 70, 15 }
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,50), 300, 200, 70, 0 },
+    { Vector2d(0,0), 450, 100, 70, 0 }
 };
 
 float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
@@ -657,9 +657,6 @@ void PlayerEntity::Update(float deltaTime) {
     UpdateStatusDown(deltaTime);    
     UpdateNinjutsuSeal(deltaTime); 
 
-    UpdateKamae(deltaTime);
-    UpdateExecution(deltaTime);
-
     UpdateSensor();
 
     CheckCanStand();
@@ -693,7 +690,7 @@ void PlayerEntity::Update(float deltaTime) {
 void PlayerEntity::Draw()
 {
     // タコを使用していない場合は通常描画
-    if (!m_isOcto)
+    if (!m_isJutsu[OCTONum])
     {
         EntityActor::Draw();
         return;
@@ -1417,6 +1414,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_anim->Play("Kamae");
             return;
         }
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
     }
 
     if (m_state == PlayerState::OCTO_AUTO) {
@@ -1427,6 +1427,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_velocity->Set(vel);
             return;
         }
+
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
 
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr) {
@@ -1868,6 +1872,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_velocity->Set(vel);
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1888,6 +1893,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1907,7 +1913,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
             }
         }
 
+        UpdateDir(input);
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr && !m_ignorePlatform) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr){
             if (m_isJutsu[OCTONum]) {
                 if (input.IsDown(Action::JUMP)) {
@@ -2566,10 +2578,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
-        m_isJutsu[OCTONum] = true;
         m_jutsuTimer = 2.0f;
-        m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
         SubShadowGauge(5);
 
         m_anim->Play("OctoStart");
@@ -2577,10 +2586,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::OCTO_AUTO:
     {
-        m_isJutsu[OCTONum] = true;
         m_isAutoOcto = true;
-        m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
         SubShadowGauge(5);
 
         Vector2d vel = m_velocity->Get();
