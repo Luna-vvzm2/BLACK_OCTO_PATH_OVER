@@ -120,7 +120,8 @@ void SpriteComponent::Draw() {
         m_alpha,
         m_flipX,
         m_flipV,
-        m_useCamera);
+        m_useCamera,
+        m_blendMode);
 }
 
 // --------------------

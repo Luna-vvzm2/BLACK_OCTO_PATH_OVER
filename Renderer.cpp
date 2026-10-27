@@ -102,7 +102,7 @@ void Renderer::DrawSprite(const Vector2d& pos, float scale, float angle, int han
 }
 
 void Renderer::DrawSpriteEx(const Vector2d& pos, float scaleX, float scaleY, float angle, int handle, bool trans,
-    const Vector2d& center, int alpha, bool flipH, bool flipV, bool useCamera) {
+    const Vector2d& center, int alpha, bool flipH, bool flipV, bool useCamera, SpriteBlendMode blendMode) {
     Vector2d p = ApplyCamera(pos, useCamera);
     float zoom = m_camera ? m_camera->GetZoom() : 1.0f;
     float sx = scaleX * (useCamera ? zoom : 1.0f);
@@ -112,7 +112,7 @@ void Renderer::DrawSpriteEx(const Vector2d& pos, float scaleX, float scaleY, flo
 
     int oldBlend, oldAlpha;
     GetDrawBlendMode(&oldBlend, &oldAlpha);
-    SetDrawBlendMode(DX_BLENDMODE_ALPHA, alpha);
+    SetDrawBlendMode(blendMode == SpriteBlendMode::Add ? DX_BLENDMODE_ADD : DX_BLENDMODE_ALPHA, alpha);
 
     DrawRotaGraph3F(p.x, p.y, center.x, center.y, sx, sy, angle, handle, trans ? TRUE : FALSE);
 

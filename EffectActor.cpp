@@ -5,7 +5,7 @@
 
 std::unordered_map<EffectType, EffectData> EffectActor::s_effects;
 
-EffectActor::EffectActor(Scene* scene, const Vector2d& pos, EffectType effectType, bool flipX)
+EffectActor::EffectActor(Scene* scene, const Vector2d& pos, EffectType effectType, bool flipX, SpriteBlendMode blendMode)
     : Actor(scene)
     , m_effectType(effectType)
     , m_transform(nullptr)
@@ -13,6 +13,7 @@ EffectActor::EffectActor(Scene* scene, const Vector2d& pos, EffectType effectTyp
     , m_anim(nullptr)
     , m_initialPos(pos)
     , m_flipX(flipX)
+    , m_blendMode(blendMode)
 {
 }
 
@@ -30,6 +31,7 @@ bool EffectActor::Init() {
 
     m_sprite->SetEffectFrames(data.handles);
     m_sprite->SetFlipX(m_flipX);
+    m_sprite->SetBlendMode(m_blendMode);
 
     m_sprite->SetSize(data.size.x, data.size.y);
     m_anim->AddClip("effect", data.clip);

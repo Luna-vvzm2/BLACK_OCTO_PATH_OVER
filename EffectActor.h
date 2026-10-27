@@ -1,5 +1,6 @@
 #pragma once
 #include "Actor.h"
+#include "SpriteBlendMode.h"
 #include "Vector2d.h"
 #include "AnimationComponent.h"
 #include <unordered_map>
@@ -40,7 +41,7 @@ class SpriteComponent;
 
 class EffectActor : public Actor {
 public:
-	explicit EffectActor(Scene* scene, const Vector2d& pos, EffectType effectType, bool flipX = false);
+	explicit EffectActor(Scene* scene, const Vector2d& pos, EffectType effectType, bool flipX = false, SpriteBlendMode blendMode = SpriteBlendMode::Normal);
 	virtual ~EffectActor() = default;
 
 	bool Init() override;
@@ -96,6 +97,7 @@ protected:
 	RenderLayer m_renderLayer = RenderLayer::Front;
 
 	bool m_flipX;
+	SpriteBlendMode m_blendMode;
 
 	Vector2d m_initialPos;
 	Vector2d m_initialSize;
