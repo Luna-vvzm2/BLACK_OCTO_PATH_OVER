@@ -81,6 +81,8 @@ public:
 	void OnResume() override;
 	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
+	void SaveCurrentSettings();
+
 	int m_bgHandle;
 	int m_fgHandle;
 private:

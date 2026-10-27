@@ -14,12 +14,21 @@ Menu::Menu(PlayScene* owner)
 	, m_newsMenu(this)
 	, m_skillMenu(this)
 	, m_equipmentMenu(this)
+	, m_keyConfigMenu(this)
 {
 }
 
 Game* Menu::GetGame() const
 {
 	return m_owner->GetGame();
+}
+
+void Menu::SaveSettings()
+{
+	if (m_owner)
+	{
+		m_owner->SaveCurrentSettings();
+	}
 }
 
 PlayerEntity* Menu::GetPlayer() const
@@ -32,6 +41,7 @@ void Menu::Initialize()
 	m_mapMenu.Initialize();
 	m_statusMenu.Initialize();
 	m_newsMenu.Initialize();
+	m_keyConfigMenu.Initialize();
 }
 
 void Menu::ChangeTab(int delta)
@@ -50,11 +60,8 @@ void Menu::ChangeTab(int delta)
 
 void Menu::Update(float deltaTime)
 {
-	const Input& input = GetGame()->GetInput();
+	const Input& input = m_owner->GetGame()->GetInput();
 
-	//--------------------
-	// É^Éuêÿë÷ (PageUp/PageDown, LB/RB)
-	//--------------------
 	if (input.IsTrigger(Action::PAGE_UP))
 	{
 		ChangeTab(-1);
@@ -216,4 +223,11 @@ void Menu::SetCursorArea(MenuCursorArea area)
 int Menu::GetLockedSkillIcon() const
 {
 	return m_lockedSkillIcon;
+}
+
+bool Menu::IsCapturingKey() const
+{
+	return m_isOpen &&
+		m_currentTab == Tab::KeyConfig &&
+		m_keyConfigMenu.IsWaitingForKey();
 }

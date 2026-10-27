@@ -76,13 +76,14 @@ bool MenuCursor::IsRepeat(
         return false;
     }
 
-    if (input.IsTrigger(action))
+    // メニュー専用の固定キーで判定
+    if (input.IsMenuTrigger(action))
     {
         *timer = 0.0f;
         return true;
     }
 
-    if (input.IsDown(action))
+    if (input.IsMenuDown(action))
     {
         *timer += deltaTime;
 
