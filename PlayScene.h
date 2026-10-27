@@ -79,6 +79,7 @@ public:
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
 	void OnResume() override;
+	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
 	int m_bgHandle;
 	int m_fgHandle;
@@ -94,6 +95,7 @@ private:
 
 	Menu m_menu;
 	PauseMenu m_pauseMenu;
+	bool m_returnToPauseMenu = false;
 
 	Camera m_camera;
 
@@ -139,7 +141,9 @@ private:
 		FadeOut,    // 暗転中（次ステージへ）
 		Loading, //ロード中
 		Hold,       // 完全な黒画面のホールド
-		FadeIn      // 明転中（新ステージ開始）
+		FadeIn,     // 明転中（新ステージ開始）
+		PauseFadeOut,
+		PauseFadeIn
 	};
 
 	FadeState m_fadeState = FadeState::None;
@@ -153,6 +157,7 @@ private:
 
 	// フェード遷移を開始する（次ステージへ） 
 	void StartFadeToStage(int idx, int spawnIndex);
+	void StartFadeToPause(bool opening);
 
 	// フェード状態を更新 
 	void UpdateFade(float deltaTime);

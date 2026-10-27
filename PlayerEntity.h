@@ -125,6 +125,7 @@ public:
 
     bool Init() override;
     void Update(float deltaTime) override;
+    void Draw() override;
 
     void UpdateIgnorePlatform();
     void UpdateInvincible(float deltaTime);
@@ -172,6 +173,7 @@ public:
 
     bool GetOwnJutsu(int idx);      // 忍術の獲得状況フラグ。　蛸 = 0、虎 = 1、蛙 = 2、鯱 = 3
     bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx] && m_jutsuInterval[idx] <= 0.0f; }
+    float GetJutsuInterval(int idx) { return m_jutsuInterval[idx]; }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
@@ -221,10 +223,56 @@ public:
 
     void ResetStageState();
 
+    //ステータス増減
+        // ステータスダウン(攻撃力・防御力半減)
+    void ApplyStatusDown(float duration) { m_statusDownTimer = duration; }
+    bool IsStatusDown() const { return m_statusDownTimer > 0.0f; }
+    float GetStatusDownTimer() const { return m_statusDownTimer; }
+    void UpdateStatusDown(float deltaTime)
+    {
+        if (m_statusDownTimer > 0.0f)
+        {
+            m_statusDownTimer -= deltaTime;
+            if (m_statusDownTimer < 0.0f) m_statusDownTimer = 0.0f;
+        }
+    }
+    int ApplyAttackRatio(int damage) const    // 与えるダメージ ×0.5(端数切り捨て、最低1)
+    {
+        if (!IsStatusDown() || damage <= 0) return damage;
+        int d = static_cast<int>(damage * 0.5f);
+        return d < 1 ? 1 : d;
+    }
+    int ApplyDefenseRatio(int damage) const   // 受けるダメージ ×2(防御力半減の扱い)
+    {
+        return IsStatusDown() ? damage * 2 : damage;
+    }
+
+    //忍術封印（使用不可の状態）
+    void ApplyNinjutsuSeal(float duration) 
+    { 
+        m_ninjutsuSealTimer = duration;
+        std::cout << "[Player] 忍術封印  for " << duration << " sec\n";
+    }
+    bool IsNinjutsuSealed() const { return m_ninjutsuSealTimer > 0.0f; }
+    float GetNinjustuSealTimer() const { return m_ninjutsuSealTimer; }
+    void UpdateNinjutsuSeal(float deltaTime)
+    {
+        if (m_ninjutsuSealTimer > 0.0f)
+        {
+            m_ninjutsuSealTimer -= deltaTime;
+            if (m_ninjutsuSealTimer <= 0.0f)
+            {
+                m_ninjutsuSealTimer = 0.0f;
+                std::cout << "[Player] 忍術封印 END\n";
+            }
+        }
+    }
+
     // ===== ドロップアイテム用 =====
     void AddCoin(int value);
     void AddKunai(int value);
     void AddHaku(int value);
+    void GetHeal(int value);
     void HealHP(int value);
 
     int GetCoin() const { return m_coin; }
@@ -289,11 +337,14 @@ private:
     float m_octoRatio;
     float m_octoTimer;
     bool m_endOcto;
-    bool m_isHide = false;
+    bool m_isHide;
+    float m_ninjutsuSealTimer = 0.0f; //忍術封印トラップ
 
     float m_tigerTimer;
     bool m_tigerFirstAttack;
     bool m_tigerSecondAttack;
+
+    float m_statusDownTimer = 0.0f;
 
     bool m_getHit;
     float m_getHitTimer;
@@ -333,7 +384,7 @@ private:
     int m_coin;
     int m_haku;
     int m_maxHaku;
-
+    int m_maxHeal = 4;
     std::string GetTexturePath() const override;
 
     //サウンド関係
@@ -354,7 +405,6 @@ private:
     SoundComponent* m_hayabusaAttackSound;
 
     SoundComponent* m_karaburiSound;
-
 
 };
 

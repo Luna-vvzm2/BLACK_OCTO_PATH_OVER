@@ -10,11 +10,11 @@ public:
 	PlayerStatusUI(
 		Scene* scene,
 		PlayerEntity* player,
-		float x = 20.0f,
-		float y = 160.0f
+		float x = 18.0f,
+		float y = 135.0f
 	);
 
-	~PlayerStatusUI() override = default;
+	~PlayerStatusUI() override;
 
 	bool Init() override;
 	void Update(float deltaTime) override;
@@ -23,8 +23,9 @@ public:
 private:
 	PlayerEntity* m_player = nullptr;
 
-	float m_x = 20.0f;
-	float m_y = 160.0f;
+	float m_x = 18.0f;
+	float m_y = 135.0f;
 
 	int m_jutsuIconHandle = -1;
+	int m_healIconHandle = -1;
 };

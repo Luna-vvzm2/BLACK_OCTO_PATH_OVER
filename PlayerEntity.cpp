@@ -17,6 +17,7 @@
 #include "Input.h"
 #include "Game.h"
 #include <Windows.h>
+#include <DxLib.h>
 
 #define weak1Num 0
 #define weak2Num 1
@@ -43,11 +44,11 @@
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(0,0), 450, 100, 70, 15 }
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,50), 300, 200, 70, 0 },
+    { Vector2d(0,0), 450, 100, 70, 0 }
 };
 
 float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
@@ -652,6 +653,9 @@ void PlayerEntity::Update(float deltaTime) {
    
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
+            
+    UpdateStatusDown(deltaTime);    
+    UpdateNinjutsuSeal(deltaTime); 
 
     UpdateSensor();
 
@@ -677,6 +681,29 @@ void PlayerEntity::Update(float deltaTime) {
 
     }
 
+}
+
+// ======================================
+// 主人公の描画
+// タコ使用中は約30%暗くする
+// ======================================
+void PlayerEntity::Draw()
+{
+    // タコを使用していない場合は通常描画
+    if (!m_isJutsu[OCTONum])
+    {
+        EntityActor::Draw();
+        return;
+    }
+
+    // 明るさを約70%にする（約30%暗くする）
+    SetDrawBright(178, 178, 178);
+
+    // 主人公を描画
+    EntityActor::Draw();
+
+    // 明るさを元に戻す
+    SetDrawBright(255, 255, 255);
 }
 
 void PlayerEntity::UpdateIgnorePlatform()
@@ -812,8 +839,10 @@ void PlayerEntity::UpdateKamae(float deltaTime)
     if (m_isKaryu) return;
 
     const Input& input = m_scene->GetGame()->GetInput();
+    const bool sealed = IsNinjutsuSealed() && m_isGround; //封印状態は構えを無視
 
-    if (input.IsDown(Action::KAMAE))
+
+    if (input.IsDown(Action::KAMAE) && !sealed)
     {
         if (m_squat) {
             if (!m_canStand) {
@@ -1066,6 +1095,9 @@ void PlayerEntity::CheckCanStand()
 
         auto block = static_cast<BlockActor*>(actor);
 
+        if (block->GetBlockType() == BlockType::Hide)   // 追加
+            continue;
+
         CollisionComponent* blockCol = block->GetCollision();
 
         Vector2d blockPos = block->GetPos();
@@ -1100,6 +1132,9 @@ BlockActor* PlayerEntity::CheckSensor(const Vector2d& offset, const Vector2d& si
             continue;
 
         auto block = static_cast<BlockActor*>(actor);
+
+        if (block->GetBlockType() == BlockType::Hide)   // 追加
+            continue;
 
         Vector2d blockPos = block->GetPos();
         CollisionComponent* col = block->GetCollision();
@@ -1214,7 +1249,7 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
                 enemy->Open();
                 continue;
             }
-            enemy->TakeDamage(hitbox.damage, { m_dir ? 150.0f : -150.0f, -300.0f });
+            enemy->TakeDamage(ApplyAttackRatio(hitbox.damage), { m_dir ? 150.0f : -150.0f, -300.0f });
             m_hit = true;
             m_combo++;
 
@@ -1379,6 +1414,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_anim->Play("Kamae");
             return;
         }
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
     }
 
     if (m_state == PlayerState::OCTO_AUTO) {
@@ -1389,6 +1427,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_velocity->Set(vel);
             return;
         }
+
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
 
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr) {
@@ -1830,6 +1872,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_velocity->Set(vel);
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1850,6 +1893,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1869,7 +1913,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
             }
         }
 
+        UpdateDir(input);
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr && !m_ignorePlatform) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr){
             if (m_isJutsu[OCTONum]) {
                 if (input.IsDown(Action::JUMP)) {
@@ -2528,10 +2578,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
-        m_isJutsu[OCTONum] = true;
         m_jutsuTimer = 2.0f;
-        m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
         SubShadowGauge(5);
 
         m_anim->Play("OctoStart");
@@ -2539,10 +2586,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::OCTO_AUTO:
     {
-        m_isJutsu[OCTONum] = true;
         m_isAutoOcto = true;
-        m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
         SubShadowGauge(5);
 
         Vector2d vel = m_velocity->Get();
@@ -2819,6 +2863,8 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     if (m_invincibleTime > 0) return;
     if (m_dashTimer > 0.0f) return;
 
+    damage = ApplyDefenseRatio(damage);   // 追加
+
     m_hp->Damage(damage);
 
     m_velocity->Set(knockback);
@@ -2922,6 +2968,7 @@ void PlayerEntity::AddKunai(int value)
 {
     m_kunai += value;
     if (m_kunai < 0) m_kunai = 0;
+    if (m_kunai > 3) m_kunai = 3;
 }
 
 void PlayerEntity::AddHaku(int value)
@@ -2935,6 +2982,15 @@ void PlayerEntity::AddHaku(int value)
         m_haku = m_maxHaku;
 }
 
+void PlayerEntity::GetHeal(int value)
+{
+    m_healItem += value;
+    if (m_healItem < 0)
+        m_healItem = 0;
+
+    if (m_healItem > m_maxHeal)
+        m_healItem = m_maxHeal;
+}
 void PlayerEntity::HealHP(int value)
 {
     if (!m_hp) return;

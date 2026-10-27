@@ -7,6 +7,7 @@
 #include "SpriteComponent.h"
 #include "PlayScene.h"
 #include "PlayerEntity.h"
+#include "SoundComponent.h"
 #include "SpiritBulletEntity.h"
 #include "AlertGaugeComponent.h"
 
@@ -19,6 +20,7 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     : EnemyEntity(scene, pos, Vector2d(80.0f, 80.0f))
     , m_state(Idle)
     , m_animation(nullptr)
+    , m_attackSound(nullptr)
     , m_floatTimer(0.0f)
     , m_attackTimer(0.0f)
     , m_deadTimer(0.0f)
@@ -45,6 +47,8 @@ bool SpiritEnemyEntity::Init()
     // 怨霊本体の当たり判定
     // 仕様：80px × 80px
     m_collision->SetRect(80.0f, 80.0f);
+
+    m_attackSound = AddComponent<SoundComponent>();
 
     // 初期状態
     m_state = Idle;
@@ -101,7 +105,11 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
 
     // 警戒ゲージを更新
-    UpdateAlertGauge(deltaTime);
+    if (UseAlertGauge())
+    {
+        UpdateAlertGauge(deltaTime);
+    }
+
 
     // 怨霊は重力を使用しない
     Vector2d pos = GetPos();
@@ -111,8 +119,6 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
     SetPos(pos);
 
-    // EnemyEntity::Update() は呼ばない
-    // EntityActor::Update() もここでは呼ばない
 }
 
 void SpiritEnemyEntity::UpdateAI()
@@ -147,8 +153,10 @@ void SpiritEnemyEntity::UpdateAI()
 
         SetVel(Vector2d(0.0f, floatSpeed));
 
-        // プレイヤーを検知したらMoveへ
-        if (absDistanceX <= m_detectRange)
+        float distanceY = std::abs(playerPos.y - myPos.y);
+
+        if (absDistanceX <= SEARCH_RANGE_X &&
+            distanceY <= SEARCH_RANGE_Y)
         {
             m_state = Move;
         }
@@ -163,7 +171,7 @@ void SpiritEnemyEntity::UpdateAI()
             std::sin(m_floatTimer) * 10.0f
         ));
 
-        // 警戒ゲージが100になったら戦闘開始
+        
         if (m_alertGauge != nullptr &&
             m_alertGauge->GetGauge() > 0.0f)
         {
@@ -313,6 +321,10 @@ void SpiritEnemyEntity::UpdateAI()
             );
 
             m_scene->AddActor(bullet);
+            if (m_attackSound != nullptr)
+            {
+                m_attackSound->Play("enemy_Onryo_attack");
+            }
 
             m_attackTimer = 0.0f;
             m_state = Recovery;
@@ -357,6 +369,8 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
     {
         return false;
     }
+
+    if (player->GetIsHide()) { return false; }
 
     Vector2d enemyPos = GetPos();
     Vector2d playerPos = player->GetPos();

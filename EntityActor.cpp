@@ -1,4 +1,4 @@
-#include "EntityActor.h"
+    #include "EntityActor.h"
 #include "PlayScene.h"
 #include "PlayerEntity.h"
 #include "BlockActor.h"
@@ -8,6 +8,7 @@
 #include "VelocityComponent.h"
 #include "SpriteComponent.h"
 #include "CollisionComponent.h"
+#include "HideBlock.h"
 #include <DxLib.h>
 
 EntityActor::EntityActor(Scene* scene, const Vector2d& pos, const Vector2d& size)
@@ -92,7 +93,10 @@ void EntityActor::MoveAndCollide(float deltaTime) {
                 if (GetType() == ActorType::Player && m_collision != nullptr)
                 {
                     CollisionComponent* hideCol = block->GetCollision();
-                    if (hideCol != nullptr && m_collision->CheckCollision(hideCol))
+                    const bool overlapped = hideCol != nullptr && m_collision->CheckCollision(hideCol);
+
+                    static_cast<HideBlock*>(block)->SetPlayerOverlapped(overlapped);   // 追加:ブロック側のフェード用に通知
+                    if (overlapped)
                     {
                         overlapHide = true;
                     }

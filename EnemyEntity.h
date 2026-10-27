@@ -71,7 +71,9 @@ protected:
     int m_hpMax;
     GravityComponent* m_gravity;
     //SpriteComponent* m_sprite;
-
+    //’Ç‰Á
+    static constexpr float SEARCH_RANGE_X = 700.0f;
+    static constexpr float SEARCH_RANGE_Y = 500.0f;
 
     AnimationComponent* m_anim;
 

@@ -9,6 +9,7 @@
 #include "SoundComponent.h"
 #include "SpriteComponent.h"
 #include "VelocityComponent.h"
+#include "AlertGaugeComponent.h"
 
 #include <cmath>
 
@@ -58,6 +59,7 @@ bool KooniEnemyEntity::Init()
     {
         return false;
     }
+    SetEnemyRank(EnemyRank::Small);
 
     m_anim = AddComponent<AnimationComponent>();
     if (m_anim == nullptr || m_sprite == nullptr)
@@ -173,9 +175,11 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
+    if (player->GetIsHide()) { return false; }
+
     const Vector2d difference = player->GetPos() - GetPos();
-    return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X &&
-        std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
+    return std::fabs(difference.x) <= SEARCH_RANGE_X &&
+        std::fabs(difference.y) <= SEARCH_RANGE_Y;
 }
 
 void KooniEnemyEntity::ChangeStatus(Status nextStatus)
@@ -248,13 +252,11 @@ void KooniEnemyEntity::UpdateIdle(PlayerEntity* player)
         return;
     }
 
-    if (m_awareness == Awareness::Undetected)
+    if (m_alertGauge == nullptr || m_alertGauge->GetGauge() < 0.0f)
     {
-        m_awareness = Awareness::Detected;
-        m_stateTimer = 0.0f;
+        m_awareness = Awareness::Undetected;
         return;
-    }
-
+   }
     const Vector2d difference = player->GetPos() - GetPos();
     const float attackDistance = KOONI_BODY_WIDTH * 0.5f + KOONI_ATTACK_WIDTH;
     if (std::fabs(difference.x) <= attackDistance &&
@@ -374,7 +376,10 @@ void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool at
         return;
     }
 
-    m_hp->Damage(damage);
+    // EnemyEntity‘¤‚Ì‹¤’Êƒ_ƒ[ƒWˆ—‚ðŒÄ‚Ño‚·
+    EnemyEntity::TakeDamage(damage, knockback, attackDir);
+
+    // HP‚ª0ˆÈ‰º‚È‚ç¬‹S‚ð“|‚³‚ê‚½ó‘Ô‚É‚·‚é
     if (m_hp->GetHP() <= 0)
     {
         if (m_velocity != nullptr)
@@ -383,14 +388,23 @@ void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool at
             velocity.x = 0.0f;
             m_velocity->SetVelocity(velocity);
         }
+
         ChangeStatus(Status::Defeated);
-        return;
+    }
+}
+
+//’Ç‰Á
+bool KooniEnemyEntity::IsPlayerInSearchRange() const
+{
+    PlayerEntity* player = FindPlayer();
+    if (player == nullptr || player->IsDead())
+    {
+        return false;
     }
 
-    if (m_velocity != nullptr)
-    {
-        m_velocity->SetVelocity(knockback);
-    }
+    const Vector2d difference = player->GetPos() - GetPos();
+
+    return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X && std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
 }
 
 std::string KooniEnemyEntity::GetTexturePath() const

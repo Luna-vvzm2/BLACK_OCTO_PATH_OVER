@@ -27,6 +27,8 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::MENU)] = { Key::M };
     m_actionKeyMap[static_cast<size_t>(Action::PAGE_UP)] = { Key::PAGE_UP };
     m_actionKeyMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Key::PAGE_DOWN };
+    m_actionKeyMap[static_cast<size_t>(Action::ZOOM_IN)] = { Key::Q };
+    m_actionKeyMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Key::E };
 
     // ジョイパッドも同様に
     m_actionPadMap[static_cast<size_t>(Action::UP)] = { Joypad::UP };
@@ -49,6 +51,8 @@ void Input::Init() {
     m_actionPadMap[static_cast<size_t>(Action::MENU)] = { Joypad::BACK };
     m_actionPadMap[static_cast<size_t>(Action::PAGE_UP)] = { Joypad::LB };
     m_actionPadMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Joypad::RB };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_IN)] = { Joypad::RS_UP };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Joypad::RS_DOWN };
     m_key.Init();
     m_pad.Init();
 }

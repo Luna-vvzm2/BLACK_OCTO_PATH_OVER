@@ -83,7 +83,7 @@ protected:
 	void DeleteTexts(); //テキストデータの解放
 	std::vector<std::string> m_texts; //表示テキスト
 
-	bool m_isStart;
+	bool m_isStart{ true };
 };
 
 class TalkEvent : public EventBase

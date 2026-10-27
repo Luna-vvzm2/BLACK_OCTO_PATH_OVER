@@ -1,2 +1,19 @@
-type,header,body,path
-TUTORIAL,スキル・虎,,assets\images\events\tutorial\image_test.png
+type,name,time,pos,Lpath,Rpath,text
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,「名古屋のヒーロー『金城』、失踪から早 10 日」<br>……いやあ全く、心苦しい見出しだね。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,遺体も進展もないならさ、<br>ヒーローが厭になっちゃって<br>電撃引退でもしたんじゃないの？
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,ね、そこんところどう思う？　<br>大の金城ファンである黒棲章サンは。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,好きな人がいきなり居なくなるってどんな気持ち？
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,ど、どう思うって……<br>これから出世街道だったのに、<br>引退は考えづらいだろ。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,それに、こんな長く行方を晦ますなんて金城らしくない。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,あの人は本当に強いから、<br>ぽっと出のヤツなんかに負ける訳ないし。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,俺なんかと違って常に明るいから、<br>思い悩むこともないだろうし……
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,何かが可笑しいと思うから、<br>事件現場の――柳ノ丸を、<br>自分の目で確かめに来た。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,日数は経ってしまったけど、<br>まだ見つかっていない手掛かりがあるかも。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,ハハハッ、まさかあの根暗な家系から<br>こんな熱心なヒーローファンが出てくるなんてな！
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,行動力は凄いが、良いのか？ <br>任務じゃないのにここまで遠出して。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,どうせお前のことだし、<br>また実家には何も言ってないだろ。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,しかも、この地区は廃墟になって久しいし、<br>不法占拠してる悪党も居て危険なんだからな。
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,その顔に傷一つつけてみろ、<br>お前の家から何か言われんのは俺なんだぞ！
+TALK,新聞屋,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,俺は家出癖のある次男の見張りが本業じゃねーのに！
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,そう言っておいて、<br>結局行くのは許すじゃない……<br>まあいいや。
+TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,ちゃんと引き際は見極めるし、<br>夜明けまでには帰るから大丈夫だよ。<br>行ってくる。

@@ -1,17 +1,18 @@
 #pragma once
 
 #include "Scene.h"
-#include "ScreenMenus.h"
+
+class PlayScene;
 
 class StageSelectScene : public Scene
 {
 public:
-    explicit StageSelectScene(Game* game);
+    explicit StageSelectScene(Game* game, PlayScene* previousPlayScene = nullptr);
 
     bool Init() override;
     void Update(float deltaTime) override;
     void Draw() override;
 
 private:
-    PauseMenu m_pauseMenu;
+    PlayScene* m_previousPlayScene = nullptr;
 };

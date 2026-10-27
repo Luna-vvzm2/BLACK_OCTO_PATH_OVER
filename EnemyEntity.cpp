@@ -65,9 +65,9 @@ bool EnemyEntity::Init() {
 
     // テスト用：必ずコインを1つ落とす
     m_dropTable.clear();
-    m_dropTable.push_back({ ItemType::Coin, 1.0f });
-    m_dropTable.push_back({ ItemType::Kunai,0.9f });
-    m_dropTable.push_back({ ItemType::Heal,0.9f });
+    m_dropTable.push_back({ ItemType::Coin, 0.0f });
+    m_dropTable.push_back({ ItemType::Kunai,0.0f });
+    m_dropTable.push_back({ ItemType::Heal,1.15f });
     return true;
 
 }
@@ -369,8 +369,8 @@ bool EnemyEntity::IsPlayerInSearchRange() const
     float distanceX = std::abs(playerPos.x - enemyPos.x);
     float distanceY = std::abs(playerPos.y - enemyPos.y);
 
-    return distanceX <= 100.0f &&
-        distanceY <= 250.0f;
+    return distanceX <= SEARCH_RANGE_X &&
+        distanceY <= SEARCH_RANGE_Y;
 }
 
 void EnemyEntity::UpdateAlertGauge(float deltaTime)
@@ -445,10 +445,7 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
             m_alertGauge->AddGauge(-changeAmount);
         }
     }
-    std::cout
-        << "Enemy Alert Gauge = "
-        << m_alertGauge->GetGauge()
-        << std::endl;
+    
 }
 bool EnemyEntity::UseAlertGauge() const
 {
