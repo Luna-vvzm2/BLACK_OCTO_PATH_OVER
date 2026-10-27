@@ -690,24 +690,28 @@ void PlayerEntity::Update(float deltaTime) {
 // 主人公の描画
 // タコ使用中は約30%暗くする
 // ======================================
+
 void PlayerEntity::Draw()
 {
-    // タコを使用していない場合は通常描画
-    if (!m_isOcto)
+    // 蛸の忍術を使用中か判定
+    if (m_isJutsu[OCTONum])
     {
+        // プレイヤーの明るさを50%にする
+        SetDrawBright(128, 128, 128);
+
+        // プレイヤーの描画
         EntityActor::Draw();
-        return;
+
+        // 明るさを元に戻す
+        SetDrawBright(255, 255, 255);
     }
-
-    // 明るさを約70%にする（約30%暗くする）
-    SetDrawBright(178, 178, 178);
-
-    // 主人公を描画
-    EntityActor::Draw();
-
-    // 明るさを元に戻す
-    SetDrawBright(255, 255, 255);
+    else
+    {
+        // 通常時の描画
+        EntityActor::Draw();
+    }
 }
+
 
 void PlayerEntity::UpdateIgnorePlatform()
 {
@@ -2569,7 +2573,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_isJutsu[OCTONum] = true;
         m_jutsuTimer = 2.0f;
         m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+
         SubShadowGauge(5);
 
         m_anim->Play("OctoStart");
@@ -2580,7 +2584,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_isJutsu[OCTONum] = true;
         m_isAutoOcto = true;
         m_octoTimer = 0.0f;
-        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
         SubShadowGauge(5);
 
         Vector2d vel = m_velocity->Get();
@@ -2595,19 +2598,31 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("wallHold");   // 後ほどOctoAutoに修正
     }   break;
 
+
     case PlayerState::OCTO_END:
         m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
-        m_anim->Play("Kamae");  //後ほど修正
+
+        // 蛸の使用終了後にクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
+        m_anim->Play("Kamae");
         break;
 
     case PlayerState::OCTO_AUTO_END:
         m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
+
+        // 自動発動した蛸の終了時にもクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
         m_anim->Play("OctoAutoEnd");
         break;
+
 
     case PlayerState::TIGER:
     {
@@ -2671,14 +2686,17 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     }
 }
 
-void PlayerEntity::UpdateJutsuInterval(float deltaTime) {
-    for (int i = 0; i < 4; i++) {
-        if (m_jutsuInterval[i] > 0.0f) {
-            if (m_jutsuInterval[i] < 100.0f) {
-                m_jutsuInterval[i] -= deltaTime;
-                if (m_jutsuInterval[i] < 0.0f) {
-                    m_jutsuInterval[i] = 0.0f;
-                }
+void PlayerEntity::UpdateJutsuInterval(float deltaTime)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (m_jutsuInterval[i] > 0.0f)
+        {
+            m_jutsuInterval[i] -= deltaTime;
+
+            if (m_jutsuInterval[i] < 0.0f)
+            {
+                m_jutsuInterval[i] = 0.0f;
             }
         }
     }
