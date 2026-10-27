@@ -919,7 +919,7 @@ void PlayScene::Draw()
 			Actor* target = effect->GetFollowTarget();
 
 			if (!target)
-				return false;
+				return true;
 
 			if (target->GetType() == ActorType::TreasureBox)
 				return false;

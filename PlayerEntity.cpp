@@ -2629,11 +2629,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_isJutsu[TIGERNum] = true;
         m_jutsuInterval[TIGERNum] = m_jutsuMaxInterval[TIGERNum];
 
-        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[0], !m_dir);
-        effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
-
-        SpawnEffect(effect);
-
         m_anim->Play("squatAttack");  // Œã‚Ù‚ÇTiger‚ÉC³
         break;
     }
@@ -2729,11 +2724,20 @@ void PlayerEntity::UpdateTiger(float deltaTime)
 
             target->TakeDamage(80, knockback);
             m_combo++;
+
+            auto effect = new EffectActor(m_scene, target->GetPos(), EffectType::Tiger1, !m_dir);
+
+            SpawnEffect(effect);
+        }
+        else {
+            auto effect = new EffectActor(m_scene, { this->GetPos().x + (m_dir ? 200.0f : -100.0f), this->GetPos().y}, EffectType::Tiger1, !m_dir);
+
+            SpawnEffect(effect);
         }
     }
 
-    // 0.25•bŒo‰ß‚µ‚½‚ç2Œ‚–Ú‚ð”»’è‚·‚é
-    if (!m_tigerSecondAttack && m_tigerTimer >= 1.25f)
+    // 1.45•bŒo‰ß‚µ‚½‚ç2Œ‚–Ú‚ð”»’è‚·‚é
+    if (!m_tigerSecondAttack && m_tigerTimer >= 1.45f)
     {
         // æ‚Éƒtƒ‰ƒO‚ð—§‚ÄA2Œ‚–Ú‚ªd•¡‚µ‚È‚¢‚æ‚¤‚É‚·‚é
         m_tigerSecondAttack = true;
@@ -2753,8 +2757,7 @@ void PlayerEntity::UpdateTiger(float deltaTime)
                 target->TakeDamage(120, knockback, true);
                 m_combo++;
 
-                auto effect = new EffectActor(m_scene, target->GetPos(), playerEffectType[0], !m_dir);
-                effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
+                auto effect = new EffectActor(m_scene, target->GetPos(), EffectType::Tiger2, !m_dir);
 
                 SpawnEffect(effect);
             }
