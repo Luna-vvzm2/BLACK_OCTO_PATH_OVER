@@ -4,6 +4,15 @@
 #include "Scene.h"
 #include "PlayScene.h"
 #include "BlockActor.h"
+#include "StoneSBlock.h"
+#include "StoneLBlock.h"
+#include "WoodSBlock.h"
+#include "WoodLBlock.h"
+#include "HouseBlock.h"
+#include "YaguraSBlock.h"
+#include "YaguraMBlock.h"
+#include "YaguraLBlock.h"
+#include "YaguraLLBlock.h"
 #include "KunaiActor.h"
 #include "TreasureBox.h"
 #include "TransformComponent.h"
@@ -18,7 +27,37 @@
 #include "Game.h"
 #include <Windows.h>
 #include <DxLib.h>
+#include <cmath>
 
+namespace
+{
+constexpr float FOOTSTEP_RAY_EXTRA = 8.0f;
+constexpr float FOOTSTEP_MIN_MOVEMENT = 0.5f;
+constexpr float FOOTSTEP_RUN_INTERVAL = 0.28f;
+constexpr float FOOTSTEP_SQUAT_INTERVAL = 0.42f;
+
+const char* GetFootstepSoundId(const BlockActor* block)
+{
+    if (dynamic_cast<const StoneSBlock*>(block) != nullptr ||
+        dynamic_cast<const StoneLBlock*>(block) != nullptr)
+    {
+        return "stage1_cobblestone_walk";
+    }
+
+    if (dynamic_cast<const WoodSBlock*>(block) != nullptr ||
+        dynamic_cast<const WoodLBlock*>(block) != nullptr ||
+        dynamic_cast<const HouseBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraSBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraMBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraLBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraLLBlock*>(block) != nullptr)
+    {
+        return "stage1_tatami_walk";
+    }
+
+    return "stage1_grit_walk";
+}
+}
 #define weak1Num 0
 #define weak2Num 1
 #define weak3Num 2
@@ -154,6 +193,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_hayabusaAttackSound(nullptr)
     , m_karaburiSound(nullptr)
 {
+    m_lastFootstepX = pos.x;
 }
 
 bool PlayerEntity::Init() {
@@ -653,6 +693,7 @@ void PlayerEntity::Update(float deltaTime) {
     CheckCanStand();
 
     UpdateState(deltaTime);
+    UpdateFootsteps(deltaTime);
 
     if (Actor::m_state == State::Paused) { m_velocity->SetX(0.0f); }
 
@@ -695,6 +736,96 @@ void PlayerEntity::Draw()
 
     // –¾‚é‚³‚ðŒ³‚É–ß‚·
     SetDrawBright(255, 255, 255);
+}
+
+BlockActor* PlayerEntity::FindGroundBelow() const
+{
+    if (m_scene == nullptr || m_collision == nullptr)
+    {
+        return nullptr;
+    }
+
+    const Vector2d playerPos = GetPos();
+    const float footY = playerPos.y + m_collision->GetHeight() * 0.5f;
+    const float rayEndY = footY + FOOTSTEP_RAY_EXTRA;
+    BlockActor* nearest = nullptr;
+    float nearestFootDistance = FOOTSTEP_RAY_EXTRA + 1.0f;
+
+    for (Actor* actor : m_scene->GetActors())
+    {
+        if (actor == nullptr || actor->GetType() != ActorType::Block ||
+            actor->GetState() == Actor::State::Dead)
+        {
+            continue;
+        }
+
+        auto* block = static_cast<BlockActor*>(actor);
+        if (block->GetBlockType() == BlockType::Hide ||
+            (m_ignorePlatform && block == m_ignorePlatformBlock))
+        {
+            continue;
+        }
+
+        const CollisionComponent* collision = block->GetCollision();
+        if (collision == nullptr || collision->GetShape() != CollisionShape::Rect)
+        {
+            continue;
+        }
+
+        const Vector2d blockPos = block->GetPos();
+        if (std::fabs(playerPos.x - blockPos.x) > collision->GetWidth() * 0.5f)
+        {
+            continue;
+        }
+
+        const float blockTop = blockPos.y - collision->GetHeight() * 0.5f;
+        if (blockTop < playerPos.y || blockTop > rayEndY)
+        {
+            continue;
+        }
+
+        const float footDistance = std::fabs(blockTop - footY);
+        if (footDistance <= FOOTSTEP_RAY_EXTRA && footDistance < nearestFootDistance)
+        {
+            nearest = block;
+            nearestFootDistance = footDistance;
+        }
+    }
+
+    return nearest;
+}
+
+void PlayerEntity::UpdateFootsteps(float deltaTime)
+{
+    const float currentX = GetPos().x;
+    const float movedX = std::fabs(currentX - m_lastFootstepX);
+    m_lastFootstepX = currentX;
+
+    const bool walking = m_state == PlayerState::RUN ||
+        m_state == PlayerState::RUN_START || m_state == PlayerState::SQUAT_WALK;
+    if (GetState() != Actor::State::Active || !m_isGround || !walking ||
+        movedX < FOOTSTEP_MIN_MOVEMENT)
+    {
+        m_footstepTimer = 0.0f;
+        return;
+    }
+
+    m_footstepTimer -= deltaTime;
+    if (m_footstepTimer > 0.0f)
+    {
+        return;
+    }
+
+    BlockActor* ground = FindGroundBelow();
+    if (ground == nullptr || m_scene == nullptr || m_scene->GetGame() == nullptr)
+    {
+        m_footstepTimer = 0.0f;
+        return;
+    }
+
+    m_scene->GetGame()->GetSoundManager().Play(GetFootstepSoundId(ground));
+    m_footstepTimer = m_state == PlayerState::SQUAT_WALK
+        ? FOOTSTEP_SQUAT_INTERVAL : FOOTSTEP_RUN_INTERVAL;
 }
 
 void PlayerEntity::UpdateIgnorePlatform()
@@ -2922,6 +3053,8 @@ std::string PlayerEntity::GetTexturePath() const { return ""; }
 void PlayerEntity::ResetStageState()
 {
     m_velocity->Set({ 0,0 });
+    m_footstepTimer = 0.0f;
+    m_lastFootstepX = GetPos().x;
 
     m_jumpCount = false;
     m_isGround = false;

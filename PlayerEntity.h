@@ -279,6 +279,8 @@ public:
     int GetHealItem() const { return m_healItem; }  // 回復アイテム所持数
 
 private:
+    BlockActor* FindGroundBelow() const;
+    void UpdateFootsteps(float deltaTime);
     HPComponent* m_hp;
     int m_hpMax;
     GravityComponent* m_gravity;
@@ -374,6 +376,8 @@ private:
     BlockActor* m_ignorePlatformBlock = nullptr;
 
     SensorData m_sensor;
+    float m_footstepTimer = 0.0f;
+    float m_lastFootstepX = 0.0f;
 
     bool m_isDeadTriggered = false; // 死亡時の初回処理用フラグ
 
