@@ -626,13 +626,6 @@ void PlayScene::Update(float deltaTime) {
 		m_autoSaveTimer = 0.0f;
 	}
 
-	if (input.IsMenuTrigger(Action::MENU) && !m_menu.IsCapturingKey())
-	{
-		if (m_player->GetState() != Actor::State::Paused) m_menu.Toggle();
-
-		return;
-	}
-
 	if (m_menu.IsOpen())
 	{
 		m_menu.Update(deltaTime);

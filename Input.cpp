@@ -206,10 +206,26 @@ bool Input::SetKeyBinding(Action action, int keyIndex)
     if (keyIndex < 0 || keyIndex >= Key::KEY_COUNT)
         return false;
 
-    auto& keys = m_actionKeyMap[index];
+    auto targetKey = static_cast<Key::KeyIndex>(keyIndex);
 
-    keys.clear();
-    keys.push_back(static_cast<Key::KeyIndex>(keyIndex));
+    // 割り当て不可キー
+    if (targetKey == Key::ESCAPE || targetKey == Key::ENTER)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
+    {
+        if (i == index) continue;
+
+        auto& keys = m_actionKeyMap[i];
+        keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
+    }
+
+    auto& targetKeys = m_actionKeyMap[index];
+
+    targetKeys.clear();
+    targetKeys.push_back(targetKey);
 
     return true;
 }
@@ -276,11 +292,28 @@ bool Input::SetKeyBindings(
 
         auto key = static_cast<Key::KeyIndex>(keyIndex);
 
+        // 割り当て不可キー
+        if (key == Key::ESCAPE || key == Key::ENTER)
+        {
+            return false;
+        }
+
         // 同じキーが重複しないようにする
         if (std::find(newKeys.begin(), newKeys.end(), key)
             == newKeys.end())
         {
             newKeys.push_back(key);
+        }
+    }
+
+    for (auto targetKey : newKeys)
+    {
+        for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
+        {
+            if (i == index) continue;
+
+            auto& keys = m_actionKeyMap[i];
+            keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
         }
     }
 

@@ -98,7 +98,7 @@ void SettingsMenu::Update()
         }
 
         // ESCキー：設定のルートメニューに戻る
-        if (input.GetKey().IsTrigger(Key::ESCAPE) || input.IsMenuTrigger(Action::ESCAPE))
+        if (input.IsMenuTrigger(Action::ESCAPE))
         {
             m_game->GetSoundManager().Play("select_default");
             m_page = Page::Root;
@@ -118,18 +118,17 @@ void SettingsMenu::Update()
 
         // 上下キー：操作項目の選択（Actionではなく物理キーの矢印やW/Sで直接判定）
         const int rowCount = static_cast<int>(rows.size());
-        if (input.GetKey().IsTrigger(Key::UP) || input.GetKey().IsTrigger(Key::W)) {
+        if (input.IsMenuTrigger(Action::UP)) {
             m_keyConfigCursor = (m_keyConfigCursor + rowCount - 1) % rowCount;
             m_game->GetSoundManager().Play("game_select_mode");
         }
-        if (input.GetKey().IsTrigger(Key::DOWN) || input.GetKey().IsTrigger(Key::S)) {
+        if (input.IsMenuTrigger(Action::DOWN)) {
             m_keyConfigCursor = (m_keyConfigCursor + 1) % rowCount;
             m_game->GetSoundManager().Play("game_select_mode");
         }
 
         // 左右キー：入力方式の切り替え（物理キーの左右やA/Dで直接判定）
-        if (input.GetKey().IsTrigger(Key::LEFT) || input.GetKey().IsTrigger(Key::A) ||
-            input.GetKey().IsTrigger(Key::RIGHT) || input.GetKey().IsTrigger(Key::D))
+        if (input.IsMenuTrigger(Action::RIGHT) || input.IsMenuTrigger(Action::LEFT))
         {
             Action action = rows[m_keyConfigCursor].action;
             InputMode current = input.GetInputMode(action);
@@ -139,7 +138,7 @@ void SettingsMenu::Update()
         }
 
         // Enterキー：キー割り当て変更の開始（物理キーの Enter で判定）
-        if (input.GetKey().IsTrigger(Key::ENTER))
+        if (input.IsMenuTrigger(Action::ENTER))
         {
             m_game->GetSoundManager().Play("select_default");
             m_waitingForKey = true;
@@ -290,9 +289,7 @@ const std::vector<SettingsMenu::BindingRow>& SettingsMenu::GetRows()
         { Action::WEAK_ATTACK, "刀攻撃" },
         { Action::KUNAI,       "苦無投げ" },
         { Action::HEAL,        "回復アイテム" },
-        { Action::KAMAE,       "構え" },
         { Action::G,           "特殊操作 G" },
-        { Action::JUTSU_KAMAE, "忍術構え" },
         { Action::OCTO,        "忍術：蛸" },
         { Action::TIGER,       "忍術：虎" },
         { Action::ORCA,        "忍術：鯱" },
