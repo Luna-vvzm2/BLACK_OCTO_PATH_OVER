@@ -390,8 +390,6 @@ private:
     SoundComponent* m_excusionSound;
     SoundComponent* m_kamaeSound;
     SoundComponent* m_karyuSound;
-    SoundComponent* m_kunaiSound;
-    SoundComponent* m_weakAttackSound1;
     SoundComponent* m_weakAttackSound2;
     SoundComponent* m_weakAttackSound3;
     SoundComponent* m_weakAttackSound4;

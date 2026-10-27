@@ -143,11 +143,9 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
 
     //Sound
 
-    , m_kunaiSound(nullptr)
     , m_excusionSound(nullptr)
     , m_kamaeSound(nullptr)
     , m_karyuSound(nullptr)
-    , m_weakAttackSound1(nullptr)
     , m_weakAttackSound2(nullptr)
     , m_weakAttackSound3(nullptr)
     , m_weakAttackSound4(nullptr)
@@ -580,11 +578,6 @@ bool PlayerEntity::Init() {
     m_anim->Play("idle");
     m_state = PlayerState::IDLE;
 
-    m_kunaiSound = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/kunai.wav")
-    );
-    if (m_kunaiSound != nullptr) m_kunaiSound->SetVolume(180);
-
     m_excusionSound = AddComponent<SoundComponent>(
         _T("assets/sounds/player/excusion.wav")
     );
@@ -599,11 +592,6 @@ bool PlayerEntity::Init() {
         _T("assets/sounds/player/karyu.wav")
     );
     if (m_karyuSound != nullptr) m_karyuSound->SetVolume(180);
-
-    m_weakAttackSound1 = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/weakAttack1.wav")
-    );
-    if (m_weakAttackSound1 != nullptr) m_weakAttackSound1->SetVolume(140);
 
     m_weakAttackSound2 = AddComponent<SoundComponent>(
         _T("assets/sounds/player/weakAttack2.wav")
@@ -1994,6 +1982,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         if (m_canStand)
         {
             ExitSquat();
+            m_scene->GetGame()->GetSoundManager().Play("player_stand");
         }
         else {
             if (m_state == PlayerState::SQUAT) {
@@ -2169,6 +2158,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::SQUAT_START:
         m_anim->Play("squatStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_crouch");
         break;
 
     case PlayerState::SQUAT:
@@ -2210,6 +2200,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("jumpStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_jump");
     }   break;
 
     case PlayerState::JUMP:
@@ -2252,6 +2243,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->SetX(move.x);
 
         m_anim->Play("Hien");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::HIEN:
@@ -2272,6 +2264,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("Hien");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::SENTEN:
@@ -2291,6 +2284,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("Senten");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::ROLL_LANDING:
@@ -2324,6 +2318,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_transform->SetScale(scale);
 
         m_anim->Play("wallJump");
+        m_scene->GetGame()->GetSoundManager().Play("player_jump");
     }   break;
 
     case PlayerState::WALL_CLIMB:
@@ -2379,12 +2374,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("weakAttack1");
         if (m_hit) {
             AddShadowGauge(5);
-            if (m_weakAttackSound1 != nullptr) {
-                m_weakAttackSound1->Play();
-            }
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_hit");
         }
         else {
-            m_karaburiSound->Play();
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_miss");
         }
         break;
 
@@ -2427,12 +2420,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("weakAirAttack1", true);
         if (m_hit) {
             AddShadowGauge(5);
-            if (m_weakAttackSound1 != nullptr) {
-                m_weakAttackSound1->Play();
-            }
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_hit");
         }
         else {
-            m_karaburiSound->Play();
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_miss");
         }
     }   break;
 
@@ -2444,10 +2435,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("Kunai");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_AIR:
@@ -2458,18 +2446,12 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("KunaiAir");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_WALL:
         m_anim->Play("wallKunai");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_SQUAT:
@@ -2480,10 +2462,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("KunaiSquat");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::HIT_TRAP:
@@ -2573,6 +2552,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         SubShadowGauge(5);
 
         m_anim->Play("OctoStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_octo");
         break;
 
     case PlayerState::OCTO_AUTO:
@@ -2592,6 +2572,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
+        m_scene->GetGame()->GetSoundManager().Play("player_octo");
         m_anim->Play("wallHold");   // Œã‚Ù‚ÇOctoAuto‚ÉC³
     }   break;
 
@@ -2628,6 +2609,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         SpawnEffect(effect);
 
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger1");
         m_anim->Play("squatAttack");  // Œã‚Ù‚ÇTiger‚ÉC³
         break;
     }
@@ -2708,6 +2690,7 @@ void PlayerEntity::UpdateTiger(float deltaTime)
     if (!m_tigerFirstAttack && m_tigerTimer >= 0.25f)
     {
         m_tigerFirstAttack = true;
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger2");
         // ‘O•û‚Ì“G‚ð‹ß‚¢‡‚ÉŽæ“¾
         CollectNearEnemies(700, 500);
 
@@ -2731,6 +2714,7 @@ void PlayerEntity::UpdateTiger(float deltaTime)
     {
         // æ‚Éƒtƒ‰ƒO‚ð—§‚ÄA2Œ‚–Ú‚ªd•¡‚µ‚È‚¢‚æ‚¤‚É‚·‚é
         m_tigerSecondAttack = true;
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger3");
 
         EnemyEntity* target = m_nearTargets[0];
         PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
@@ -2860,6 +2844,7 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     damage = ApplyDefenseRatio(damage);   // ’Ç‰Á
 
     m_hp->Damage(damage);
+    m_scene->GetGame()->GetSoundManager().Play("player_hit");
 
     m_velocity->Set(knockback);
 

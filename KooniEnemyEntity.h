@@ -38,7 +38,7 @@ private:
     PlayerEntity* FindPlayer() const;
     bool CanSeePlayer(const PlayerEntity* player) const;
     void ChangeStatus(Status nextStatus);
-    void PlayMotion(const std::string& name, const char* texturePath, int frameCount);
+    void PlayMotion(const std::string& name);
     void UpdateIdle(PlayerEntity* player);
     void UpdateMove(PlayerEntity* player);
     void UpdateAttack(float deltaTime, PlayerEntity* player);
@@ -53,7 +53,6 @@ private:
     bool m_faceRight;
     bool m_attackHit;
     bool m_attackRecoveryStarted;
-    std::string m_currentTexturePath;
     SoundComponent* m_attackSound;
 };
 

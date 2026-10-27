@@ -5,6 +5,7 @@
 #include "CollisionComponent.h"
 #include "SpriteComponent.h"
 #include "Scene.h"
+#include "Game.h"
 #include "EnemyEntity.h"
 #include "BlockActor.h"
 
@@ -70,6 +71,7 @@ void KunaiActor::Update(float deltaTime)
             if (m_collision->CheckCollision(enemy->GetCollision()))
             {
                 enemy->TakeDamage(100, { m_dir ? 300.0f : -300.0f, 0 });
+                m_scene->GetGame()->GetSoundManager().Play("player_kunai_hit");
                 enemy->TakeMetsu(60);
                 SetState(State::Dead);
 

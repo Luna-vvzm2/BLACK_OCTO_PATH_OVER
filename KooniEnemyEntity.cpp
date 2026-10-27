@@ -14,30 +14,30 @@
 
 namespace
 {
-constexpr float KOONI_BODY_WIDTH = 80.0f;
-constexpr float KOONI_BODY_HEIGHT = 120.0f;
+constexpr float KOONI_BODY_WIDTH = 104.0f;
+constexpr float KOONI_BODY_HEIGHT = 156.0f;
 constexpr float KOONI_SIGHT_RANGE_X = 800.0f;
 constexpr float KOONI_SIGHT_RANGE_Y = 120.0f;
-constexpr float KOONI_MOVE_SPEED = 600.0f;
+constexpr float KOONI_MOVE_SPEED = 294.0f;
 
 constexpr float KOONI_ATTACK_WIDTH = 60.0f;
 constexpr float KOONI_ATTACK_HEIGHT = 60.0f;
+constexpr float KOONI_ATTACK_INNER_EXTENSION = 12.0f;
 constexpr int KOONI_ATTACK_DAMAGE = 15;
-constexpr float KOONI_ATTACK_HIT_TIME = 10.0f / 60.0f;
-constexpr float KOONI_ATTACK_MOTION_TIME = 30.0f / 60.0f;
+constexpr float KOONI_ATTACK_HIT_TIME = 40.0f / 60.0f;
+constexpr float KOONI_ATTACK_MOTION_TIME = 80.0f / 60.0f;
 constexpr float KOONI_ATTACK_RECOVERY_TIME = 1.0f;
 constexpr float KOONI_ATTACK_KNOCKBACK = 250.0f;
 
 constexpr float KOONI_IDLE_FRAME_TIME = 9.0f / 60.0f;
 constexpr float KOONI_MOVE_FRAME_TIME = 6.0f / 60.0f;
 constexpr float KOONI_ATTACK_FRAME_TIME = 10.0f / 60.0f;
-constexpr float KOONI_DEAD_FRAME_TIME = 14.0f / 60.0f;
-constexpr float KOONI_DEAD_MOTION_TIME = KOONI_DEAD_FRAME_TIME * 7.0f;
+constexpr float KOONI_DEAD_FADE_TIME = 1.0f;
+constexpr float KOONI_SPRITE_DRAW_HEIGHT = 176.8f;
+constexpr float KOONI_SPRITE_DRAW_OFFSET_X = 79.3f;
+constexpr float KOONI_SPRITE_DRAW_OFFSET_Y = -9.0f;
 
-const char* KOONI_TEXTURE_IDLE = "assets/images/Enemy/kooni/idle.png";
-const char* KOONI_TEXTURE_MOVE = "assets/images/Enemy/kooni/move.png";
-const char* KOONI_TEXTURE_ATTACK = "assets/images/Enemy/kooni/attack.png";
-const char* KOONI_TEXTURE_DEAD = "assets/images/Enemy/kooni/dead.png";
+const char* KOONI_TEXTURE_SHEET = "assets/images/Enemy/kooni/kooni_sheet.png";
 }
 
 KooniEnemyEntity::KooniEnemyEntity(Scene* scene, const Vector2d& pos)
@@ -67,40 +67,43 @@ bool KooniEnemyEntity::Init()
 
     m_anim->SetSprite(m_sprite);
     m_attackSound = AddComponent<SoundComponent>();
+    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4))
+    {
+        return false;
+    }
+    m_sprite->SetDrawSize(0.0f, KOONI_SPRITE_DRAW_HEIGHT);
+    m_sprite->SetFlipX(m_faceRight);
+    m_sprite->SetDrawOffset(KOONI_SPRITE_DRAW_OFFSET_X, KOONI_SPRITE_DRAW_OFFSET_Y);
 
     AnimationClip idle;
-    idle.frames = { 0, 1, 2 };
-    idle.frameDurations = { KOONI_IDLE_FRAME_TIME, KOONI_IDLE_FRAME_TIME, KOONI_IDLE_FRAME_TIME };
+    idle.frames = { 0, 1, 2, 3 };
+    idle.frameDurations = { KOONI_IDLE_FRAME_TIME, KOONI_IDLE_FRAME_TIME,
+        KOONI_IDLE_FRAME_TIME, KOONI_IDLE_FRAME_TIME };
     idle.loop = true;
     m_anim->AddClip("idle", idle);
 
     AnimationClip move;
-    move.frames = { 0, 1, 2 };
-    move.frameDurations = { KOONI_MOVE_FRAME_TIME, KOONI_MOVE_FRAME_TIME, KOONI_MOVE_FRAME_TIME };
+    move.frames = { 4, 5, 6, 7 };
+    move.frameDurations = { KOONI_MOVE_FRAME_TIME, KOONI_MOVE_FRAME_TIME,
+        KOONI_MOVE_FRAME_TIME, KOONI_MOVE_FRAME_TIME };
     move.loop = true;
     m_anim->AddClip("move", move);
 
     AnimationClip attack;
-    attack.frames = { 0, 1, 2 };
-    attack.frameDurations = { KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME };
+    attack.frames = { 8, 9, 10, 11, 12, 13, 14, 15 };
+    attack.frameDurations = { KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME,
+        KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME,
+        KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME,
+        KOONI_ATTACK_FRAME_TIME, KOONI_ATTACK_FRAME_TIME };
     attack.loop = false;
     m_anim->AddClip("attack", attack);
 
-    AnimationClip dead;
-    dead.frames = { 0, 1, 2, 3, 4, 5, 6 };
-    dead.frameDurations = {
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME,
-        KOONI_DEAD_FRAME_TIME
-    };
-    dead.loop = false;
-    m_anim->AddClip("dead", dead);
+    AnimationClip defeated;
+    defeated.frames = { 0 };
+    defeated.loop = false;
+    m_anim->AddClip("defeated", defeated);
 
-    PlayMotion("idle", KOONI_TEXTURE_IDLE, 3);
+    PlayMotion("idle");
     return true;
 }
 
@@ -142,7 +145,10 @@ void KooniEnemyEntity::Update(float deltaTime)
 
     if (m_sprite != nullptr)
     {
-        m_sprite->SetFlipH(!m_faceRight);
+        m_sprite->SetFlipX(m_faceRight);
+        m_sprite->SetDrawOffset(
+            m_faceRight ? KOONI_SPRITE_DRAW_OFFSET_X : -KOONI_SPRITE_DRAW_OFFSET_X,
+            KOONI_SPRITE_DRAW_OFFSET_Y);
     }
 
     EnemyEntity::Update(deltaTime);
@@ -193,43 +199,35 @@ void KooniEnemyEntity::ChangeStatus(Status nextStatus)
     switch (m_status)
     {
     case Status::Idle:
-        PlayMotion("idle", KOONI_TEXTURE_IDLE, 3);
+        PlayMotion("idle");
         break;
     case Status::Move:
-        PlayMotion("move", KOONI_TEXTURE_MOVE, 3);
+        PlayMotion("move");
         break;
     case Status::Attack:
         m_attackHit = false;
         m_attackRecoveryStarted = false;
-        PlayMotion("attack", KOONI_TEXTURE_ATTACK, 3);
+        PlayMotion("attack");
         if (m_attackSound != nullptr)
         {
             m_attackSound->Play("enemy_Kooni_attack");
         }
         break;
     case Status::Defeated:
-        PlayMotion("dead", KOONI_TEXTURE_DEAD, 7);
+        PlayMotion("defeated");
+        if (m_sprite != nullptr)
+        {
+            m_sprite->SetAlpha(255);
+        }
         break;
     }
 }
 
-void KooniEnemyEntity::PlayMotion(
-    const std::string& name,
-    const char* texturePath,
-    int frameCount)
+void KooniEnemyEntity::PlayMotion(const std::string& name)
 {
     if (m_sprite == nullptr || m_anim == nullptr)
     {
         return;
-    }
-
-    if (m_currentTexturePath != texturePath)
-    {
-        if (!m_sprite->LoadTextureDiv(texturePath, frameCount, 1))
-        {
-            return;
-        }
-        m_currentTexturePath = texturePath;
     }
 
     m_anim->Play(name, true);
@@ -325,7 +323,7 @@ void KooniEnemyEntity::UpdateAttack(float deltaTime, PlayerEntity* player)
     if (!m_attackRecoveryStarted && m_stateTimer >= KOONI_ATTACK_MOTION_TIME)
     {
         m_attackRecoveryStarted = true;
-        PlayMotion("idle", KOONI_TEXTURE_IDLE, 3);
+        PlayMotion("idle");
     }
 
     if (m_stateTimer >= KOONI_ATTACK_MOTION_TIME + KOONI_ATTACK_RECOVERY_TIME)
@@ -336,7 +334,13 @@ void KooniEnemyEntity::UpdateAttack(float deltaTime, PlayerEntity* player)
 
 void KooniEnemyEntity::UpdateDead()
 {
-    if (m_stateTimer >= KOONI_DEAD_MOTION_TIME)
+    if (m_sprite != nullptr)
+    {
+        const float remaining = 1.0f - m_stateTimer / KOONI_DEAD_FADE_TIME;
+        m_sprite->SetAlpha(remaining > 0.0f ? static_cast<int>(255.0f * remaining) : 0);
+    }
+
+    if (m_stateTimer >= KOONI_DEAD_FADE_TIME)
     {
         OnDead();
     }
@@ -352,12 +356,14 @@ void KooniEnemyEntity::TryHitPlayer(PlayerEntity* player)
     const Vector2d playerPos = player->GetPos();
     const Vector2d attackCenter(
         GetPos().x + (m_faceRight ? 1.0f : -1.0f) *
-            (KOONI_BODY_WIDTH * 0.5f + KOONI_ATTACK_WIDTH * 0.5f),
+            (KOONI_BODY_WIDTH * 0.5f +
+                (KOONI_ATTACK_WIDTH - KOONI_ATTACK_INNER_EXTENSION) * 0.5f),
         GetPos().y
     );
 
     const float combinedHalfWidth =
-        KOONI_ATTACK_WIDTH * 0.5f + player->GetCollision()->GetWidth() * 0.5f;
+        (KOONI_ATTACK_WIDTH + KOONI_ATTACK_INNER_EXTENSION) * 0.5f +
+        player->GetCollision()->GetWidth() * 0.5f;
     const float combinedHalfHeight =
         KOONI_ATTACK_HEIGHT * 0.5f + player->GetCollision()->GetHeight() * 0.5f;
 
@@ -397,6 +403,6 @@ void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool at
 
 std::string KooniEnemyEntity::GetTexturePath() const
 {
-    return KOONI_TEXTURE_IDLE;
+    return "";
 }
 
