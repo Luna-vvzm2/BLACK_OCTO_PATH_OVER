@@ -207,6 +207,8 @@
     <ClCompile Include="MenuPage.cpp" />
     <ClCompile Include="MoneyUI.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="NewsBox.cpp" />
+    <ClCompile Include="NewsViewer.cpp" />
     <ClCompile Include="NinjutsuSealTrap.cpp" />
     <ClCompile Include="PlatformBlock.cpp" />
     <ClCompile Include="PlatformOboroLBlock.cpp" />
@@ -324,6 +326,8 @@
     <ClInclude Include="MenuPage.h" />
     <ClInclude Include="MoneyUI.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="NewsBox.h" />
+    <ClInclude Include="NewsViewer.h" />
     <ClInclude Include="NinjutsuSealTrap.h" />
     <ClInclude Include="NewsData.h" />
     <ClInclude Include="PlatformBlock.h" />

@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -13,6 +14,7 @@ bool SaveManager::Save(const SaveData& data)
     saveData["stageClear"] = data.stageClear;
     saveData["playTime"] = data.playTime;
     saveData["kunaiCount"] = data.kunaiCount;
+    saveData["newsOwned"] = data.newsOwned;
 
     std::ofstream file("save/save.json");
 
@@ -52,6 +54,19 @@ bool SaveManager::Load(SaveData& data)
             {
                 data.stageClear[i] =
                     saveData["stageClear"][i].get<bool>();
+            }
+        }
+    }
+
+    if (saveData.contains("newsOwned") &&
+        saveData["newsOwned"].is_array())
+    {
+        for (size_t i = 0; i < data.newsOwned.size(); ++i)
+        {
+            if (i < saveData["newsOwned"].size())
+            {
+                data.newsOwned[i] =
+                    saveData["newsOwned"][i].get<bool>();
             }
         }
     }
