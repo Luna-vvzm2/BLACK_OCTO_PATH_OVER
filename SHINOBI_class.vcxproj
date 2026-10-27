@@ -217,6 +217,7 @@
     <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
     <ClCompile Include="SkillMenu.cpp" />
+    <ClCompile Include="SmokeActor.cpp" />
     <ClCompile Include="SoundComponent.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="SpiritBulletEntity.cpp" />
@@ -336,6 +337,7 @@
     <ClInclude Include="ScreenMenus.h" />
     <ClInclude Include="ShurikenUI.h" />
     <ClInclude Include="SkillMenu.h" />
+    <ClInclude Include="SmokeActor.h" />
     <ClInclude Include="SoundComponent.h" />
     <ClInclude Include="SoundManager.h" />
     <ClInclude Include="SpiritBulletEntity.h" />

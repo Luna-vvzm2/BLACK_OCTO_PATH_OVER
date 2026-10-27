@@ -2710,7 +2710,7 @@ void PlayerEntity::UpdateTiger(float deltaTime)
     {
         m_tigerFirstAttack = true;
         // ‘O•û‚Ì“G‚ğ‹ß‚¢‡‚Éæ“¾
-        CollectNearEnemies(700, 500);
+        CollectNearEnemies(700, 250);
 
         // ˆê”Ô‹ß‚¢“G‚ª‘¶İ‚·‚éê‡A1Œ‚–Ú‚ğs‚¤
         EnemyEntity* target = m_nearTargets[0];

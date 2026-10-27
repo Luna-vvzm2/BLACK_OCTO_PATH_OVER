@@ -250,6 +250,18 @@ void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackD
 
             //10•bŠÔAƒQ[ƒW‚ªƒ}ƒCƒiƒX‚É‚È‚é‚Ì‚ğ§ŒÀ
             m_defenselessLockTimer = 10.0f;
+
+
+            if (m_isInSmoke)
+            {
+                m_isInSmoke = false;
+
+                // Œx‰úƒQ[ƒW‚ğ—Õíó‘Ô‚É‚·‚é
+                m_alertGauge->SetGauge(100.0f);
+
+                // ‰Œ–‹‚É‚æ‚é’ÇÕ‰ğœó‘Ô‚ğ‰ğœ‚µA
+                // —Õíó‘Ô‚ÌAIˆ—‚ÖˆÚs‚·‚é
+            }
         }
         else
         {
@@ -457,3 +469,24 @@ void EnemyEntity::SetEnemyRank(EnemyRank rank)
     m_enemyRank = rank;
 }
 
+void EnemyEntity::ApplySmoke()
+{
+    m_isInSmoke = true;
+
+    // Œx‰úƒQ[ƒW‚ğ–³–h”õó‘Ô‚É‚·‚é
+    m_alertGauge->SetGauge(-100.0f);
+
+    // ƒvƒŒƒCƒ„[‚Ì’ÇÕ‚ğ‰ğœ
+    // UŒ‚’†‚È‚çUŒ‚‚ğƒLƒƒƒ“ƒZƒ‹
+}
+
+void EnemyEntity::EndSmoke()
+{
+    if (!m_isInSmoke)
+        return;
+
+    m_isInSmoke = false;
+
+    // Œx‰úƒQ[ƒW‚ğŒx‰úó‘Ô‚É‚·‚é
+    m_alertGauge->SetGauge(0.0f);
+}

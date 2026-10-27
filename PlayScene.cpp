@@ -15,6 +15,7 @@
 #include "KooniEnemyEntity.h"
 #include "KasaTenguEnemyEntity.h"
 #include "EffectActor.h"
+#include "SmokeActor.h"
 #include "StageBackActor.h"
 #include "StageExitActor.h"
 #include "GroundBlock.h"
@@ -1357,6 +1358,76 @@ void PlayScene::OnResume()
 //	
 //}
 
+void PlayScene::SpawnSmoke(
+	const Vector2d& position,
+	const Vector2d& size)
+{
+	auto* smoke = new SmokeActor(this, position, size);
+	AddActor(smoke);
+
+	// 発生時点で範囲内にいる敵へ適用
+	for (Actor* actor : GetActors())
+	{
+		if (actor == nullptr || actor->IsDead())
+			continue;
+
+		auto* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+		if (enemy == nullptr || enemy->IsDead())
+			continue;
+
+		if (smoke->Contains(enemy->GetPos()))
+		{
+			enemy->ApplySmoke();
+		}
+	}
+}
+
+void PlayScene::OnSmokeExpired(SmokeActor* smoke)
+{
+	if (smoke == nullptr)
+		return;
+
+	for (Actor* actor : GetActors())
+	{
+		auto* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+		if (enemy == nullptr || enemy->IsDead())
+			continue;
+
+		if (!smoke->Contains(enemy->GetPos()))
+			continue;
+
+		if (IsCoveredBySmoke(enemy, smoke))
+			continue;
+
+		enemy->EndSmoke();
+	}
+}
+
+bool PlayScene::IsCoveredBySmoke(
+	const EnemyEntity* enemy,
+	const SmokeActor* excludedSmoke) const
+{
+	if (enemy == nullptr)
+		return false;
+
+	for (Actor* actor : GetActors())
+	{
+		auto* smoke = dynamic_cast<SmokeActor*>(actor);
+
+		if (smoke == nullptr || smoke == excludedSmoke)
+			continue;
+
+		if (smoke->IsDead() || !smoke->IsSmokeActive())
+			continue;
+
+		if (smoke->Contains(enemy->GetPos()))
+			return true;
+	}
+
+	return false;
+}
 
 // ====================================================
 // フェード遷移
