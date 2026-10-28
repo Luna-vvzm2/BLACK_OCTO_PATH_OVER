@@ -59,7 +59,14 @@ public:
     void MetsuAttacked();
     int GetMetsuGauge() const { return m_metsuGauge; }
     int GetMetsuMax() const { return m_metsuMax; }
+    //ƒoƒt‚ğ•t—^
+    void ApplyAttackPowerBuff(float multiplier, float duration);
 
+    //Œ»İ‚ÌUŒ‚”{—¦‚ğæ“¾‚·‚é
+    float GetAttackPowerMultiplier() const
+    {
+        return m_attackPowerMultiplier;
+    }
 
 protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
@@ -118,6 +125,9 @@ protected:
 
     EnemyRank m_enemyRank = EnemyRank::Small;
     float m_defenselessLockTimer = 0.0f;
+    //ç•D˜T‚Ì•ûŒü‚É‚æ‚éƒoƒt
+    float m_attackPowerMultiplier = 1.0f;
+    float m_attackBuffTimer = 0.0f;
 
 };
 

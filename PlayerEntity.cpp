@@ -2869,6 +2869,16 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     m_combo = 0;
 }
 
+void PlayerEntity::TakeSlipDamage(int damage)
+{
+    if (m_invincibleTime > 0.0f) return;
+    if (m_dashTimer > 0.0f) return;
+    if (m_hp == nullptr) return;
+
+    damage = ApplyDefenseRatio(damage);
+    m_hp->Damage(damage);
+}
+
 void PlayerEntity::HitTrap() {
     ChangeState(PlayerState::HIT_TRAP);
     m_canMove = false;

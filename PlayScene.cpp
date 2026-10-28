@@ -14,6 +14,7 @@
 #include "DropItemEntity.h"
 #include "KooniEnemyEntity.h"
 #include "KasaTenguEnemyEntity.h"
+#include "WolfEnemyEntity.h"
 #include "EffectActor.h"
 #include "StageBackActor.h"
 #include "StageExitActor.h"
@@ -392,6 +393,11 @@ bool PlayScene::StageInit(int stageNo) {
 			{
 				AddActor(new Boss_01(this, pos));
 			} break;
+
+			case 205:
+			{
+				auto* wolfEnemy = EnemySpawner::SpawnEnemy<WolfEnemyEntity>(this, pos);
+			}break;
 
 			default:
 				if (objID >= 100)

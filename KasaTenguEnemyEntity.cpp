@@ -395,7 +395,10 @@ void KasaTenguEnemyEntity::TryHitPlayer(PlayerEntity* player, int stage)
         std::fabs(playerPos.y - attackCenter.y) <= combinedHalfHeight)
     {
         const float knockbackX = m_faceRight ? KASATENGU_ATTACK_KNOCKBACK : -KASATENGU_ATTACK_KNOCKBACK;
-        player->TakeDamage(attackDamage, Vector2d(knockbackX, 0.0f));
+        const int finalDamage = static_cast<int>(
+            attackDamage * GetAttackPowerMultiplier()
+            );
+        player->TakeDamage(finalDamage, Vector2d(knockbackX, 0.0f));
     }
 }
 

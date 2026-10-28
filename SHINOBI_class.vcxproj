@@ -261,6 +261,7 @@
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="UIActor.cpp" />
     <ClCompile Include="VelocityComponent.cpp" />
+    <ClCompile Include="WolfEnemyEntity.cpp" />
     <ClCompile Include="WoodLBlock.cpp" />
     <ClCompile Include="WoodSBlock.cpp" />
     <ClCompile Include="YaguraLBlock.cpp" />
@@ -378,6 +379,7 @@
     <ClInclude Include="UIActor.h" />
     <ClInclude Include="Vector2d.h" />
     <ClInclude Include="VelocityComponent.h" />
+    <ClInclude Include="WolfEnemyEntity.h" />
     <ClInclude Include="WoodLBlock.h" />
     <ClInclude Include="WoodSBlock.h" />
     <ClInclude Include="YaguraLBlock.h" />

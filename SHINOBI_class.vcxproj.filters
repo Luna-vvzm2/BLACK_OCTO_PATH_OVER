@@ -144,31 +144,13 @@
     <ClCompile Include="EnemyEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
     </ClCompile>
-    <ClCompile Include="WhiteEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
-    </ClCompile>
     <ClCompile Include="KooniEnemyEntity.cpp">
       <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ArmorEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="ArrowEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="GunnerEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="HealerEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
     </ClCompile>
     <ClCompile Include="EnemyBullet.cpp">
       <Filter>ソース ファイル\Actor\Entity</Filter>
     </ClCompile>
     <ClCompile Include="BossEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="SekienkiBossEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
     </ClCompile>
     <ClCompile Include="KunaiActor.cpp">
@@ -204,9 +186,6 @@
     <ClCompile Include="EventTexture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="WhiteShurikenBullet.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="BackGroundUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
@@ -218,9 +197,6 @@
     </ClCompile>
     <ClCompile Include="TreasureBox.cpp">
       <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ScarecrowEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
     </ClCompile>
     <ClCompile Include="StageBackActor.cpp">
       <Filter>ソース ファイル\Actor</Filter>
@@ -324,18 +300,6 @@
     <ClCompile Include="TrapEffect.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="SubMenu.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SubMenuMapPage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SubMenuNewsPage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SubMenuStatusPage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Mapmenu.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
@@ -344,6 +308,33 @@
     </ClCompile>
     <ClCompile Include="NewsMenu.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="AlertGaugeComponent.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="boss_01.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EquipmentMenu.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="HideBlock.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="KasaTenguEnemyEntity.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SkillMenu.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SpiritBulletEntity.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SpiritEnemyEntity.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="WolfEnemyEntity.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -452,16 +443,7 @@
     <ClInclude Include="EnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="WhiteEnemyEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="KooniEnemyEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ArrowEnemyEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ArmorEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GunnerEnemyEntity.h">
@@ -474,9 +456,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="EnemyBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SekienkiBossEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="KunaiActor.h">
@@ -518,16 +497,10 @@
     <ClInclude Include="EventTexture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="WhiteShurikenBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="DropData.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="DropItemEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ScarecrowEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="StageBackActor.h">
@@ -644,18 +617,6 @@
     <ClInclude Include="NewsData.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="SubMenu.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SubMenuMapPage.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SubMenuNewsPage.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SubMenuStatusPage.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Mapmenu.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -663,6 +624,33 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="NewsMenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="AlertGaugeComponent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="boss_01.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverMenuUI.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="HideBlock.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="KasaTenguEnemyEntity.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SkillMenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SpiritBulletEntity.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SpiritEnemyEntity.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="WolfEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

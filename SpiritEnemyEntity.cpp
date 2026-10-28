@@ -312,12 +312,17 @@ void SpiritEnemyEntity::UpdateAI()
                 direction.y * 700.0f
             );
 
+            const int bulletDamage = static_cast<int>(
+                10 * GetAttackPowerMultiplier()
+                );
+
             SpiritBulletEntity* bullet = new SpiritBulletEntity(
                 m_scene,
                 bulletPos,
                 bulletVelocity,
                 1500.0f,
-                GetTexturePath()
+                GetTexturePath(),
+                bulletDamage
             );
 
             m_scene->AddActor(bullet);

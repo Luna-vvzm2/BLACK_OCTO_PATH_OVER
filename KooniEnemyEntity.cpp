@@ -365,7 +365,10 @@ void KooniEnemyEntity::TryHitPlayer(PlayerEntity* player)
         std::fabs(playerPos.y - attackCenter.y) <= combinedHalfHeight)
     {
         const float knockbackX = m_faceRight ? KOONI_ATTACK_KNOCKBACK : -KOONI_ATTACK_KNOCKBACK;
-        player->TakeDamage(KOONI_ATTACK_DAMAGE, Vector2d(knockbackX, 0.0f));
+
+        //ç•D˜T‚ÌUŒ‚‹­‰»‚ğ”½‰f
+        const int finalDamage = static_cast<int>(KOONI_ATTACK_DAMAGE * GetAttackPowerMultiplier());
+        player->TakeDamage(finalDamage, Vector2d(knockbackX, 0.0f));
     }
 }
 

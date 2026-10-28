@@ -89,7 +89,20 @@ void EnemyEntity::Update(float deltaTime)
     }
 
     UpdateGravity(deltaTime);
+
+    if (m_attackBuffTimer > 0.0f)
+    {
+        m_attackBuffTimer -= deltaTime;
+
+        if (m_attackBuffTimer <= 0.0f)
+        {
+            m_attackBuffTimer = 0.0f;
+            m_attackPowerMultiplier = 1.0f;
+        }
+    }
 }
+
+
 void EnemyEntity::UpdateGravity(float deltaTime)
 {
     if (!m_velocity)
@@ -457,3 +470,14 @@ void EnemyEntity::SetEnemyRank(EnemyRank rank)
     m_enemyRank = rank;
 }
 
+//’Ç‰Á
+void EnemyEntity::ApplyAttackPowerBuff(float multiplier, float duration)
+{
+    if (multiplier < 1.0f || duration <= 0.0f)
+    {
+        return;
+    }
+
+    m_attackPowerMultiplier = multiplier;
+    m_attackBuffTimer = duration;
+}

@@ -193,6 +193,8 @@ public:
 
     void CheckAttackHit(const AttackHitbox& hitbox);
     void TakeDamage(int damage, const Vector2d& knockback);
+    //スリップダメージ用
+    void TakeSlipDamage(int damage);
     void HitTrap();
 
     void CheckCanStand();
