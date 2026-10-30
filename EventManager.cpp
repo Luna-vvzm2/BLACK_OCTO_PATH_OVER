@@ -13,6 +13,7 @@
 #include "Actor.h"
 #include "HPComponent.h"
 #include "EnemySpawner.h"
+#include "boss_01.h"
 
 //CSV‚Ì•ªŠ„—pŠÖ”
 inline std::vector<std::string> SplitCSV(const std::string& line)
@@ -839,6 +840,14 @@ void BattleEvent::Update(float deltaTime)
 			{
 				return true;
 			}
+			else
+			{
+				Boss_01* sujou = dynamic_cast<Boss_01*>(enemy); // Fğí‚ÍActorState‚ªDead‚É‚È‚ç‚È‚¢‚½‚ß
+				if (sujou->IsBattleFinished())
+				{
+					return true;
+				}
+			}
 			return false;
 		});
 	
@@ -863,7 +872,7 @@ void BattleEvent::Update(float deltaTime)
 					m_isPlayerInsideArea = false;
 					continue;
 				}
-
+				
 				auto transform = actor->GetComponent<TransformComponent>();
 				if (!transform) continue;
 
@@ -974,6 +983,10 @@ void BattleEvent::EnemySpawn()
 	switch (m_enemyType)
 	{
 	case 1:
+		break;
+		
+	case 6:
+		spawnedEnemy = EnemySpawner::SpawnEnemy<Boss_01>(playScene, spawnPos);
 		break;
 
 	default:
