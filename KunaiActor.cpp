@@ -70,7 +70,7 @@ void KunaiActor::Update(float deltaTime)
             if (m_collision->CheckCollision(enemy->GetCollision()))
             {
                 enemy->TakeDamage(100, { m_dir ? 300.0f : -300.0f, 0 });
-                enemy->TakeMetsu(60);
+                enemy->TakeMetsu(0);
                 SetState(State::Dead);
 
                 return;

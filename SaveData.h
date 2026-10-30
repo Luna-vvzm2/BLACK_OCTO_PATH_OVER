@@ -34,4 +34,6 @@ struct SaveData
     // 0 = 長押し
     // 1 = トグル
     std::array<int, ActionCount> inputModes{};
+    // 入手済みの新聞(新聞ID 1~6 → 添字 0~5)
+    std::array<bool, 6> newsOwned{ true, false, false, false, false, false };
 };

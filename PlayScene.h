@@ -10,6 +10,7 @@
 #include "SaveData.h"
 
 #include "ScreenMenus.h"
+#include "NewsViewer.h"
 
 #include <memory>
 #include <unordered_map>
@@ -82,6 +83,9 @@ public:
 	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
 	void SaveCurrentSettings();
+
+	// 宝箱から呼ぶ: 新聞を入手して表示する
+	void ShowNews(int id);
 
 	int m_bgHandle;
 	int m_fgHandle;
@@ -194,4 +198,6 @@ private:
 
 	// ロード画面を描画
 	void DrawLoadingScreen();
+
+	NewsViewer m_newsViewer;
 };

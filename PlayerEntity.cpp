@@ -44,11 +44,11 @@
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(0,0), 450, 100, 70, 15 }
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,50), 300, 200, 70, 0 },
+    { Vector2d(0,0), 450, 100, 70, 0 }
 };
 
 float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
@@ -657,9 +657,6 @@ void PlayerEntity::Update(float deltaTime) {
     UpdateStatusDown(deltaTime);    
     UpdateNinjutsuSeal(deltaTime); 
 
-    UpdateKamae(deltaTime);
-    UpdateExecution(deltaTime);
-
     UpdateSensor();
 
     CheckCanStand();
@@ -690,24 +687,28 @@ void PlayerEntity::Update(float deltaTime) {
 // 主人公の描画
 // タコ使用中は約30%暗くする
 // ======================================
+
 void PlayerEntity::Draw()
 {
-    // タコを使用していない場合は通常描画
-    if (!m_isOcto)
+    // 蛸の忍術を使用中か判定
+    if (m_isJutsu[OCTONum])
     {
+        // プレイヤーの明るさを50%にする
+        SetDrawBright(128, 128, 128);
+
+        // プレイヤーの描画
         EntityActor::Draw();
-        return;
+
+        // 明るさを元に戻す
+        SetDrawBright(255, 255, 255);
     }
-
-    // 明るさを約70%にする（約30%暗くする）
-    SetDrawBright(178, 178, 178);
-
-    // 主人公を描画
-    EntityActor::Draw();
-
-    // 明るさを元に戻す
-    SetDrawBright(255, 255, 255);
+    else
+    {
+        // 通常時の描画
+        EntityActor::Draw();
+    }
 }
+
 
 void PlayerEntity::UpdateIgnorePlatform()
 {
@@ -1417,6 +1418,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_anim->Play("Kamae");
             return;
         }
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
     }
 
     if (m_state == PlayerState::OCTO_AUTO) {
@@ -1427,6 +1431,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_velocity->Set(vel);
             return;
         }
+
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
 
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr) {
@@ -1868,6 +1876,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_velocity->Set(vel);
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1888,6 +1897,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1907,7 +1917,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
             }
         }
 
+        UpdateDir(input);
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr && !m_ignorePlatform) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr){
             if (m_isJutsu[OCTONum]) {
                 if (input.IsDown(Action::JUMP)) {
@@ -2566,7 +2582,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
-        m_isJutsu[OCTONum] = true;
         m_jutsuTimer = 2.0f;
         m_octoTimer = 0.0f;
         m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
@@ -2577,7 +2592,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::OCTO_AUTO:
     {
-        m_isJutsu[OCTONum] = true;
         m_isAutoOcto = true;
         m_octoTimer = 0.0f;
         m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
@@ -2595,19 +2609,31 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("wallHold");   // 後ほどOctoAutoに修正
     }   break;
 
+
     case PlayerState::OCTO_END:
         m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
-        m_anim->Play("Kamae");  //後ほど修正
+
+        // 蛸の使用終了後にクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
+        m_anim->Play("Kamae");
         break;
 
     case PlayerState::OCTO_AUTO_END:
         m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
+
+        // 自動発動した蛸の終了時にもクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
         m_anim->Play("OctoAutoEnd");
         break;
+
 
     case PlayerState::TIGER:
     {
@@ -2671,14 +2697,17 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     }
 }
 
-void PlayerEntity::UpdateJutsuInterval(float deltaTime) {
-    for (int i = 0; i < 4; i++) {
-        if (m_jutsuInterval[i] > 0.0f) {
-            if (m_jutsuInterval[i] < 100.0f) {
-                m_jutsuInterval[i] -= deltaTime;
-                if (m_jutsuInterval[i] < 0.0f) {
-                    m_jutsuInterval[i] = 0.0f;
-                }
+void PlayerEntity::UpdateJutsuInterval(float deltaTime)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (m_jutsuInterval[i] > 0.0f)
+        {
+            m_jutsuInterval[i] -= deltaTime;
+
+            if (m_jutsuInterval[i] < 0.0f)
+            {
+                m_jutsuInterval[i] = 0.0f;
             }
         }
     }
@@ -2962,6 +2991,7 @@ void PlayerEntity::AddKunai(int value)
 {
     m_kunai += value;
     if (m_kunai < 0) m_kunai = 0;
+    if (m_kunai > 3) m_kunai = 3;
 }
 
 void PlayerEntity::AddHaku(int value)

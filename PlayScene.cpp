@@ -43,6 +43,7 @@
 #include "HPBarUI.h"
 #include "BackGroundUI.h"
 #include "TreasureBox.h"
+#include "NewsBox.h"
 #include "JutsuChargeUI.h"
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
@@ -91,8 +92,13 @@ bool PlayScene::Init() {
 	// セーブデータ読み込み
 	if (SaveManager::Load(m_saveData))
 	{
+		SaveData saveData;
 		m_stageIndex = m_saveData.currentStage;
 		m_playTimer = m_saveData.playTime;
+		for (int i = 0; i < static_cast<int>(saveData.newsOwned.size()); ++i)
+		{
+			m_menu.SetNewsOwned(i, saveData.newsOwned[i]);
+		}
 	}
 
 	// 保存されている操作設定を復元
@@ -360,6 +366,22 @@ bool PlayScene::StageInit(int stageNo) {
 				AddActor(new TreasureBoxEntity(this, pos));
 				break;
 			}
+
+			// 新聞の宝箱: オブジェクトID 301~306 → 新聞ID 1~6(仮ID: マップエディタに合わせる)
+			case 301: case 302: case 303: case 304: case 305: case 306:
+			{
+				pos += Vector2d(-tileSize * 0.5f, 20.0f);
+				const int newsId = objID - 300;
+
+				if (m_menu.IsNewsOwned(newsId - 1))
+				{
+					break;         // 入手済み
+				}
+				else
+				{
+					AddActor(new NewsBoxEntity(this, pos, newsId));     // 未入手
+				}
+			} break;
 
 			case 9:
 				AddActor(new Trap(this, pos, Vector2d(192, 192)));
@@ -634,6 +656,20 @@ void PlayScene::Update(float deltaTime) {
 
 	if (m_shurikenUI && m_player) {
 		m_shurikenUI->SetCount(m_player->GetKunai());
+	}
+	
+#ifdef _DEBUG
+	static bool prevN = false;
+	const bool nowN = CheckHitKey(KEY_INPUT_N) != 0;
+	if (nowN && !prevN) ShowNews(4);
+	prevN = nowN;
+#endif
+
+	// 新聞の表示中はゲーム画面を止める(決定キーで閉じる)
+	if (m_newsViewer.IsOpen())
+	{
+		m_newsViewer.Update(deltaTime, m_game->GetInput());
+		return;
 	}
 
 	updateActors(m_backactors, deltaTime);
@@ -1159,6 +1195,7 @@ void PlayScene::Draw()
 		m_eventManager->Draw();
 	}
 
+	m_newsViewer.Draw();   // 追加
 
 	// =====================================================
 	// ⑬ メニュー
@@ -1878,4 +1915,28 @@ void PlayScene::AutoSave()
 void PlayScene::SaveCurrentSettings()
 {
 	AutoSave();
+}
+
+void PlayScene::ShowNews(int id)
+{
+	static const std::vector<NewsData> newsList = GetDefaultNewsList();
+
+	for (const NewsData& news : newsList)
+	{
+		if (news.id != id) continue;
+
+		// 所持品画面の新聞ページに反映する(新聞ID 1~6 は、一覧の順番 0~5 に対応)
+		m_menu.SetNewsOwned(id - 1, true);
+
+		// 自動保存(ドキュメント18-1「宝箱開封・回収時」)
+		{
+			SaveData saveData;
+			SaveManager::Load(saveData);              // 既存のセーブを読み込む(なければ初期値)
+			saveData.newsOwned[id - 1] = true;
+			SaveManager::Save(saveData);
+		}
+
+		m_newsViewer.Open(news);    // 新聞を表示する(ゲームは Update で止まる)
+		return;
+	}
 }
