@@ -19,10 +19,12 @@ namespace
 	constexpr float WOLF_BODY_HEIGHT = 200.0f;
 	constexpr float WOLF_SIGHT_RANGE_X = 800.0f;
 	constexpr float WOLF_SIGHT_RANGE_Y = 120.0f;
+	constexpr float WOLF_KEEP_DISTANCE = 400.0f;
 	constexpr float WOLF_MOVE_SPEED = 600.0f;
 
 	constexpr float WOLF_ATTACK_WIDTH = 3500.0f;
 	constexpr float WOLF_ATTACK_HEIGHT = 3500.0f;
+	constexpr float WOLF_ATTACK_WAIT_TIME = 2.0f;
 	constexpr float WOLF_ATTACK_DAMAGE = 5;
 	constexpr float WOLF_ATTACK_HIT_TIME = 0.5f;
 	constexpr float WOLF_ROAR_DURATION = 5.0f;
@@ -257,33 +259,52 @@ void WolfEnemyEntity::UpdateIdle(PlayerEntity* player)
 		m_awareness = Awareness::Undetected;
 		return;
 	}
+
 	const Vector2d difference = player->GetPos() - GetPos();
-	const float attackDistance = WOLF_BODY_WIDTH * 0.5f + WOLF_ATTACK_WIDTH;
-	if (std::fabs(difference.x) <= attackDistance &&
-		std::fabs(difference.y) <= WOLF_ATTACK_HEIGHT)
-	{
-		m_faceRight = difference.x >= 0.0f;
-		ChangeStatus(Status::Attack);
-	}
-	else
+
+	m_faceRight = difference.x >= 0.0f;
+
+	// 400より離れている場合は移動
+	if (std::fabs(difference.x) > WOLF_KEEP_DISTANCE)
 	{
 		ChangeStatus(Status::Move);
+		return;
+	}
+
+	// 400以内に入ったら2秒後に攻撃
+	if (m_stateTimer >= WOLF_ATTACK_WAIT_TIME)
+	{
+		ChangeStatus(Status::Attack);
 	}
 }
 
 void WolfEnemyEntity::UpdateMove(PlayerEntity* player)
 {
+	// プレイヤーを視認できなくなった場合
 	if (!CanSeePlayer(player))
 	{
 		m_awareness = Awareness::Undetected;
+
+		if (m_velocity != nullptr)
+		{
+			Vector2d velocity = m_velocity->GetVelocity();
+			velocity.x = 0.0f;
+			m_velocity->SetVelocity(velocity);
+		}
+
 		ChangeStatus(Status::Idle);
 		return;
 	}
 
+	// プレイヤーとの距離を取得
 	const Vector2d difference = player->GetPos() - GetPos();
-	const float attackDistance = WOLF_BODY_WIDTH * 0.5f + WOLF_ATTACK_WIDTH;
-	if (std::fabs(difference.x) <= attackDistance &&
-		std::fabs(difference.y) <= WOLF_ATTACK_HEIGHT)
+	const float distanceX = std::fabs(difference.x);
+
+	// プレイヤーの方向を向く
+	m_faceRight = difference.x >= 0.0f;
+
+	// 目標距離400以内まで近づいた場合
+	if (distanceX <= WOLF_KEEP_DISTANCE)
 	{
 		if (m_velocity != nullptr)
 		{
@@ -291,12 +312,13 @@ void WolfEnemyEntity::UpdateMove(PlayerEntity* player)
 			velocity.x = 0.0f;
 			m_velocity->SetVelocity(velocity);
 		}
-		m_faceRight = difference.x >= 0.0f;
-		ChangeStatus(Status::Attack);
+
+		// 攻撃待機状態へ移行
+		ChangeStatus(Status::Idle);
 		return;
 	}
 
-	m_faceRight = difference.x >= 0.0f;
+	// 目標距離より離れている場合は接近
 	if (m_velocity != nullptr)
 	{
 		Vector2d velocity = m_velocity->GetVelocity();
@@ -374,13 +396,13 @@ void WolfEnemyEntity::TryHitPlayer(PlayerEntity* player)
 
 	const float combinedHalfWidth =
 		WOLF_ATTACK_WIDTH * 0.5f + player->GetCollision()->GetWidth() * 0.5f;
+
 	const float combinedHalfHeight =
 		WOLF_ATTACK_HEIGHT * 0.5f + player->GetCollision()->GetHeight() * 0.5f;
 
 	if (std::fabs(playerPos.x - attackCenter.x) <= combinedHalfWidth &&
 		std::fabs(playerPos.y - attackCenter.y) <= combinedHalfHeight)
 	{
-		const float knockbackX = m_faceRight ? WOLF_ATTACK_KNOCKBACK : -WOLF_ATTACK_KNOCKBACK;
 		player->TakeSlipDamage(static_cast<int>(WOLF_ATTACK_DAMAGE));
 	}
 }
