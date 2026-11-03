@@ -14,6 +14,7 @@ enum class Action {
     WEAK_ATTACK,
     KUNAI,
     HEAL,
+    SHADOW_HEAL,
     KAMAE,
     G,
     JUTSU_KAMAE,

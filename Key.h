@@ -21,6 +21,7 @@ public:
 		F,
 		G,
 		H,
+		Z,
 		M,
 		ESCAPE,
 		SPACE,

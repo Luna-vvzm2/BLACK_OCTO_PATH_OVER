@@ -762,195 +762,195 @@ void PlayerEntity::UpdateSensor() {
 }
 
 
-void PlayerEntity::UpdateJutsuKamae(float deltaTime) {
-    if (!m_jutsuCharge) return;
-    if (m_getHit) return;
-    if (m_dashTimer > 0.0f) return;
-    if (!m_isGround) return;
-    if (m_isKaryu) return;
-
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (input.IsDown(Action::G) && input.IsDown(Action::JUTSU_KAMAE))
-    {
-        if (m_squat) {
-            if (!m_canStand) {
-                return;
-            }
-            else {
-                ExitSquat();
-            }
-        }
-        m_isJutsuKamae = true;
-        m_canMove = false;
-    }
-    else
-    {
-        m_isJutsuKamae = false;
-        if (!m_isKaryu) m_canMove = true;
-    }
-}
-
-void PlayerEntity::UpdateKaryu(float deltaTime) {
-    if (m_state == PlayerState::DEAD) return;
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (m_KaryuTimer <= 0.0f) {
-        if (m_isJutsuKamae && input.IsTrigger(Action::KUNAI))
-        {
-            m_isKaryu = true;
-            m_KaryuTimer = 5.0f;
-            m_invincibleTime = m_KaryuTimer;
-            m_isJutsuKamae = false;
-            m_jutsuGauge = 0;
-            m_jutsuCharge = false;
-            KaryuTextUI* UI = new KaryuTextUI(m_scene);
-            m_scene->SpawnUIActor(UI);
-        }
-        else if (m_isKaryu) {
-            m_isKaryu = false;
-            m_canMove = true;
-
-            auto enemies = CollectEnemiesInScreen();
-
-            for (EnemyEntity* enemy : enemies)
-            {
-                m_combo += 5;
-
-                float dir = m_transform->GetPosition().x - enemy->GetPos().x > 0 ? 1.0f : -1.0f;
-
-                enemy->TakeDamage(1400, { dir * 300.0f, 200.0f });
-            }
-        }
-    }
-    else {
-        m_KaryuTimer -= deltaTime;
-    }
-}
-
-void PlayerEntity::UpdateKamae(float deltaTime)
-{
-    if (m_getHit) return;
-    if (m_dashTimer > 0.0f) return;
-    if (m_isJutsuKamae) {
-        m_isKamae = false;
-        return;
-    }
-    if (m_isKaryu) return;
-
-    const Input& input = m_scene->GetGame()->GetInput();
-    const bool sealed = IsNinjutsuSealed() && m_isGround; //封印状態は構えを無視
-
-
-    if (input.IsDown(Action::KAMAE) && !sealed)
-    {
-        if (m_squat) {
-            if (!m_canStand) {
-                return;
-            }
-            else {
-                ExitSquat();
-            }
-        }
-        m_isKamae = true;
-        m_canMove = false;
-    }
-    else
-    {
-        m_isKamae = false;
-        if (!m_isExecution) m_canMove = true;
-    }
-}
-
-void PlayerEntity::UpdateExecution(float deltaTime)
-{
-    if (m_state == PlayerState::DEAD) return;
-    if (!m_isExecution) {
-        if (!m_isKamae) return;
-    }
-
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (input.IsTrigger(Action::DASH))
-    {
-        if (!m_isExecution) {
-            CollectExecutionTargets();
-            if (m_executionTargets.empty()) return;
-
-            m_isExecution = true;
-            m_executionTimer = 0.7f;
-            m_invincibleTime = m_executionTimer;
-            auto effect = new EffectActor(m_scene, GetPos(), EffectType::ExecutionStart, !m_dir);
-            effect->SetFollowTarget(this, { m_dir ? -20.0f : 20.0f, -20.0f });
-
-            SpawnEffect(effect);
-        }
-    }
-
-    if (m_executionTimer <= 0.0f)
-    {
-        while (!m_executionTargets.empty())
-        {
-            EnemyEntity* target = m_executionTargets.back();
-            m_executionTargets.pop_back();
-
-            if (target == nullptr)
-                continue;
-
-            PlayScene* play = static_cast<PlayScene*>(m_scene);
-
-            if (!play->IsActorAlive(target))
-                continue;
-
-            if (target->IsDead())
-                continue;
-
-            if (!target->IsMetsu())
-                continue;
-
-            Vector2d prevPos = m_transform->GetPosition();
-            Vector2d lastPos = target->GetPos();
-
-            m_transform->SetPosition(lastPos);
-
-            target->MetsuAttacked();
-
-            if (m_excusionSound != nullptr) {
-                m_excusionSound->Play();
-            }
-
-            m_combo++;
-
-            m_executionTimer = m_invincibleTime = 0.2f;
-
-            if (m_executionTargets.empty())
-            {
-                m_isExecution = false;
-
-                Vector2d dir = lastPos - prevPos;
-
-                if (dir.length() > 0.0f)
-                {
-                    dir = dir.normalize();
-                    dir.y -= 0.3f;
-
-                    m_dir = dir.x > 0.0f ? 1.0f : 0.0f;
-                    m_velocity->Set(dir * m_dashSpeed);
-                }
-            }
-
-            break;
-        }
-
-        if (m_executionTargets.empty())
-        {
-            m_isExecution = false;
-        }
-    }
-    else {
-        m_executionTimer -= deltaTime;
-    }
-}
+//void PlayerEntity::UpdateJutsuKamae(float deltaTime) {
+//    if (!m_jutsuCharge) return;
+//    if (m_getHit) return;
+//    if (m_dashTimer > 0.0f) return;
+//    if (!m_isGround) return;
+//    if (m_isKaryu) return;
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (input.IsDown(Action::G) && input.IsDown(Action::JUTSU_KAMAE))
+//    {
+//        if (m_squat) {
+//            if (!m_canStand) {
+//                return;
+//            }
+//            else {
+//                ExitSquat();
+//            }
+//        }
+//        m_isJutsuKamae = true;
+//        m_canMove = false;
+//    }
+//    else
+//    {
+//        m_isJutsuKamae = false;
+//        if (!m_isKaryu) m_canMove = true;
+//    }
+//}
+//
+//void PlayerEntity::UpdateKaryu(float deltaTime) {
+//    if (m_state == PlayerState::DEAD) return;
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (m_KaryuTimer <= 0.0f) {
+//        if (m_isJutsuKamae && input.IsTrigger(Action::KUNAI))
+//        {
+//            m_isKaryu = true;
+//            m_KaryuTimer = 5.0f;
+//            m_invincibleTime = m_KaryuTimer;
+//            m_isJutsuKamae = false;
+//            m_jutsuGauge = 0;
+//            m_jutsuCharge = false;
+//            KaryuTextUI* UI = new KaryuTextUI(m_scene);
+//            m_scene->SpawnUIActor(UI);
+//        }
+//        else if (m_isKaryu) {
+//            m_isKaryu = false;
+//            m_canMove = true;
+//
+//            auto enemies = CollectEnemiesInScreen();
+//
+//            for (EnemyEntity* enemy : enemies)
+//            {
+//                m_combo += 5;
+//
+//                float dir = m_transform->GetPosition().x - enemy->GetPos().x > 0 ? 1.0f : -1.0f;
+//
+//                enemy->TakeDamage(1400, { dir * 300.0f, 200.0f });
+//            }
+//        }
+//    }
+//    else {
+//        m_KaryuTimer -= deltaTime;
+//    }
+//}
+//
+//void PlayerEntity::UpdateKamae(float deltaTime)
+//{
+//    if (m_getHit) return;
+//    if (m_dashTimer > 0.0f) return;
+//    if (m_isJutsuKamae) {
+//        m_isKamae = false;
+//        return;
+//    }
+//    if (m_isKaryu) return;
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//    const bool sealed = IsNinjutsuSealed() && m_isGround; //封印状態は構えを無視
+//
+//
+//    if (input.IsDown(Action::KAMAE) && !sealed)
+//    {
+//        if (m_squat) {
+//            if (!m_canStand) {
+//                return;
+//            }
+//            else {
+//                ExitSquat();
+//            }
+//        }
+//        m_isKamae = true;
+//        m_canMove = false;
+//    }
+//    else
+//    {
+//        m_isKamae = false;
+//        if (!m_isExecution) m_canMove = true;
+//    }
+//}
+//
+//void PlayerEntity::UpdateExecution(float deltaTime)
+//{
+//    if (m_state == PlayerState::DEAD) return;
+//    if (!m_isExecution) {
+//        if (!m_isKamae) return;
+//    }
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (input.IsTrigger(Action::DASH))
+//    {
+//        if (!m_isExecution) {
+//            CollectExecutionTargets();
+//            if (m_executionTargets.empty()) return;
+//
+//            m_isExecution = true;
+//            m_executionTimer = 0.7f;
+//            m_invincibleTime = m_executionTimer;
+//            auto effect = new EffectActor(m_scene, GetPos(), EffectType::ExecutionStart, !m_dir);
+//            effect->SetFollowTarget(this, { m_dir ? -20.0f : 20.0f, -20.0f });
+//
+//            SpawnEffect(effect);
+//        }
+//    }
+//
+//    if (m_executionTimer <= 0.0f)
+//    {
+//        while (!m_executionTargets.empty())
+//        {
+//            EnemyEntity* target = m_executionTargets.back();
+//            m_executionTargets.pop_back();
+//
+//            if (target == nullptr)
+//                continue;
+//
+//            PlayScene* play = static_cast<PlayScene*>(m_scene);
+//
+//            if (!play->IsActorAlive(target))
+//                continue;
+//
+//            if (target->IsDead())
+//                continue;
+//
+//            if (!target->IsMetsu())
+//                continue;
+//
+//            Vector2d prevPos = m_transform->GetPosition();
+//            Vector2d lastPos = target->GetPos();
+//
+//            m_transform->SetPosition(lastPos);
+//
+//            target->MetsuAttacked();
+//
+//            if (m_excusionSound != nullptr) {
+//                m_excusionSound->Play();
+//            }
+//
+//            m_combo++;
+//
+//            m_executionTimer = m_invincibleTime = 0.2f;
+//
+//            if (m_executionTargets.empty())
+//            {
+//                m_isExecution = false;
+//
+//                Vector2d dir = lastPos - prevPos;
+//
+//                if (dir.length() > 0.0f)
+//                {
+//                    dir = dir.normalize();
+//                    dir.y -= 0.3f;
+//
+//                    m_dir = dir.x > 0.0f ? 1.0f : 0.0f;
+//                    m_velocity->Set(dir * m_dashSpeed);
+//                }
+//            }
+//
+//            break;
+//        }
+//
+//        if (m_executionTargets.empty())
+//        {
+//            m_isExecution = false;
+//        }
+//    }
+//    else {
+//        m_executionTimer -= deltaTime;
+//    }
+//}
 
 void PlayerEntity::CollectExecutionTargets() {
 
@@ -1323,58 +1323,17 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_getHit = false;
     }
 
-    if (m_isKaryu) {
-        if (m_state == PlayerState::KARYU_END) {
-            if (!m_anim->IsFinished()) return;
-            else { m_KaryuTimer = 0.0f; }
-        }
-        if (m_state == PlayerState::KARYU_MID) {
-            if (m_KaryuTimer < 0.5f) {
-                ChangeState(PlayerState::KARYU_END);
-            }
-            return;
-        }
-        if (m_state == PlayerState::KARYU_START) {
-            if (m_KaryuTimer < 3.0f) {
-                ChangeState(PlayerState::KARYU_MID);
-            }
-            return;
-        }
-        if (m_KaryuTimer > 0.0f) {
-            ChangeState(PlayerState::KARYU_START);
-            return;
-        }
-    }
-
-    if (m_isJutsuKamae) {
+    /*if (m_isJutsuKamae) {
         ChangeState(PlayerState::JUTSU_KAMAE);
         return;
-    }
+    }*/
 
-    if (m_isExecution) {
-        if (m_state == PlayerState::EXECUTION_START) {
-            if (m_anim->IsFinished()) {
-                ChangeState(PlayerState::EXECUTION_HORIZON);
-            }
-            return;
-        }
+    const Input& input = m_scene->GetGame()->GetInput();
 
-        if (m_state != PlayerState::EXECUTION_HORIZON && m_state != PlayerState::EXECUTION_VERTICAL) {
-            ChangeState(PlayerState::EXECUTION_START);
-            return;
-        }
-        return;
-    }
-
-    if (m_state == PlayerState::EXECUTION_HORIZON || m_state == PlayerState::EXECUTION_VERTICAL) {
-        ChangeState(PlayerState::EXECUTION_END);
-        return;
-    }
-
-    if (m_state == PlayerState::EXECUTION_END) {
-        if (!m_anim->IsFinished()) {
-            m_canMove = true;
-            return;
+    if (input.IsTrigger(Action::HEAL)) {
+        if (m_healItem > 0 && (m_hp->GetHP() != m_hp->GetMaxHP())) {
+            m_healItem -= 1;
+            m_hp->Heal(25);
         }
     }
 
@@ -1383,8 +1342,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
         UpdateTiger(deltaTime);
         if (m_tigerTimer < 1.8f) return;
     }
-
-    const Input& input = m_scene->GetGame()->GetInput();
 
     if (m_isJutsu[OCTONum]) {
         UpdateOcto(deltaTime);
@@ -1482,16 +1439,6 @@ void PlayerEntity::UpdateState(float deltaTime) {
         && GetCanJutsu(TIGERNum) 
         && m_isGround) {
         ChangeState(PlayerState::TIGER);
-        return;
-    }
-
-    if (m_isKamae) {
-        if (m_isGround) {
-            ChangeState(PlayerState::KAMAE);
-        }
-        else {
-            ChangeState(PlayerState::AIR_KAMAE);
-        }
         return;
     }
 
@@ -1946,9 +1893,19 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::JUMP_LANDING) {
-        if (!(m_anim->IsFinished())) {
-            return;
+        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+            if (!(m_anim->IsFinished())) {
+                return;
+            }
         }
+    }
+
+    if (input.IsDown(Action::SHADOW_HEAL)) {
+        if (m_squat) {
+            ExitSquat();
+        }
+        ChangeState(PlayerState::KAMAE);
+        return;
     }
 
     if (input.IsDown(Action::DOWN)) {
@@ -2124,6 +2081,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     m_state = newState;
     UpdateScale();
+    m_isKamae = false;
 
     switch (m_state)
     {
@@ -2515,8 +2473,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::KAMAE:
-        m_anim->Play("Kamae");
+        m_shadowGaugeTimer = 0.0f;
+        m_isKamae = true;
 
+        m_anim->Play("Kamae");
         break;
 
     case PlayerState::KAMAE_END:
@@ -2579,7 +2539,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::OCTO_START:
         m_jutsuTimer = 2.0f;
-        SubShadowGauge(5);
+        SubShadowGauge(m_jutsuCost[OCTONum]);
 
         m_anim->Play("OctoStart");
         break;
@@ -2587,7 +2547,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
     case PlayerState::OCTO_AUTO:
     {
         m_isAutoOcto = true;
-        SubShadowGauge(5);
+        SubShadowGauge(m_jutsuCost[OCTONum]);
 
         Vector2d vel = m_velocity->Get();
         vel.x = 0.0f;
@@ -2612,7 +2572,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
-        m_anim->Play("OctoAutoEnd");
+        m_anim->Play("jump");    // 後ほどOctoAutoEndに修正
         break;
 
     case PlayerState::TIGER:
@@ -2666,9 +2626,17 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     if (m_shadowGauge == m_shadowGaugeMax) return;
 
     m_shadowGaugeTimer += deltaTime;
-    if (m_shadowGaugeTimer >= 2.0f) {
-        AddShadowGauge(1);
-        m_shadowGaugeTimer -= 2.0f;
+    if (m_isKamae) {
+        if (m_shadowGaugeTimer >= 1.0f) {
+            AddShadowGauge(5);
+            m_shadowGaugeTimer -= 1.0f;
+        }
+    }
+    else {
+        if (m_shadowGaugeTimer >= 2.0f) {
+            AddShadowGauge(1);
+            m_shadowGaugeTimer -= 2.0f;
+        }
     }
 }
 
@@ -2691,7 +2659,7 @@ void PlayerEntity::UpdateOcto(float deltaTime) {
     m_octoTimer += deltaTime;
 
     if (m_octoTimer >= 1.0f) {
-        SubShadowGauge(5);  //　GDDでは1
+        SubShadowGauge(m_jutsuCost[OCTONum]);  //　GDDでは1
         m_octoTimer -= 1.0f;
     }
 
