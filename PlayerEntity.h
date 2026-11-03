@@ -352,7 +352,7 @@ private:
     bool m_canAttack;
     float m_attackLockTimer;
 
-    bool m_ownJutsu[4] = { true, true, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
+    bool m_ownJutsu[4] = { true, false, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
     bool m_isJutsu[4] = { false , false, false, false };    // ”Epg—p’†ƒtƒ‰ƒO
     int m_jutsuCost[4] = { 5, 60, 10, 60 }; // ”EpÁ”ï‰eƒQ[ƒW—Ê
     float m_jutsuInterval[4] = {};

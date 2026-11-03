@@ -272,6 +272,7 @@ private:
 
 	float m_viewTimer{ 2.0f };
 
+	int m_phaze{ 1 };
 	bool m_isCameraMoving{ false };
 	bool m_isMoveEnd{ false };
 	bool m_isEnd{ false };

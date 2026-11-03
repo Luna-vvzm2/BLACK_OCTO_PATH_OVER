@@ -1202,22 +1202,27 @@ void GetSkillEvent::Init()
 
 			if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
 			{
-				m_viewTimer = std::stof(tokens[1]);
+				m_phaze = std::stoi(tokens[1]);
 			}
 
 			if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
 			{
-				m_skillType = static_cast<SkillType>(std::stoi(tokens[2]));
+				m_viewTimer = std::stof(tokens[2]);
 			}
 
 			if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
 			{
-				m_targetPos.x = std::stof(tokens[3]);
+				m_skillType = static_cast<SkillType>(std::stoi(tokens[3]));
 			}
 
 			if (tokens.size() > 4 && !tokens[4].empty() && tokens[4] != "None")
 			{
-				m_targetPos.y = std::stof(tokens[4]);
+				m_targetPos.x = std::stof(tokens[4]);
+			}
+
+			if (tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
+			{
+				m_targetPos.y = std::stof(tokens[5]);
 			}
 		}
 
@@ -1227,11 +1232,18 @@ void GetSkillEvent::Init()
 		{
 			Camera& camera = playScene->GetCamera();
 
-			m_initPos = camera.GetCenter();
-			m_targetPos += m_initPos; //ターゲット位置を設定（初期値からの相対）
+			if (m_phaze == 1)
+			{
+				m_targetPos += camera.GetCenter();
+				m_isCameraMoving = true;
+			}
+			else if (m_phaze == 2)
+			{
+				m_targetPos = camera.GetCenter() - m_targetPos;
+				m_isCameraMoving = false;
+			}
 		}
 
-		m_isCameraMoving = true;
 		m_isMoveEnd = false;
 		m_isEnd = false;
 	}
@@ -1258,8 +1270,16 @@ void GetSkillEvent::Update(float deltaTime)
 				Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
 				if (moveVector.length() >= distance)
 				{
-					camera.SetCenter(m_targetPos);
-					m_isCameraMoving = false;
+					if (m_viewTimer >= 0.0f)
+					{
+						m_viewTimer -= deltaTime;
+					}
+					else
+					{
+						camera.SetCenter(m_targetPos);
+						m_isCameraMoving = false;
+						m_isEnd = true;
+					}
 				}
 				else
 				{
@@ -1268,21 +1288,27 @@ void GetSkillEvent::Update(float deltaTime)
 			}
 			else
 			{
-				m_viewTimer -= deltaTime;
-				if (!m_isCameraMoving && m_viewTimer <= 0.0f)
+				if (m_viewTimer >= 0.0f)
 				{
-					Vector2d direction = m_initPos - camPos;
-					float distance = direction.length();
+					m_viewTimer -= deltaTime;
+				}
+				else 
+				{
+					if (!m_isCameraMoving)
+					{
+						Vector2d direction = m_targetPos - camPos;
+						float distance = direction.length();
 
-					Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
-					if (moveVector.length() >= distance)
-					{
-						camera.SetCenter(m_initPos);
-						m_isMoveEnd = true;
-					}
-					else
-					{
-						camera.SetCenter(camPos + moveVector);
+						Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
+						if (moveVector.length() >= distance)
+						{
+							camera.SetCenter(m_targetPos);
+							m_isMoveEnd = true;
+						}
+						else
+						{
+							camera.SetCenter(camPos + moveVector);
+						}
 					}
 				}
 			}
