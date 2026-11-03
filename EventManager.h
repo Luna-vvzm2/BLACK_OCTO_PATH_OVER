@@ -244,6 +244,7 @@ public:
 
 	enum class SkillType
 	{
+		Oct,
 		Tiger,
 		Frog,
 		Orca

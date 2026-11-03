@@ -1207,12 +1207,17 @@ void GetSkillEvent::Init()
 
 			if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
 			{
-				m_targetPos.x = std::stof(tokens[2]);
+				m_skillType = static_cast<SkillType>(std::stoi(tokens[2]));
 			}
 
 			if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
 			{
-				m_targetPos.y = std::stof(tokens[3]);
+				m_targetPos.x = std::stof(tokens[3]);
+			}
+
+			if (tokens.size() > 4 && !tokens[4].empty() && tokens[4] != "None")
+			{
+				m_targetPos.y = std::stof(tokens[4]);
 			}
 		}
 
@@ -1285,6 +1290,14 @@ void GetSkillEvent::Update(float deltaTime)
 		else
 		{
 			// “üèˆ—
+			PlayerEntity* player = playScene->GetPlayer();
+			bool skillType = player->GetCanJutsu(static_cast<int>(m_skillType));
+			if (!skillType)
+			{
+				player->ToggleJutsu(static_cast<int>(m_skillType)); // ƒXƒLƒ‹‚ÌŠl“¾
+				player->AddShadowGaugeMax(); // ‰eƒQ[ƒW‚Ì‘‰Á
+			}
+
 			m_isEnd = true;
 		}
 	}

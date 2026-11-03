@@ -184,6 +184,13 @@ public:
         return m_isJutsu[idx];
     }
 
+    // ”Ep‚ÌŠl“¾ó‹µ‚ðØ‚è‘Ö‚¦‚é
+    void ToggleJutsu(int idx) {
+        if (idx >= 0 && idx < 4) {
+            m_ownJutsu[idx] = !m_ownJutsu[idx];
+        }
+    }
+
     // ”Ep‚ÌÅ‘åƒN[ƒ‹ƒ^ƒCƒ€‚ðŽæ“¾‚·‚é
     float GetJutsuMaxInterval(int idx) const
     {

@@ -1,3 +1,5 @@
+type,skill,camPos.x,camPos.y,,,
+GETSKILL,1,,,,,
 type,name,time,pos,Lpath,Rpath,text
 TALK,黒棲,None,R,,assets\images\character\musashi.png,これは……随分と大きな屏風だな。
 TALK,黒棲,None,R,,assets\images\character\musashi.png,これだけ焼けずに残っていたのか……
