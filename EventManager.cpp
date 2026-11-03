@@ -1276,7 +1276,6 @@ void GetSkillEvent::Update(float deltaTime)
 					}
 					else
 					{
-						camera.SetCenter(m_targetPos);
 						m_isCameraMoving = false;
 						m_isEnd = true;
 					}
@@ -1302,7 +1301,6 @@ void GetSkillEvent::Update(float deltaTime)
 						Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// ³‹K‰»‚µˆÚ“®‘¬“x‚ð‚©‚¯‚é
 						if (moveVector.length() >= distance)
 						{
-							camera.SetCenter(m_targetPos);
 							m_isMoveEnd = true;
 						}
 						else
