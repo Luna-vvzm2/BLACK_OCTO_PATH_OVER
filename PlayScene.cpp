@@ -164,12 +164,38 @@ bool PlayScene::Init() {
 	// セーブデータ読み込み
 	if (SaveManager::Load(m_saveData))
 	{
-		SaveData saveData;
 		m_stageIndex = m_saveData.currentStage;
 		m_playTimer = m_saveData.playTime;
-		for (int i = 0; i < static_cast<int>(saveData.newsOwned.size()); ++i)
+		for (int i = 0; i < static_cast<int>(m_saveData.newsOwned.size()); ++i)
 		{
-			m_menu.SetNewsOwned(i, saveData.newsOwned[i]);
+			m_menu.SetNewsOwned(i, m_saveData.newsOwned[i]);
+		}
+	}
+
+	// 保存されている操作設定を復元
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		// キー割り当てを復元
+		if (m_saveData.hasKeyBinding[i])
+		{
+			input.SetKeyBindings(
+				action,
+				m_saveData.keyBindings[i]
+			);
+		}
+
+		// 操作方式を復元
+		if (m_saveData.inputModes[i] == 0 ||
+			m_saveData.inputModes[i] == 1)
+		{
+			input.SetInputMode(
+				action,
+				static_cast<InputMode>(m_saveData.inputModes[i])
+			);
 		}
 	}
 
@@ -706,11 +732,10 @@ void PlayScene::Update(float deltaTime)
 		m_autoSaveTimer = 0.0f;
 	}
 
-	if (input.IsTrigger(Action::MENU))
+	if (input.IsMenuTrigger(Action::MENU))
 	{
 		if (m_player->GetState() != Actor::State::Paused)
-		m_menu.Toggle();
-
+			m_menu.Toggle();
 		return;
 	}
 
@@ -1984,6 +2009,19 @@ void PlayScene::AutoSave()
 		m_saveData.kunaiCount = m_player->GetKunai();
 	}
 
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		m_saveData.keyBindings[i] =
+			input.GetKeyBindings(action);
+
+		m_saveData.inputModes[i] =
+			static_cast<int>(input.GetInputMode(action));
+	}
+
 	SaveManager::Save(m_saveData);
 }
 
@@ -1999,14 +2037,15 @@ void PlayScene::ShowNews(int id)
 		m_menu.SetNewsOwned(id - 1, true);
 
 		// 自動保存(ドキュメント18-1「宝箱開封・回収時」)
-		{
-			SaveData saveData;
-			SaveManager::Load(saveData);              // 既存のセーブを読み込む(なければ初期値)
-			saveData.newsOwned[id - 1] = true;
-			SaveManager::Save(saveData);
-		}
+		m_saveData.newsOwned[id - 1] = true;
+		AutoSave();
 
 		m_newsViewer.Open(news);    // 新聞を表示する(ゲームは Update で止まる)
 		return;
 	}
+}
+// 操作設定画面から即時保存するための公開関数
+void PlayScene::SaveCurrentSettings()
+{
+	AutoSave();
 }

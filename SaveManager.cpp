@@ -3,6 +3,8 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>
+#include <algorithm>
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -15,6 +17,12 @@ bool SaveManager::Save(const SaveData& data)
     saveData["playTime"] = data.playTime;
     saveData["kunaiCount"] = data.kunaiCount;
     saveData["newsOwned"] = data.newsOwned;
+
+    // キー設定を保存
+    saveData["keyBindings"] = data.keyBindings;
+
+    // 操作方式を保存
+    saveData["inputModes"] = data.inputModes;
 
     std::ofstream file("save/save.json");
 
@@ -67,6 +75,63 @@ bool SaveManager::Load(SaveData& data)
             {
                 data.newsOwned[i] =
                     saveData["newsOwned"][i].get<bool>();
+            }
+        }
+    }
+
+    // キー割り当てを読み込む
+    if (saveData.contains("keyBindings") &&
+        saveData["keyBindings"].is_array())
+    {
+        const auto& savedBindings = saveData["keyBindings"];
+
+        const std::size_t count =
+            (savedBindings.size() < data.keyBindings.size())
+            ? savedBindings.size()
+            : data.keyBindings.size();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            if (!savedBindings[i].is_array())
+                continue;
+
+            std::vector<int> keys;
+
+            for (const auto& value : savedBindings[i])
+            {
+                if (value.is_number_integer())
+                {
+                    keys.push_back(value.get<int>());
+                }
+            }
+
+            data.keyBindings[i] = std::move(keys);
+            data.hasKeyBinding[i] = true;
+        }
+    }
+
+    // 操作方式を読み込む
+    if (saveData.contains("inputModes") &&
+        saveData["inputModes"].is_array())
+    {
+        const auto& savedModes = saveData["inputModes"];
+
+        const std::size_t count =
+            (savedModes.size() < data.inputModes.size())
+            ? savedModes.size()
+            : data.inputModes.size();
+
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            if (!savedModes[i].is_number_integer())
+                continue;
+
+            const int mode = savedModes[i].get<int>();
+
+            // 0 = 長押し、1 = トグル
+            if (mode == 0 || mode == 1)
+            {
+                data.inputModes[i] = mode;
             }
         }
     }

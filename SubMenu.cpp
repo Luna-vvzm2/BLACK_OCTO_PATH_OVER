@@ -112,12 +112,12 @@ void SubMenu::UpdateTabInput()
     int tabIndex = static_cast<int>(m_currentTab);
     const int maxTab = static_cast<int>(Tab::Max);
 
-    if (input.GetKey().IsTrigger(Key::UP))
+    if (input.IsMenuTrigger(Action::UP))
     {
         tabIndex = (tabIndex - 1 + maxTab) % maxTab;
         m_currentTab = static_cast<Tab>(tabIndex);
     }
-    else if (input.GetKey().IsTrigger(Key::DOWN))
+    else if (input.IsMenuTrigger(Action::DOWN))
     {
         tabIndex = (tabIndex + 1) % maxTab;
         m_currentTab = static_cast<Tab>(tabIndex);

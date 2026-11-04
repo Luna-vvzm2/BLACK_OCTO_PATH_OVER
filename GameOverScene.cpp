@@ -45,7 +45,7 @@ void GameOverScene::Update(float deltaTime)
 		}
 	}
 
-	else if (input.IsTrigger(Action::UP))
+	else if (input.IsMenuTrigger(Action::UP))
 	{
 		int current = static_cast<int>(m_nextScene);
 		if (current > 0)
@@ -54,7 +54,7 @@ void GameOverScene::Update(float deltaTime)
 		}
 	}
 
-	else if (input.IsTrigger(Action::DOWN))
+	else if (input.IsMenuTrigger(Action::DOWN))
 	{
 		int current = static_cast<int>(m_nextScene);
 		if (current < static_cast<int>(NextScene::Count) - 1)

@@ -600,7 +600,7 @@ void TutorialEvent::Update(float deltaTime)
 				ShowText();
 			}
 		}
-		else if (input.IsTrigger(Action::RIGHT))
+		else if (input.IsMenuTrigger(Action::RIGHT))
 		{
 			if (m_currentPage < static_cast<int>(m_texts.size() - 1))
 			{
@@ -608,7 +608,7 @@ void TutorialEvent::Update(float deltaTime)
 				ShowText();
 			}
 		}
-		else if (input.IsTrigger(Action::LEFT))
+		else if (input.IsMenuTrigger(Action::LEFT))
 		{
 			if (m_currentPage > 0)
 			{

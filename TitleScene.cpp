@@ -38,11 +38,11 @@ void TitleScene::Update(float deltaTime) {
 	}
 
     const Input& input = m_game->GetInput();
-    if (input.IsTrigger(Action::UP)) {
+    if (input.IsMenuTrigger(Action::UP)) {
         m_cursor = (m_cursor + 2) % 3;
         m_game->GetSoundManager().Play("game_select_mode");
     }
-    if (input.IsTrigger(Action::DOWN)) {
+    if (input.IsMenuTrigger(Action::DOWN)) {
         m_cursor = (m_cursor + 1) % 3;
         m_game->GetSoundManager().Play("game_select_mode");
     }

@@ -91,6 +91,7 @@ public:
 
 	// •ó” ‚©‚çŒÄ‚Ô: V•·‚ğ“üè‚µ‚Ä•\¦‚·‚é
 	void ShowNews(int id);
+	void SaveCurrentSettings();
 
 	int m_bgHandle;
 	int m_fgHandle;

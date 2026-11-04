@@ -1,6 +1,10 @@
 #pragma once
 
+#include "Input.h"
+
 #include <array>
+#include <vector>
+#include <cstddef>
 
 struct SaveData
 {
@@ -20,4 +24,17 @@ struct SaveData
 
     // 入手済みの新聞(新聞ID 1~6 → 添字 0~5)
     std::array<bool, 6> newsOwned{ true, false, false, false, false, false };
+    // 操作数
+    static constexpr std::size_t ActionCount =
+        static_cast<std::size_t>(Action::ACTION_COUNT);
+
+    // アクションごとのキー割り当て
+    // 1つの操作に複数のキーが設定される場合にも対応
+    std::array<std::vector<int>, ActionCount> keyBindings{};
+    std::array<bool, ActionCount> hasKeyBinding{};
+
+    // 操作方式
+    // 0 = 長押し
+    // 1 = トグル
+    std::array<int, ActionCount> inputModes{};
 };
