@@ -1254,26 +1254,6 @@ void PlayScene::Draw()
 		actor->Draw();
 	}
 
-	// コンボ表示
-	if (m_player && m_player->GetCombo() > 0)
-	{
-		const std::string& debugFont =
-			m_game->GatDebugFont();
-
-		std::string comboText =
-			std::to_string(m_player->GetCombo()) +
-			" Hits";
-
-		renderer->DrawTextL(
-			Vector2d(20.0f, 120.0f),
-			comboText,
-			Color(0, 0, 0),
-			debugFont,
-			60,
-			false
-		);
-	}
-
 	// 結果表示
 	std::vector<NumberInfo> comboInfo =
 	{
