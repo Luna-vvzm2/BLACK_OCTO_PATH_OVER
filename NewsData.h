@@ -36,5 +36,33 @@ inline std::vector<NewsData> GetDefaultNewsList()
     n2.unlocked = false;
     list.push_back(n2);
 
+    NewsData n3;
+    n3.id = 3;
+    n3.title = "˜b‘è‚Ìƒ‹[ƒL[w‹àé´½x";
+    n3.date = "1995”N7Œ5“ú";
+    n3.imagePath = "assets/images/uies/news_3.png";
+    list.push_back(n3);
+
+    NewsData n4;
+    n4.id = 4;
+    n4.title = "‘å]R‹ß•Ó‚©‚ç‘–¯‚ğ•ÛŒì";
+    n4.date = "1970”N6Œ16“ú";
+    n4.imagePath = "assets/images/uies/news_4.png";
+    list.push_back(n4);
+
+    NewsData n5;
+    n5.id = 5;
+    n5.title = "vŒ£Ò‚Ö‚ÌŒMÍö—^®";
+    n5.date = "1970”N7Œ1“ú";
+    n5.imagePath = "assets/images/uies/news_5.png";
+    list.push_back(n5);
+
+    NewsData n6;
+    n6.id = 6;
+    n6.title = "‰\‚Ìw‰e‚Ì–‚ptx‚Ìs•û";
+    n6.date = "1901”N2Œ11“ú";
+    n6.imagePath = "assets/images/uies/news_6.png";
+    list.push_back(n6);
+
     return list;
 }

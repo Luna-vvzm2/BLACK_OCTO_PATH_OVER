@@ -46,6 +46,10 @@ public:
 
     void SetCursorArea(MenuCursorArea area);
 
+    // 新聞の入手状況(所持品画面の新聞ページに反映される)
+    void SetNewsOwned(int index, bool owned) { m_newsMenu.SetOwned(index, owned); }
+    bool IsNewsOwned(int index) const { return m_newsMenu.IsOwned(index); }
+
 private:
     void DrawTabs() const;
     void ChangeTab(int delta);

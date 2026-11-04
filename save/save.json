@@ -1,7 +1,15 @@
 {
     "currentStage": 1,
     "kunaiCount": 3,
-    "playTime": 1883.0870361328125,
+    "newsOwned": [
+        true,
+        true,
+        false,
+        true,
+        true,
+        true
+    ],
+    "playTime": 891.5930786132813,
     "stageClear": [
         true,
         false,
