@@ -1328,9 +1328,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }*/
 
-    const Input& input = m_scene->GetGame()->GetInput();
+    const Input* input = nullptr;
+    
+    if (Actor::GetState() == Actor::State::Active) {
+        input = &m_scene->GetGame()->GetInput();
+    }
 
-    if (input.IsTrigger(Action::HEAL)) {
+    if (input && input->IsTrigger(Action::HEAL)) {
         if (m_healItem > 0 && (m_hp->GetHP() != m_hp->GetMaxHP())) {
             m_healItem -= 1;
             m_hp->Heal(25);
@@ -1344,7 +1348,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_isJutsu[OCTONum]) {
-        UpdateOcto(deltaTime);
+        if (Actor::GetState() == Actor::State::Active) {
+            UpdateOcto(deltaTime);
+        }
 
         if (m_endOcto) {
             if (m_isGround) {
@@ -1391,7 +1397,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr) {
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 ChangeState(PlayerState::WALL_CLIMB);
                 return;
             }
@@ -1422,7 +1428,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * m_octoRatio * m_isOcto) * m_buffRatio;
 
-    if (input.IsTrigger(Action::OCTO) && m_isGround) {
+    if (input && input->IsTrigger(Action::OCTO) && m_isGround) {
         if (!m_isJutsu[OCTONum]) {
             if (GetCanJutsu(OCTONum)) {
                 ChangeState(PlayerState::OCTO_START);
@@ -1435,7 +1441,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::TIGER) 
+    if (input && input->IsTrigger(Action::TIGER)
         && GetCanJutsu(TIGERNum) 
         && m_isGround) {
         ChangeState(PlayerState::TIGER);
@@ -1540,7 +1546,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::WALL_HOLD) {
-        UpdateDir(input);
+        if (input) {
+            UpdateDir(*input);
+        }
         UpdateWallSensor();
         if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
             ChangeState(PlayerState::WALL_CLIMB_UP);
@@ -1549,7 +1557,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_sensor.frontWall != nullptr) {
             if (!m_isGround) {
-                if (input.IsTrigger(Action::JUMP)) {
+                if (input && input->IsTrigger(Action::JUMP)) {
                     ChangeState(PlayerState::WALL_JUMP);
                     return;
                 }
@@ -1567,7 +1575,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::WALL_CLIMB) {
-        UpdateDir(input);
+        if (input) {
+            UpdateDir(*input);
+        }
         UpdateWallSensor();
         if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
             ChangeState(PlayerState::WALL_CLIMB_UP);
@@ -1575,7 +1585,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         if (m_sensor.frontWall != nullptr) {
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 Vector2d vel = m_velocity->Get();
                 vel.x = 0.0f;
                 vel.y = -7000.0f * deltaTime;
@@ -1625,7 +1635,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
+    if (input && input->IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
         if (m_kunai > 0) {
             m_attack = true;
             m_canAttack = false;
@@ -1643,7 +1653,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::WEAK_ATTACK)) {
+    if (input && input->IsTrigger(Action::WEAK_ATTACK)) {
         m_attack = true;
         m_canAttack = false;
         m_canMove = false;
@@ -1711,10 +1721,12 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }
 
-    UpdateDir(input);
+    if (input) {
+        UpdateDir(*input);
+    }
     dir = m_dir ? 1.0f : -1.0f;
 
-    if (input.IsTrigger(Action::DASH)) {
+    if (input && input->IsTrigger(Action::DASH)) {
         if (m_isGround) {
             if (m_sensor.frontBottom != nullptr && m_sensor.frontUpper == nullptr) {
                 ChangeState(PlayerState::SENTEN);
@@ -1732,7 +1744,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::JUMP)) {
+    if (input && input->IsTrigger(Action::JUMP)) {
         if (m_squat) {
             BlockActor* block = CheckSensor({ 0.0f, m_collision->GetHeight() * 0.5f + 2.0f });
             if (block && block->GetBlockType() == BlockType::Platform)
@@ -1777,15 +1789,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_jumpTime < m_maxJumpTime) {
             m_jumpTime += deltaTime;
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 vel.y += -1500.0f * deltaTime;
             }
         }
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 vel.x = -m_moveSpeed;
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 vel.x = m_moveSpeed;
             }
         }
@@ -1804,15 +1816,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_jumpTime < m_maxJumpTime) {
             m_jumpTime += deltaTime;
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 vel.y += -1500.0f * deltaTime;
             }
         }
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 vel.x = -m_moveSpeed;
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 vel.x = m_moveSpeed;
             }
         }
@@ -1830,11 +1842,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 m_velocity->SetX(-m_moveSpeed);
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 m_velocity->SetX(m_moveSpeed);
             }
         }
@@ -1851,16 +1863,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 m_velocity->SetX(-m_moveSpeed);
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 m_velocity->SetX(m_moveSpeed);
             }
         }
 
-        UpdateDir(input);
         UpdateWallSensor();
         if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr && !m_ignorePlatform) {
             ChangeState(PlayerState::WALL_CLIMB_UP);
@@ -1869,7 +1880,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_sensor.frontWall != nullptr){
             if (m_isJutsu[OCTONum]) {
-                if (input.IsDown(Action::JUMP)) {
+                if (input && input->IsDown(Action::JUMP)) {
                     ChangeState(PlayerState::WALL_CLIMB);
                     return;
                 }
@@ -1893,14 +1904,14 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::JUMP_LANDING) {
-        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+        if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
             if (!(m_anim->IsFinished())) {
                 return;
             }
         }
     }
 
-    if (input.IsDown(Action::SHADOW_HEAL)) {
+    if (input && input->IsDown(Action::SHADOW_HEAL)) {
         if (m_squat) {
             ExitSquat();
         }
@@ -1908,7 +1919,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }
 
-    if (input.IsDown(Action::DOWN)) {
+    if (input && input->IsDown(Action::DOWN)) {
 
         if (!m_squat)
         {
@@ -1926,7 +1937,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         if (m_state == PlayerState::SQUAT) {
-            if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
+            if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
                 ChangeState(PlayerState::SQUAT_WALK);
                 return;
             }
@@ -1935,7 +1946,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         // ‚µ‚á‚ª‚Ý‚È‚ª‚çˆÚ“®
         if (m_state == PlayerState::SQUAT_WALK) {
-            if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+            if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
                 ChangeState(PlayerState::SQUAT);
                 return;
             }
@@ -1944,10 +1955,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 vel.x = 0.0f;
             }
             else {
-                if (input.IsDown(Action::LEFT)) {
+                if (input && input->IsDown(Action::LEFT)) {
                     m_velocity->SetX(-m_moveSpeed * 0.5f);
                 }
-                if (input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::RIGHT)) {
                     m_velocity->SetX(m_moveSpeed * 0.5f);
                 }
             }
@@ -1966,7 +1977,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         else {
             if (m_state == PlayerState::SQUAT) {
-                if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
                     ChangeState(PlayerState::SQUAT_WALK);
                     return;
                 }
@@ -1975,15 +1986,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
             // ‚µ‚á‚ª‚Ý‚È‚ª‚çˆÚ“®
             if (m_state == PlayerState::SQUAT_WALK) {
-                if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+                if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
                     ChangeState(PlayerState::SQUAT);
                     return;
                 }
 
-                if (input.IsDown(Action::LEFT)) {
+                if (input && input->IsDown(Action::LEFT)) {
                     m_velocity->SetX(-m_moveSpeed * 0.5f);
                 }
-                if (input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::RIGHT)) {
                     m_velocity->SetX(m_moveSpeed * 0.5f);
                 }
                 return;
@@ -2012,7 +2023,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         // ˆÚ“®ƒL[—£‚µ‚½
-        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)))
+        if (!input || !(input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)))
         {
             ChangeState(PlayerState::STOP_LONG);
             return;
@@ -2024,7 +2035,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (m_state == PlayerState::RUN_START)
     {
-        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)))
+        if (input && !(input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)))
         {
             ChangeState(PlayerState::STOP_SHORT);
             return;
@@ -2039,7 +2050,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }
 
-    if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))
+    if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))
     {
         ChangeState(PlayerState::RUN_START);
         return;
@@ -2047,7 +2058,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if ((m_state == PlayerState::STOP_SHORT) || (m_state == PlayerState::STOP_LONG))
     {
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))
         {
             ChangeState(PlayerState::RUN);
             return;
