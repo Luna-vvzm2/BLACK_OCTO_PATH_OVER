@@ -109,14 +109,14 @@ bool PlayScene::Init() {
 		std::cerr << "Load error map1" << std::endl;
 		return false;
 	}
-	if (!m_mapData.LoadStage("assets/maps/stage2")) {
+	/*if (!m_mapData.LoadStage("assets/maps/stage2")) {
 		std::cerr << "Load error map2" << std::endl;
 		return false;
 	}
 	if (!m_mapData.LoadStage("assets/maps/stage3")) {
 		std::cerr << "Load error map3" << std::endl;
 		return false;
-	}
+	}*/
 
 	m_mapData.tileSize = 104;
 
@@ -356,7 +356,8 @@ bool PlayScene::StageInit(int stageNo) {
 				}
 			} break;
 
-			case 9:
+			case 90
+				:
 				AddActor(new Trap(this, pos, Vector2d(192, 192)));
 				break;
 
