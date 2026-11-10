@@ -47,7 +47,7 @@ void TitleScene::Update(float deltaTime) {
         m_game->GetSoundManager().Play("game_select_mode");
     }
 
-    if (input.IsTrigger(Action::ENTER)) {
+    if (input.IsMenuTrigger(Action::ENTER)) {
         if (m_cursor == 0) m_game->ChangeScene(std::make_unique<StageSelectScene>(m_game));
         else if (m_cursor == 1) {
             m_game->GetSoundManager().Play("select_default");

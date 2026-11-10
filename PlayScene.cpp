@@ -708,11 +708,11 @@ void PlayScene::Update(float deltaTime)
 	// Events use a held Escape input to skip dialogue; the pause shortcut
 	// must not consume that input. Game over also owns its own menu.
 	if (m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
-		if (m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
+		if (m_menu.IsOpen() && input.IsMenuTrigger(Action::ESCAPE)) {
 			m_menu.Toggle();
 			return;
 		}
-		if (!m_menu.IsOpen() && input.IsTrigger(Action::ESCAPE)) {
+		if (!m_menu.IsOpen() && input.IsMenuTrigger(Action::ESCAPE)) {
 			StartFadeToPause(true);
 			return;
 		}

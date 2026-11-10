@@ -69,6 +69,8 @@ void Input::Init() {
     m_pad.Init();
 }
 
+
+
 void Input::Update() {
     m_key.Update();
     m_pad.Update();
@@ -204,6 +206,10 @@ int Input::GetKeyBinding(Action action) const
 
 bool Input::SetKeyBinding(Action action, int keyIndex)
 {
+    // ENTER / ESCAPE は固定。割り当て変更を一切受け付けない
+    if (action == Action::ENTER || action == Action::ESCAPE)
+        return false;
+
     const size_t index = static_cast<size_t>(action);
 
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
@@ -280,6 +286,10 @@ bool Input::SetKeyBindings(
     Action action,
     const std::vector<int>& keyIndices)
 {
+    // ENTER / ESCAPE は固定。割り当て変更を一切受け付けない
+    if (action == Action::ENTER || action == Action::ESCAPE)
+        return false;
+
     const size_t index = static_cast<size_t>(action);
 
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
@@ -305,6 +315,17 @@ bool Input::SetKeyBindings(
             == newKeys.end())
         {
             newKeys.push_back(key);
+        }
+    }
+
+    for (auto targetKey : newKeys)
+    {
+        for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
+        {
+            if (i == index) continue;
+
+            auto& keys = m_actionKeyMap[i];
+            keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
         }
     }
 
