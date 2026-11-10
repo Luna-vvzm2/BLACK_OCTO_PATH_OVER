@@ -60,7 +60,10 @@ public:
     int GetMetsuGauge() const { return m_metsuGauge; }
     int GetMetsuMax() const { return m_metsuMax; }
 
-
+    // ‰Œ–‹
+    void ApplySmoke();
+    void EndSmoke();
+    bool IsInSmoke() const { return m_isInSmoke; }
 protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
@@ -119,6 +122,8 @@ protected:
     EnemyRank m_enemyRank = EnemyRank::Small;
     float m_defenselessLockTimer = 0.0f;
 
+    // ‰Œ–‹
+    bool m_isInSmoke = false;
 };
 
 

@@ -131,13 +131,13 @@ public:
     void UpdateInvincible(float deltaTime);
     void UpdateSensor();
 
-    void UpdateJutsuKamae(float deltaTime);
-    void UpdateKaryu(float deltaTime);
+    /*void UpdateJutsuKamae(float deltaTime);
+    void UpdateKaryu(float deltaTime);*/
     bool GetIsKaryu() { return m_isKaryu; }
     float GetKaryuTimer() { return m_KaryuTimer; }
 
-    void UpdateKamae(float deltaTime);
-    void UpdateExecution(float deltaTime);
+    /*void UpdateKamae(float deltaTime);
+    void UpdateExecution(float deltaTime);*/
     void CollectExecutionTargets();
     std::vector<EnemyEntity*> CollectEnemiesInScreen();
     void CollectNearEnemies(int width, int height);

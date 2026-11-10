@@ -31,6 +31,8 @@ enum class EffectType
 	ExecutionEnemy,
 	Jump,
 	JumpSecond,
+	Tiger1,
+	Tiger2,
 };
 
 class TransformComponent;

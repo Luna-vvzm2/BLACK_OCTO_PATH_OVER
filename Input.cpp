@@ -28,6 +28,7 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::KAMAE)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::G)] = { Key::G };
     m_actionKeyMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Key::H };
+    m_actionKeyMap[static_cast<size_t>(Action::SHADOW_HEAL)] = { Key::Z };
     m_actionKeyMap[static_cast<size_t>(Action::OCTO)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::TIGER)] = { Key::E };
     m_actionKeyMap[static_cast<size_t>(Action::ORCA)] = { Key::F };
@@ -52,6 +53,7 @@ void Input::Init() {
     m_actionPadMap[static_cast<size_t>(Action::KAMAE)] = { Joypad::LB };
     m_actionPadMap[static_cast<size_t>(Action::G)] = { Joypad::LT };
     m_actionPadMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Joypad::RT };
+    m_actionPadMap[static_cast<size_t>(Action::SHADOW_HEAL)] = {};
     m_actionPadMap[static_cast<size_t>(Action::OCTO)] = {};
     m_actionPadMap[static_cast<size_t>(Action::TIGER)] = {};
     m_actionPadMap[static_cast<size_t>(Action::ORCA)] = {};
@@ -107,6 +109,10 @@ bool Input::IsDown(Action action) const {
     {
         if (m_pad.IsDown(button))
             return true;
+    }
+
+    if (action == Action::SHADOW_HEAL) {
+        return m_pad.IsDown(Joypad::LT) && m_pad.IsDown(Joypad::RT);
     }
 
     return false;

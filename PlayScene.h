@@ -19,6 +19,7 @@
 
 class PlayerEntity;
 class EnemyEntity;
+class SmokeActor;
 class HPBarUI;
 class EnemyHPBar;
 class JutsuChargeUI;
@@ -89,6 +90,10 @@ public:
 
 	int m_bgHandle;
 	int m_fgHandle;
+
+	void SpawnSmoke(const Vector2d& position, const Vector2d& size);
+	void OnSmokeExpired(SmokeActor* smoke);
+
 private:
 	
 	PlayerEntity* m_player;
@@ -198,6 +203,9 @@ private:
 
 	// ÉçÅ[ÉhâÊñ Çï`âÊ
 	void DrawLoadingScreen();
+
+	// âåñã
+	bool IsCoveredBySmoke(const EnemyEntity* enemy, const SmokeActor* excludedSmoke) const;
 
 	NewsViewer m_newsViewer;
 };
