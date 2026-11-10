@@ -184,6 +184,13 @@ public:
         return m_isJutsu[idx];
     }
 
+    // ”Ep‚ÌŠl“¾ó‹µ‚ðØ‚è‘Ö‚¦‚é
+    void ToggleJutsu(int idx) {
+        if (idx >= 0 && idx < 4) {
+            m_ownJutsu[idx] = !m_ownJutsu[idx];
+        }
+    }
+
     // ”Ep‚ÌÅ‘åƒN[ƒ‹ƒ^ƒCƒ€‚ðŽæ“¾‚·‚é
     float GetJutsuMaxInterval(int idx) const
     {
@@ -345,7 +352,7 @@ private:
     bool m_canAttack;
     float m_attackLockTimer;
 
-    bool m_ownJutsu[4] = { true, true, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
+    bool m_ownJutsu[4] = { true, false, false, false }; // ”EpŠl“¾Ïƒtƒ‰ƒOB@‘ûAŒÕAŠ^AéÍ
     bool m_isJutsu[4] = { false , false, false, false };    // ”EpŽg—p’†ƒtƒ‰ƒO
     int m_jutsuCost[4] = { 5, 60, 10, 60 }; // ”EpÁ”ï‰eƒQ[ƒW—Ê
     float m_jutsuInterval[4] = {};

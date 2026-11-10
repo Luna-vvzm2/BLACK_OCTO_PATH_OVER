@@ -1,3 +1,5 @@
+type,phaze,time,skill,camPos.x,camPos.y,
+GETSKILL,1,0.5,1,,,
 type,name,time,pos,Lpath,Rpath,text
 TALK,黒棲,None,R,,assets\images\character\musashi.png,これは……随分と大きな屏風だな。
 TALK,黒棲,None,R,,assets\images\character\musashi.png,これだけ焼けずに残っていたのか……
@@ -7,3 +9,5 @@ TALK,黒棲,None,R,,assets\images\character\musashi.png,……昔、父上に連れられて本
 TALK,黒棲,None,R,,assets\images\character\musashi.png,やはりその大きな躯体からの、<br>重い一撃による容赦の無さと早さが素晴らしく――
 TALK,黒棲,None,R,,assets\images\character\musashi.png,――影で再現できたら、<br>強い戦力になるかもしれないな。
 TALK,黒棲,None,R,,assets\images\character\musashi.png,確か……こう！
+type,phaze,time,skill,camPos.x,camPos.y,
+GETSKILL,2,0.5,1,,,
