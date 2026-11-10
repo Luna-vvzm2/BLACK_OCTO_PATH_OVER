@@ -22,5 +22,5 @@ public:
 
     // CSV ‚©‚ç“Ç‚İ‚İ
     bool AddLayerFromCSV(StageData& stage, const std::string& filename, const std::string& layerName);
-    bool LoadStage(const std::string& stageFolder);
+    bool LoadStage(const std::string& stageFolder, int stageNo);
 };

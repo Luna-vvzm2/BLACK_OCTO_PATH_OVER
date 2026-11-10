@@ -150,10 +150,14 @@ bool MapData::AddLayerFromCSV(
 }
 
 
-// ステージ読み込み
-bool MapData::LoadStage(const std::string& stageFolder)
+
+bool MapData::LoadStage(const std::string& stageFolder, int stageNo)
 {
     StageData stage;
+
+    // ステージ番号を2桁にする
+    std::string stageNumber =
+        (stageNo < 10 ? "0" : "") + std::to_string(stageNo);
 
     // レイヤー読み込み処理
     auto loadLayer = [&](const std::string& prefix,
@@ -169,10 +173,14 @@ bool MapData::LoadStage(const std::string& stageFolder)
             // CSV番号01～03を順番に読み込む
             for (int partNo = 1; partNo <= 3; partNo++)
             {
+                std::string partNumber =
+                    (partNo < 10 ? "0" : "") + std::to_string(partNo);
+
                 std::string filename =
                     stageFolder + "/" +
-                    prefix + "_01_0" +
-                    std::to_string(partNo) + ".csv";
+                    prefix + "_" +
+                    stageNumber + "_" +
+                    partNumber + ".csv";
 
                 std::vector<std::vector<int>> data;
 
@@ -187,7 +195,6 @@ bool MapData::LoadStage(const std::string& stageFolder)
                 int currentHeight =
                     static_cast<int>(data.size());
 
-                // 高さの一致を確認
                 if (height != 0 && height != currentHeight)
                 {
                     std::cerr << "CSVの高さが一致しません: "
@@ -197,7 +204,6 @@ bool MapData::LoadStage(const std::string& stageFolder)
 
                 height = currentHeight;
 
-                // 各行の列数を確認
                 for (const auto& row : data)
                 {
                     if (static_cast<int>(row.size()) != currentWidth)
@@ -226,7 +232,6 @@ bool MapData::LoadStage(const std::string& stageFolder)
 
                     for (int y = 0; y < height; y++)
                     {
-                        // 既存データ
                         int oldStart = y * totalWidth;
 
                         combined.insert(
@@ -235,7 +240,6 @@ bool MapData::LoadStage(const std::string& stageFolder)
                             layer.tiles.begin() + oldStart + totalWidth
                         );
 
-                        // 新しいCSVデータ
                         combined.insert(
                             combined.end(),
                             data[y].begin(),
@@ -249,7 +253,6 @@ bool MapData::LoadStage(const std::string& stageFolder)
                 totalWidth += currentWidth;
             }
 
-            // Mapレイヤーのサイズを設定
             if (layerName == "Map")
             {
                 stage.width = totalWidth;
@@ -273,8 +276,8 @@ bool MapData::LoadStage(const std::string& stageFolder)
         return false;
     }
 
-    // ステージを追加
     stages.push_back(std::move(stage));
 
     return true;
 }
+

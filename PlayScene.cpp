@@ -105,18 +105,23 @@ bool PlayScene::Init() {
 	m_menu.Initialize();
 	
 	// CSV からマップ読み込み
-	if (!m_mapData.LoadStage("assets/maps/stage1")) {
+	// ステージ1
+	if (!m_mapData.LoadStage("assets/maps/stage1", 1)) {
 		std::cerr << "Load error map1" << std::endl;
 		return false;
 	}
-	/*if (!m_mapData.LoadStage("assets/maps/stage2")) {
+
+	// ステージ2
+	if (!m_mapData.LoadStage("assets/maps/stage2", 2)) {
 		std::cerr << "Load error map2" << std::endl;
 		return false;
 	}
-	if (!m_mapData.LoadStage("assets/maps/stage3")) {
+
+	// ステージ3
+	if (!m_mapData.LoadStage("assets/maps/stage3", 3)) {
 		std::cerr << "Load error map3" << std::endl;
 		return false;
-	}*/
+	}
 
 	m_mapData.tileSize = 104;
 
@@ -355,12 +360,12 @@ bool PlayScene::StageInit(int stageNo) {
 					AddActor(new NewsBoxEntity(this, pos, newsId));     // 未入手
 				}
 			} break;
-
-			case 90
+			/*
+			case 9
 				:
 				AddActor(new Trap(this, pos, Vector2d(192, 192)));
 				break;
-
+			*/
 			case 10:    // 仮ID
 				pos += Vector2d(0.0f, 30.0f);
 				AddActor(new DamageTrap(this, pos, Vector2d(tileSize,50.0f)));
