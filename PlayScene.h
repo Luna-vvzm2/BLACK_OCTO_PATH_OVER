@@ -82,6 +82,8 @@ public:
 	void OnResume() override;
 	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
+	void SaveCurrentSettings();
+
 	// •ó” ‚©‚çŒÄ‚Ô: V•·‚ğ“üè‚µ‚Ä•\¦‚·‚é
 	void ShowNews(int id);
 

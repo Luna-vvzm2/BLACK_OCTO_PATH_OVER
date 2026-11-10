@@ -101,6 +101,33 @@ bool PlayScene::Init() {
 		}
 	}
 
+	// •Û‘¶‚³‚ê‚Ä‚¢‚é‘€ìİ’è‚ğ•œŒ³
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		// ƒL[Š„‚è“–‚Ä‚ğ•œŒ³
+		if (!m_saveData.keyBindings[i].empty())
+		{
+			input.SetKeyBindings(
+				action,
+				m_saveData.keyBindings[i]
+			);
+		}
+
+		// ‘€ì•û®‚ğ•œŒ³
+		if (m_saveData.inputModes[i] == 0 ||
+			m_saveData.inputModes[i] == 1)
+		{
+			input.SetInputMode(
+				action,
+				static_cast<InputMode>(m_saveData.inputModes[i])
+			);
+		}
+	}
+
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
 	
@@ -619,14 +646,6 @@ void PlayScene::Update(float deltaTime) {
 	{
 		AutoSave();
 		m_autoSaveTimer = 0.0f;
-	}
-
-	if (input.IsTrigger(Action::MENU))
-	{
-		if (m_player->GetState() != Actor::State::Paused)
-		m_menu.Toggle();
-
-		return;
 	}
 
 	if (m_menu.IsOpen())
@@ -1876,7 +1895,26 @@ void PlayScene::AutoSave()
 		m_saveData.kunaiCount = m_player->GetKunai();
 	}
 
+	Input& input = m_game->GetInput();
+
+	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
+	{
+		Action action = static_cast<Action>(i);
+
+		m_saveData.keyBindings[i] =
+			input.GetKeyBindings(action);
+
+		m_saveData.inputModes[i] =
+			static_cast<int>(input.GetInputMode(action));
+	}
+
 	SaveManager::Save(m_saveData);
+}
+
+// ‘€ìİ’è‰æ–Ê‚©‚ç‘¦•Û‘¶‚·‚é‚½‚ß‚ÌŒöŠJŠÖ”
+void PlayScene::SaveCurrentSettings()
+{
+	AutoSave();
 }
 
 void PlayScene::ShowNews(int id)

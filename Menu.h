@@ -37,7 +37,7 @@ public:
 
     int GetTabCursor() const;
 
-    int GetLockedSkillIcon() const;
+    int GetLockedSkillIcon() const;;
 
     MenuCursor& GetCursor()
     {

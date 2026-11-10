@@ -22,6 +22,7 @@ Game* Menu::GetGame() const
 	return m_owner->GetGame();
 }
 
+
 PlayerEntity* Menu::GetPlayer() const
 {
 	return m_owner->GetPlayer();
@@ -50,11 +51,8 @@ void Menu::ChangeTab(int delta)
 
 void Menu::Update(float deltaTime)
 {
-	const Input& input = GetGame()->GetInput();
+	const Input& input = m_owner->GetGame()->GetInput();
 
-	//--------------------
-	// É^Éuêÿë÷ (PageUp/PageDown, LB/RB)
-	//--------------------
 	if (input.IsTrigger(Action::PAGE_UP))
 	{
 		ChangeTab(-1);
