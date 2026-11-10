@@ -6,6 +6,7 @@
 #include "SpriteComponent.h"
 #include "Scene.h"
 #include "PlayScene.h"
+#include "Game.h"
 #include "EnemyEntity.h"
 #include "BlockActor.h"
 
@@ -83,6 +84,7 @@ void KunaiActor::Update(float deltaTime)
                 }
 
                 // ƒNƒiƒC‚ğÁ‚·
+                m_scene->GetGame()->GetSoundManager().Play("player_kunai_hit");
                 SetState(State::Dead);
 
                 return;
