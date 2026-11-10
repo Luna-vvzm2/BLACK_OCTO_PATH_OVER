@@ -13,8 +13,11 @@
 #include "DropData.h"
 #include "DropItemEntity.h"
 #include "PlayerEntity.h"
+#include "Renderer.h"
+#include "Scene.h"
 #include <cstdlib>
 #include <iostream>
+#include <DxLib.h>
 
 EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size)
     : EntityActor(scene, pos, size)
@@ -49,9 +52,12 @@ EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size
     , m_actionLock(false)
 
     , m_canMove(true)
-    ,m_alertGaugeTimer(0.0f)
+    , m_alertGaugeTimer(0.0f)
     , m_alertChangeTimer(0.0f)
     , m_wasPlayerInSearchRange(false)
+
+    , m_searchRangeGroundY(0.0f)
+    , m_searchRangeGroundYInitialized(false)
 {
 }
 
@@ -129,6 +135,16 @@ void EnemyEntity::UpdateGravity(float deltaTime)
     // ˆÚ“®•’nŒ`Õ“Ë
     MoveAndCollide(deltaTime);
 
+    //’n–Ê‚É’…’n‚µ‚Ä‚¢‚éê‡A‘«Œ³‚ÌYÀ•W‚ğ•Û‘¶
+    if (m_isGround)
+    {
+        Vector2d pos = GetPos();
+        Vector2d size = GetSize();
+
+        m_searchRangeGroundY = pos.y + size.y * 0.5;
+        m_searchRangeGroundYInitialized = true;
+    }
+
     // ’…’n‚µ‚½‚çc‘¬“x‚ğ~‚ß‚é
     if (m_isGround)
     {
@@ -142,6 +158,44 @@ void EnemyEntity::OnDead()
     if (GetState() == Actor::State::Dead)
         return;
 
+    if (m_scene != nullptr)
+    {
+        const float alertRange = 300.0f;
+        const float alertAmount = 20.0f;
+
+        Vector2d myPos = GetPos();
+
+        for (Actor* actor : m_scene->GetActors())
+        {
+            if (actor == nullptr || actor == this)
+                continue;
+
+            if (actor->GetType() != ActorType::Enemy)
+                continue;
+
+
+            if (actor->GetState() == Actor::State::Dead)
+                continue;
+            EnemyEntity* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+            if (enemy == nullptr || enemy->m_alertGauge == nullptr)
+                continue;
+            Vector2d enemyPos = enemy->GetPos();
+
+            float distanceX = std::abs(myPos.x - enemyPos.x);
+            float distanceY = std::abs(myPos.y - enemyPos.y);
+
+            // €–S‚µ‚½“G‚ª‘ÎÛ‚Ì“G‚Ìõ“G”ÍˆÍ“à‚É‚¢‚éê‡
+            if (distanceX <= enemy->SEARCH_RANGE_X &&
+                distanceY <= enemy->SEARCH_RANGE_Y)
+            {
+                if (enemy->m_alertGauge->GetGauge() < 50.0f)
+                {
+                    enemy->m_alertGauge->SetGauge(50.0f);
+                }
+            }
+        }
+    }
 
     for (const auto& drop : m_dropTable)
     {
@@ -422,14 +476,14 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
 
     m_wasPlayerInSearchRange = isPlayerInRange;
 
-    // 1 ¨ 2 ¨ 3 ¨ ... ¨ 10
-    m_alertChangeTimer += 1.0f;
+    // 3 ¨ 6 ¨ 9 ¨ ... ¨ 30
+    m_alertChangeTimer += 3.0f;
 
     float changeAmount = m_alertChangeTimer;
 
-    if (changeAmount > 10.0f)
+    if (changeAmount > 30.0f)
     {
-        changeAmount = 10.0f;
+        changeAmount = 30.0f;
     }
 
     if (isPlayerInRange)
@@ -480,4 +534,87 @@ void EnemyEntity::ApplyAttackPowerBuff(float multiplier, float duration)
 
     m_attackPowerMultiplier = multiplier;
     m_attackBuffTimer = duration;
+}
+
+void EnemyEntity::Draw()
+{
+    // €–S‚µ‚Ä‚¢‚é“G‚Í•`‰æ‚µ‚È‚¢
+    if (IsDead())
+    {
+        return;
+    }
+
+    // Scene‚Ìæ“¾
+    Scene* scene = GetScene();
+
+    if (scene == nullptr || scene->GetGame() == nullptr)
+    {
+        Actor::Draw();
+        return;
+    }
+
+    // Renderer‚Ìæ“¾
+    Renderer* renderer = scene->GetGame()->GetRenderer();
+
+    if (renderer == nullptr)
+    {
+        Actor::Draw();
+        return;
+    }
+
+    // “G‚ÌˆÊ’u‚ÆƒTƒCƒY‚ğæ“¾
+    Vector2d pos = GetPos();
+    Vector2d size = GetSize();
+
+    if (m_alertGauge != nullptr && m_alertGauge->GetGauge() < 0.0f)
+    {
+        // õ“G”ÍˆÍ‚Ì‘å‚«‚³
+        const float rangeWidth = SEARCH_RANGE_X * 2.0f;
+        const float rangeHeight = 25.0f;
+
+        // “G‚Ì‘«Œ³
+        float groundY;
+
+        if (m_searchRangeGroundYInitialized)
+        {
+            groundY = m_searchRangeGroundY;
+        }
+        else
+        {
+            groundY = pos.y + size.y * 0.5f;
+        }
+
+
+
+        // ‘Ñ‚Ì’†SˆÊ’u
+        // ã’[‚ª“G‚Ì‘«Œ³‚Æˆê’v‚·‚é
+        Vector2d rangeCenter(
+            pos.x,
+            groundY + rangeHeight * 0.5f
+        );
+
+        // Œ»İ‚ÌƒuƒŒƒ“ƒhƒ‚[ƒh‚ğ•Û‘¶
+        int oldBlendMode;
+        int oldBlendParam;
+
+        GetDrawBlendMode(&oldBlendMode, &oldBlendParam);
+
+        // ”¼“§–¾‚Å•`‰æ
+        SetDrawBlendMode(DX_BLENDMODE_ALPHA, 60);
+
+        renderer->DrawRectCenter(
+            rangeCenter,
+            rangeWidth,
+            rangeHeight,
+            Color(255, 0, 0),
+            true,
+            true
+        );
+
+        // Œ³‚ÌƒuƒŒƒ“ƒhƒ‚[ƒh‚É–ß‚·
+        SetDrawBlendMode(oldBlendMode, oldBlendParam);
+
+    }
+    // ’Êí‚ÌComponent•`‰æ
+    Actor::Draw();
 }

@@ -117,6 +117,7 @@ protected:
     void UpdateAlertGauge(float deltaTime);
 
     virtual bool IsPlayerInSearchRange() const;
+    virtual void Draw() override;
 
     AlertGaugeComponent* m_alertGauge;
     float m_alertGaugeTimer;
@@ -128,6 +129,10 @@ protected:
     //ç•D˜T‚Ì•ûŒü‚É‚æ‚éƒoƒt
     float m_attackPowerMultiplier = 1.0f;
     float m_attackBuffTimer = 0.0f;
+
+    float m_searchRangeGroundY;
+
+    bool m_searchRangeGroundYInitialized;
 
 };
 
