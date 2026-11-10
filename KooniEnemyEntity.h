@@ -37,6 +37,7 @@ public:
 private:
     PlayerEntity* FindPlayer() const;
     bool CanSeePlayer(const PlayerEntity* player) const;
+    bool CanReachPlayer(const PlayerEntity* player) const;
     void ChangeStatus(Status nextStatus);
     void PlayMotion(const std::string& name);
     void UpdateIdle(PlayerEntity* player);
@@ -50,6 +51,7 @@ private:
     Status m_status;
     Awareness m_awareness;
     float m_stateTimer;
+    float m_heightDifferenceTimer;
     bool m_faceRight;
     bool m_attackHit;
     bool m_attackRecoveryStarted;

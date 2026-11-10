@@ -18,7 +18,9 @@ constexpr float KOONI_BODY_WIDTH = 104.0f;
 constexpr float KOONI_BODY_HEIGHT = 156.0f;
 constexpr float KOONI_SIGHT_RANGE_X = 800.0f;
 constexpr float KOONI_SIGHT_RANGE_Y = 120.0f;
-constexpr float KOONI_MOVE_SPEED = 294.0f;
+constexpr float KOONI_CHASE_RANGE_Y = 60.0f;
+constexpr float KOONI_CHASE_HEIGHT_WAIT_TIME = 0.6f;
+constexpr float KOONI_MOVE_SPEED = 147.0f;
 
 constexpr float KOONI_ATTACK_WIDTH = 60.0f;
 constexpr float KOONI_ATTACK_HEIGHT = 60.0f;
@@ -45,6 +47,7 @@ KooniEnemyEntity::KooniEnemyEntity(Scene* scene, const Vector2d& pos)
     , m_status(Status::Idle)
     , m_awareness(Awareness::Undetected)
     , m_stateTimer(0.0f)
+    , m_heightDifferenceTimer(0.0f)
     , m_faceRight(true)
     , m_attackHit(false)
     , m_attackRecoveryStarted(false)
@@ -127,6 +130,14 @@ void KooniEnemyEntity::Update(float deltaTime)
 
     PlayerEntity* player = FindPlayer();
     m_stateTimer += deltaTime;
+    if (CanSeePlayer(player) && player->GetPos().y - GetPos().y < -KOONI_CHASE_RANGE_Y)
+    {
+        m_heightDifferenceTimer += deltaTime;
+    }
+    else
+    {
+        m_heightDifferenceTimer = 0.0f;
+    }
 
     switch (m_status)
     {
@@ -186,6 +197,16 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
 }
 
+bool KooniEnemyEntity::CanReachPlayer(const PlayerEntity* player) const
+{
+    if (player == nullptr)
+    {
+        return false;
+    }
+
+    return m_heightDifferenceTimer < KOONI_CHASE_HEIGHT_WAIT_TIME;
+}
+
 void KooniEnemyEntity::ChangeStatus(Status nextStatus)
 {
     if (m_status == nextStatus)
@@ -199,6 +220,12 @@ void KooniEnemyEntity::ChangeStatus(Status nextStatus)
     switch (m_status)
     {
     case Status::Idle:
+        if (m_velocity != nullptr)
+        {
+            Vector2d velocity = m_velocity->GetVelocity();
+            velocity.x = 0.0f;
+            m_velocity->SetVelocity(velocity);
+        }
         PlayMotion("idle");
         break;
     case Status::Move:
@@ -255,6 +282,11 @@ void KooniEnemyEntity::UpdateIdle(PlayerEntity* player)
         return;
     }
 
+    if (!CanReachPlayer(player))
+    {
+        return;
+    }
+
     const Vector2d difference = player->GetPos() - GetPos();
     const float attackDistance = KOONI_BODY_WIDTH * 0.5f + KOONI_ATTACK_WIDTH;
     if (std::fabs(difference.x) <= attackDistance &&
@@ -274,6 +306,12 @@ void KooniEnemyEntity::UpdateMove(PlayerEntity* player)
     if (!CanSeePlayer(player))
     {
         m_awareness = Awareness::Undetected;
+        ChangeStatus(Status::Idle);
+        return;
+    }
+
+    if (!CanReachPlayer(player))
+    {
         ChangeStatus(Status::Idle);
         return;
     }
