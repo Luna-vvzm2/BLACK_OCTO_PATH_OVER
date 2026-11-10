@@ -48,6 +48,13 @@ public:
 	void Update(float deltaTime) override;
 	void Draw() override;
 
+	// 攻撃命中時の演出
+	void RequestHitEffect(
+		float hitStopTime,
+		float shakeTime,
+		float shakeStrength
+	);
+
 	PlayerEntity* GetPlayer() const { return m_player; }
 	int GetStageIndex() const { return m_stageIndex; }
 
@@ -83,10 +90,9 @@ public:
 	void OnResume() override;
 	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
-	void SaveCurrentSettings();
-
 	// 宝箱から呼ぶ: 新聞を入手して表示する
 	void ShowNews(int id);
+	void SaveCurrentSettings();
 
 	int m_bgHandle;
 	int m_fgHandle;
@@ -109,6 +115,25 @@ private:
 	bool m_returnToPauseMenu = false;
 
 	Camera m_camera;
+
+// =====================================
+// ヒットストップ
+// =====================================
+	float m_hitStopTimer = 0.0f;
+
+	// =====================================
+	// 画面揺れ
+	// =====================================
+	float m_shakeTimer = 0.0f;
+	float m_shakeDuration = 0.0f;
+	float m_shakeStrength = 0.0f;
+	float m_shakeClock = 0.0f;
+
+	// 前フレームでカメラに加えた揺れ
+	Vector2d m_appliedShakeOffset = { 0.0f, 0.0f };
+
+	// 画面揺れの更新
+	void UpdateCameraShake(float deltaTime);
 
 	int m_stageIndex;
 	int m_comboCount = 0;

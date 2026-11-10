@@ -48,7 +48,7 @@ public:
     bool IsTrigger(Action action) const;
     bool IsRelease(Action action) const;
     int GetPressFrame(Action action) const;
-    
+
     // キー割り当ての取得・変更
     int GetKeyBinding(Action action) const;
     bool SetKeyBinding(Action action, int keyIndex);

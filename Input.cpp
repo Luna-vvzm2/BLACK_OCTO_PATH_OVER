@@ -285,10 +285,6 @@ bool Input::SetKeyBindings(
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
         return false;
 
-    // ‹ó‚ÌŠ„‚è“–‚Ä‚ÍŽó‚¯•t‚¯‚È‚¢
-    if (keyIndices.empty())
-        return false;
-
     std::vector<Key::KeyIndex> newKeys;
 
     for (int keyIndex : keyIndices)
@@ -312,17 +308,6 @@ bool Input::SetKeyBindings(
         }
     }
 
-    for (auto targetKey : newKeys)
-    {
-        for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
-        {
-            if (i == index) continue;
-
-            auto& keys = m_actionKeyMap[i];
-            keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
-        }
-    }
-
     m_actionKeyMap[index] = std::move(newKeys);
 
     return true;
@@ -334,28 +319,32 @@ bool Input::IsMenuDown(Action action) const
     {
     case Action::UP:
         return m_key.IsDown(Key::W) ||
-            m_key.IsDown(Key::UP);
+            m_key.IsDown(Key::UP) ||
+            m_pad.IsDown(Joypad::UP);
 
     case Action::DOWN:
         return m_key.IsDown(Key::S) ||
-            m_key.IsDown(Key::DOWN);
+            m_key.IsDown(Key::DOWN) ||
+            m_pad.IsDown(Joypad::DOWN);
 
     case Action::LEFT:
         return m_key.IsDown(Key::A) ||
-            m_key.IsDown(Key::LEFT);
+            m_key.IsDown(Key::LEFT) ||
+            m_pad.IsDown(Joypad::LEFT);
 
     case Action::RIGHT:
         return m_key.IsDown(Key::D) ||
-            m_key.IsDown(Key::RIGHT);
+            m_key.IsDown(Key::RIGHT) ||
+            m_pad.IsDown(Joypad::RIGHT);
 
     case Action::ENTER:
-        return m_key.IsDown(Key::ENTER);
+        return m_key.IsDown(Key::ENTER) || m_pad.IsDown(Joypad::B);
 
     case Action::ESCAPE:
-        return m_key.IsDown(Key::ESCAPE);
+        return m_key.IsDown(Key::ESCAPE) || m_pad.IsDown(Joypad::START);
 
     case Action::MENU:
-        return m_key.IsDown(Key::M);
+        return m_key.IsDown(Key::M) || m_pad.IsDown(Joypad::BACK);
 
     default:
         return false;
@@ -368,28 +357,32 @@ bool Input::IsMenuTrigger(Action action) const
     {
     case Action::UP:
         return m_key.IsTrigger(Key::W) ||
-            m_key.IsTrigger(Key::UP);
+            m_key.IsTrigger(Key::UP) ||
+            m_pad.IsTrigger(Joypad::UP);
 
     case Action::DOWN:
         return m_key.IsTrigger(Key::S) ||
-            m_key.IsTrigger(Key::DOWN);
+            m_key.IsTrigger(Key::DOWN) ||
+            m_pad.IsTrigger(Joypad::DOWN);
 
     case Action::LEFT:
         return m_key.IsTrigger(Key::A) ||
-            m_key.IsTrigger(Key::LEFT);
+            m_key.IsTrigger(Key::LEFT) ||
+            m_pad.IsTrigger(Joypad::LEFT);
 
     case Action::RIGHT:
         return m_key.IsTrigger(Key::D) ||
-            m_key.IsTrigger(Key::RIGHT);
+            m_key.IsTrigger(Key::RIGHT) ||
+            m_pad.IsTrigger(Joypad::RIGHT);
 
     case Action::ENTER:
-        return m_key.IsTrigger(Key::ENTER);
+        return m_key.IsTrigger(Key::ENTER) || m_pad.IsTrigger(Joypad::B);
 
     case Action::ESCAPE:
-        return m_key.IsTrigger(Key::ESCAPE);
+        return m_key.IsTrigger(Key::ESCAPE) || m_pad.IsTrigger(Joypad::START);
 
     case Action::MENU:
-        return m_key.IsTrigger(Key::M);
+        return m_key.IsTrigger(Key::M) || m_pad.IsTrigger(Joypad::BACK);
 
     default:
         return false;

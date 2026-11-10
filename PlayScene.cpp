@@ -55,12 +55,15 @@
 #include "SpiritEnemyEntity.h"
 #include "HideBlock.h"
 
+
 //イベントのため変更
 #include "EventManager.h"
 #include "EventTexture.h"
 
 #include <DxLib.h>
 #include <algorithm>
+
+#include <cmath>
 
 #include <unordered_set>
 #include <type_traits>
@@ -84,6 +87,75 @@ PlayScene::PlayScene(Game* game)
 
 }
 
+
+void PlayScene::RequestHitEffect(
+	float hitStopTime,
+	float shakeTime,
+	float shakeStrength)
+{
+	if (m_fadeState != FadeState::None)
+		return;
+
+	// ヒットストップを設定
+	if (hitStopTime > m_hitStopTimer)
+	{
+		m_hitStopTimer = hitStopTime;
+	}
+
+	// 画面揺れを設定
+	if (shakeTime > 0.0f && shakeStrength > 0.0f)
+	{
+		m_shakeTimer = shakeTime;
+		m_shakeDuration = shakeTime;
+		m_shakeStrength = shakeStrength;
+		m_shakeClock = 0.0f;
+	}
+}
+
+void PlayScene::UpdateCameraShake(float deltaTime)
+{
+	if (m_shakeTimer <= 0.0f)
+		return;
+
+	m_shakeTimer -= deltaTime;
+
+	if (m_shakeTimer < 0.0f)
+		m_shakeTimer = 0.0f;
+
+	m_shakeClock += deltaTime;
+
+	// 時間経過とともに揺れを弱める
+	float power = 0.0f;
+
+	if (m_shakeDuration > 0.0f)
+	{
+		power = m_shakeTimer / m_shakeDuration;
+	}
+
+	// 横方向と縦方向で異なる揺れを作る
+	const float offsetX =
+		std::sin(m_shakeClock * 83.0f) *
+		m_shakeStrength * power;
+
+	const float offsetY =
+		std::cos(m_shakeClock * 117.0f) *
+		m_shakeStrength * power;
+
+	m_appliedShakeOffset =
+		Vector2d(offsetX, offsetY);
+
+	// カメラに揺れを加える
+	m_camera.SetCenter(
+		m_camera.GetCenter() + m_appliedShakeOffset
+	);
+
+	if (m_shakeTimer <= 0.0f)
+	{
+		m_shakeStrength = 0.0f;
+	}
+}
+
+
 bool PlayScene::Init() {
 	m_isRunning = true;
 	m_type = Type::Play;
@@ -93,12 +165,11 @@ bool PlayScene::Init() {
 	// セーブデータ読み込み
 	if (SaveManager::Load(m_saveData))
 	{
-		SaveData saveData;
 		m_stageIndex = m_saveData.currentStage;
 		m_playTimer = m_saveData.playTime;
-		for (int i = 0; i < static_cast<int>(saveData.newsOwned.size()); ++i)
+		for (int i = 0; i < static_cast<int>(m_saveData.newsOwned.size()); ++i)
 		{
-			m_menu.SetNewsOwned(i, saveData.newsOwned[i]);
+			m_menu.SetNewsOwned(i, m_saveData.newsOwned[i]);
 		}
 	}
 
@@ -110,7 +181,7 @@ bool PlayScene::Init() {
 		Action action = static_cast<Action>(i);
 
 		// キー割り当てを復元
-		if (!m_saveData.keyBindings[i].empty())
+		if (m_saveData.hasKeyBinding[i])
 		{
 			input.SetKeyBindings(
 				action,
@@ -594,8 +665,21 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 		(int)m_fadeState);
 }
 
-void PlayScene::Update(float deltaTime) {
+void PlayScene::Update(float deltaTime)
+{
 	const Input& input = m_game->GetInput();
+
+	// 前フレームのカメラ揺れを取り除く
+	// カメラ追従との位置ずれを防止
+	if (m_appliedShakeOffset.x != 0.0f ||
+		m_appliedShakeOffset.y != 0.0f)
+	{
+		m_camera.SetCenter(
+			m_camera.GetCenter() - m_appliedShakeOffset
+		);
+
+		m_appliedShakeOffset = Vector2d(0.0f, 0.0f);
+	}
 
 	if (m_fadeState != FadeState::None) {
 		UpdateFade(deltaTime);
@@ -649,9 +733,36 @@ void PlayScene::Update(float deltaTime) {
 		m_autoSaveTimer = 0.0f;
 	}
 
+	if (input.IsMenuTrigger(Action::MENU))
+	{
+		if (m_player->GetState() != Actor::State::Paused)
+			m_menu.Toggle();
+		return;
+	}
+
 	if (m_menu.IsOpen())
 	{
 		m_menu.Update(deltaTime);
+		return;
+	}
+
+// =====================================
+// ヒットストップ中の処理
+// =====================================
+	if (m_hitStopTimer > 0.0f)
+	{
+		m_hitStopTimer -= deltaTime;
+
+		if (m_hitStopTimer < 0.0f)
+			m_hitStopTimer = 0.0f;
+
+		// 画面揺れは止めずに更新
+		UpdateCameraShake(deltaTime);
+
+		// UIのアニメーションは更新する
+		updateActors(m_UIactors, deltaTime);
+
+		// プレイヤー・敵・ゲーム内の更新を停止
 		return;
 	}
 
@@ -705,6 +816,9 @@ void PlayScene::Update(float deltaTime) {
 
 			// 前期と同じ滑らかな追従
 			m_camera.UpdateFollow(cameraTarget, deltaTime);
+
+			// カメラ追従の後に画面揺れを適用
+			UpdateCameraShake(deltaTime);
 
 			m_camera.SetZoom(1.0f);
 		}
@@ -1139,26 +1253,6 @@ void PlayScene::Draw()
 			continue;
 
 		actor->Draw();
-	}
-
-	// コンボ表示
-	if (m_player && m_player->GetCombo() > 0)
-	{
-		const std::string& debugFont =
-			m_game->GatDebugFont();
-
-		std::string comboText =
-			std::to_string(m_player->GetCombo()) +
-			" Hits";
-
-		renderer->DrawTextL(
-			Vector2d(20.0f, 120.0f),
-			comboText,
-			Color(0, 0, 0),
-			debugFont,
-			60,
-			false
-		);
 	}
 
 	// 結果表示
@@ -1982,12 +2076,6 @@ void PlayScene::AutoSave()
 	SaveManager::Save(m_saveData);
 }
 
-// 操作設定画面から即時保存するための公開関数
-void PlayScene::SaveCurrentSettings()
-{
-	AutoSave();
-}
-
 void PlayScene::ShowNews(int id)
 {
 	static const std::vector<NewsData> newsList = GetDefaultNewsList();
@@ -2000,14 +2088,15 @@ void PlayScene::ShowNews(int id)
 		m_menu.SetNewsOwned(id - 1, true);
 
 		// 自動保存(ドキュメント18-1「宝箱開封・回収時」)
-		{
-			SaveData saveData;
-			SaveManager::Load(saveData);              // 既存のセーブを読み込む(なければ初期値)
-			saveData.newsOwned[id - 1] = true;
-			SaveManager::Save(saveData);
-		}
+		m_saveData.newsOwned[id - 1] = true;
+		AutoSave();
 
 		m_newsViewer.Open(news);    // 新聞を表示する(ゲームは Update で止まる)
 		return;
 	}
+}
+// 操作設定画面から即時保存するための公開関数
+void PlayScene::SaveCurrentSettings()
+{
+	AutoSave();
 }

@@ -84,6 +84,11 @@ void SettingsMenu::Update()
         // 1. キー入力待ち（割り当て中）
         if (m_waitingForKey)
         {
+            if (input.IsMenuTrigger(Action::ESCAPE))
+            {
+                m_waitingForKey = false;
+                return;
+            }
             int keyIndex = input.GetKey().GetFirstTriggeredKey();
             if (keyIndex >= 0)
             {
@@ -156,18 +161,18 @@ void SettingsMenu::Update()
     }
 
     const int count = m_page == Page::Volume ? 5 : (m_page == Page::Root ? 3 : 1);
-    if (input.IsTrigger(Action::UP)) {
+    if (input.IsMenuTrigger(Action::UP)) {
         m_cursor = (m_cursor + count - 1) % count;
         m_game->GetSoundManager().Play("game_select_mode");
     }
-    if (input.IsTrigger(Action::DOWN)) {
+    if (input.IsMenuTrigger(Action::DOWN)) {
         m_cursor = (m_cursor + 1) % count;
         m_game->GetSoundManager().Play("game_select_mode");
     }
 
     if (m_page == Page::Volume && m_cursor < 4)
     {
-        const int step = input.IsTrigger(Action::RIGHT) ? 5 : (input.IsTrigger(Action::LEFT) ? -5 : 0);
+        const int step = input.IsMenuTrigger(Action::RIGHT) ? 5 : (input.IsMenuTrigger(Action::LEFT) ? -5 : 0);
         if (step != 0)
         {
             const int before = m_cursor == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(m_cursor);
@@ -338,7 +343,7 @@ void SettingsMenu::LoadSave(Game* game)
             Action action = static_cast<Action>(i);
 
             // キー割り当てを反映
-            if (!saveData.keyBindings[i].empty())
+            if (saveData.hasKeyBinding[i])
             {
                 input.SetKeyBindings(action, saveData.keyBindings[i]);
             }
@@ -384,11 +389,11 @@ PauseMenu::Result PauseMenu::Update()
     }
 
     const int count = m_fromStageSelect ? 3 : 4;
-    if (input.IsTrigger(Action::UP)) {
+    if (input.IsMenuTrigger(Action::UP)) {
         m_cursor = (m_cursor + count - 1) % count;
         m_game->GetSoundManager().Play("game_select_mode");
     }
-    if (input.IsTrigger(Action::DOWN)) {
+    if (input.IsMenuTrigger(Action::DOWN)) {
         m_cursor = (m_cursor + 1) % count;
         m_game->GetSoundManager().Play("game_select_mode");
     }
@@ -434,4 +439,3 @@ void PauseMenu::Draw(int alpha) const
     }
     SetDrawBlendMode(oldBlend, oldAlpha);
 }
-

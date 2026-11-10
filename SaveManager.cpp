@@ -2,9 +2,9 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <filesystem>
 #include <algorithm>
 #include <vector>
-#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -66,6 +66,19 @@ bool SaveManager::Load(SaveData& data)
         }
     }
 
+    if (saveData.contains("newsOwned") &&
+        saveData["newsOwned"].is_array())
+    {
+        for (size_t i = 0; i < data.newsOwned.size(); ++i)
+        {
+            if (i < saveData["newsOwned"].size())
+            {
+                data.newsOwned[i] =
+                    saveData["newsOwned"][i].get<bool>();
+            }
+        }
+    }
+
     // ƒL[Š„‚è“–‚Ä‚ğ“Ç‚İ‚Ş
     if (saveData.contains("keyBindings") &&
         saveData["keyBindings"].is_array())
@@ -92,11 +105,8 @@ bool SaveManager::Load(SaveData& data)
                 }
             }
 
-            // ‹ó‚ÌŠ„‚è“–‚Ä‚Í“Ç‚İ‚Ü‚È‚¢
-            if (!keys.empty())
-            {
-                data.keyBindings[i] = std::move(keys);
-            }
+            data.keyBindings[i] = std::move(keys);
+            data.hasKeyBinding[i] = true;
         }
     }
 
@@ -122,19 +132,6 @@ bool SaveManager::Load(SaveData& data)
             if (mode == 0 || mode == 1)
             {
                 data.inputModes[i] = mode;
-            }
-        }
-    }
-
-    if (saveData.contains("newsOwned") &&
-        saveData["newsOwned"].is_array())
-    {
-        for (size_t i = 0; i < data.newsOwned.size(); ++i)
-        {
-            if (i < saveData["newsOwned"].size())
-            {
-                data.newsOwned[i] =
-                    saveData["newsOwned"][i].get<bool>();
             }
         }
     }
