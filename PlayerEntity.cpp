@@ -706,7 +706,7 @@ void PlayerEntity::Update(float deltaTime) {
                     std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
                 }
             }
-            if (input.GetKey().IsTrigger(Key::NUM_0)) {
+            if (input.GetKey().IsTrigger(Key::DIGIT_0)) {
                 m_kunai = 3;
                 std::cout << "[Debug] ƒNƒiƒC‰ñ•œ" << std::endl;
             }

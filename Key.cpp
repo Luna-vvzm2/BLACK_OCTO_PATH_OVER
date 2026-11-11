@@ -27,7 +27,6 @@ void Key::Init() {
 	m_keyMap[PAGE_UP] = KEY_INPUT_PGUP;
 	m_keyMap[PAGE_DOWN] = KEY_INPUT_PGDN;
 	m_keyMap[NUM_4] = KEY_INPUT_4;  // デバッグ用の4キー
-	m_keyMap[NUM_0] = KEY_INPUT_0;  // デバッグ用の0キー
 
     // 追加：英字キー
     m_keyMap[B] = KEY_INPUT_B;
