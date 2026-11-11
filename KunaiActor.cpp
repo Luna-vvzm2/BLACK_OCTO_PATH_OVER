@@ -80,7 +80,7 @@ void KunaiActor::Update(float deltaTime)
                 {
                     playScene->SpawnSmoke(
                         m_transform->GetPosition(),
-                        Vector2d(400.0f, 250.0f));
+                        Vector2d(600.0f, 500.0f));
                 }
 
                 // ÉNÉiÉCÇè¡Ç∑

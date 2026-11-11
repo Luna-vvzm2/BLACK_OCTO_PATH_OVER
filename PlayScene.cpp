@@ -1144,21 +1144,27 @@ void PlayScene::Draw()
 			EffectActor* effect =
 				dynamic_cast<EffectActor*>(actor);
 
-			if (!effect)
-				return false;
-
-			if (effect->GetRenderLayer() !=
-				EffectActor::RenderLayer::Front)
+			if (effect)
 			{
-				return false;
+				if (effect->GetRenderLayer() !=
+					EffectActor::RenderLayer::Front)
+				{
+					return false;
+				}
+
+				Actor* target = effect->GetFollowTarget();
+
+				if (!target)
+					return false;
+
+				return dynamic_cast<PlayerEntity*>(target) != nullptr;
 			}
 
-			Actor* target = effect->GetFollowTarget();
-
-			if (!target)
-				return false;
-
-			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+			if (actor && actor->GetType() == ActorType::Smoke) 
+			{
+				return true;
+			}
+			return false;
 		});
 
 
@@ -1383,7 +1389,7 @@ void PlayScene::Draw()
 	if (m_player)
 	{
 		Vector2d Pos = m_player->GetPos();
-		Vector2d offset = { 60.0f, 50.0f };
+		Vector2d offset = { 0.0f, 80.0f };
 
 		if (m_player->GetDir())
 		{
@@ -1398,8 +1404,8 @@ void PlayScene::Draw()
 
 		renderer->DrawRectCenter(
 			Pos,
-			4.0f,
-			4.0f,
+			600.0f,
+			500.0f,
 			GetColor(0, 255, 0),
 			false,
 			true
@@ -1526,7 +1532,7 @@ void PlayScene::SpawnSmoke(
 		if (enemy == nullptr || enemy->IsDead())
 			continue;
 
-		if (smoke->Contains(enemy->GetPos()))
+		if (smoke->IsSmokeActive() && smoke->Contains(enemy->GetPos()))
 		{
 			enemy->ApplySmoke();
 		}
