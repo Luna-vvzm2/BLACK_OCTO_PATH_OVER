@@ -25,6 +25,7 @@ bool Checkpoint::Init()
 
     transform->SetPosition(m_initialPos);
     m_sprite->SetSize(104.0f, 104.0f);
+    m_sprite->SetDrawOffset(0.0f, -70.0f);
     return true;
 }
 
