@@ -29,6 +29,7 @@ public:
 		PAGE_UP,
 		PAGE_DOWN,
 		NUM_4,
+		NUM_0,
 		KEY_COUNT
 	};
 

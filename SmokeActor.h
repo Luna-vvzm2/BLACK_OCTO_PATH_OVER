@@ -3,6 +3,10 @@
 #include "Actor.h"
 #include "Vector2d.h"
 
+class TransformComponent;
+class SpriteComponent;
+class AnimationComponent;
+
 class SmokeActor : public Actor
 {
 public:
@@ -12,12 +16,12 @@ public:
         const Vector2d& size
     );
 
+    bool Init() override;
     void Update(float deltaTime) override;
-    void Draw() override;
 
     ActorType GetType() const override
     {
-        return ActorType::Effect;
+        return ActorType::Smoke;
     }
 
     bool Contains(const Vector2d& position) const;
@@ -28,8 +32,12 @@ public:
 
 private:
     Vector2d m_position;
+    TransformComponent* m_transform;
     Vector2d m_size;
+    SpriteComponent* m_sprite;
+    AnimationComponent* m_anim;
 
     float m_elapsedTime;
     bool m_expiredNotified;
+    int m_state;
 };
