@@ -49,6 +49,7 @@
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
 #include "SaveManager.h"
+#include "Checkpoint.h"
 #include "PlayerStatusUI.h"
 #include "boss_01.h"
 
@@ -221,6 +222,7 @@ bool PlayScene::Init() {
 
 	StageInit(m_stageIndex);
 
+	m_respawnPos = m_playerSpawnPoints[0];
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
 
@@ -422,8 +424,12 @@ bool PlayScene::StageInit(int stageNo) {
 			switch (objID)
 			{
 			case 1:
+				m_playerSpawnPoints.push_back(pos);
+				break;
+
 			case 3:
 				m_playerSpawnPoints.push_back(pos);
+				AddActor(new Checkpoint(this, pos));
 				break;
 
 			case 2:
@@ -601,6 +607,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 		spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
 	{
 		m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
+		m_respawnPos = m_playerSpawnPoints[spawnIndex];
 
 		Vector2d playerPos = m_player->GetPos();
 
@@ -624,6 +631,7 @@ void PlayScene::ClearStageActors()
 		case ActorType::Effect:
 		case ActorType::StageExit:
 		case ActorType::StageBack:
+		case ActorType::CheckPoint:
 		case ActorType::TreasureBox:
 			actor->SetState(Actor::State::Dead);
 			break;
@@ -995,6 +1003,7 @@ void PlayScene::Draw()
 			return
 				type == ActorType::Block ||
 				type == ActorType::Trap ||
+				type == ActorType::CheckPoint ||
 				type == ActorType::StageExit ||
 				type == ActorType::StageBack ||
 				dynamic_cast<DropItemEntity*>(actor) != nullptr;
@@ -1452,10 +1461,10 @@ void PlayScene::RespawnPlayer() {
 	TransformComponent* transform = m_player->GetComponent<TransformComponent>();
 
 	if (transform) {
-		transform->SetPosition(m_playerSpawnPoints[0]);
+		transform->SetPosition(m_respawnPos);
 
 		// リスポーンした瞬間にカメラも戻す
-		Vector2d cameraPos = m_playerSpawnPoints[0];
+		Vector2d cameraPos = m_respawnPos;
 		cameraPos.y -= 150.0f;
 
 		m_camera.SetCenter(cameraPos);
@@ -1473,7 +1482,7 @@ void PlayScene::RespawnPlayer() {
 		hp->Heal(hp->GetMaxHP());
 	}
 	m_player->SetState(Actor::State::Active);
-	std::cout << "Player respawned at: " << m_playerSpawnPoints[0].x << ", " << m_playerSpawnPoints[0].y << std::endl;
+	std::cout << "Player respawned at: " << m_respawnPos.x << ", " << m_respawnPos.y << std::endl;
 }
 
 void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
