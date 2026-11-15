@@ -5,6 +5,8 @@
 #include "CollisionComponent.h"
 #include "SpriteComponent.h"
 #include "Scene.h"
+#include "PlayScene.h"
+#include "Game.h"
 #include "EnemyEntity.h"
 #include "BlockActor.h"
 
@@ -70,7 +72,19 @@ void KunaiActor::Update(float deltaTime)
             if (m_collision->CheckCollision(enemy->GetCollision()))
             {
                 enemy->TakeDamage(100, { m_dir ? 300.0f : -300.0f, 0 });
-                enemy->TakeMetsu(60);
+                enemy->TakeMetsu(0);
+
+                auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+                if (playScene != nullptr)
+                {
+                    playScene->SpawnSmoke(
+                        m_transform->GetPosition(),
+                        Vector2d(600.0f, 500.0f));
+                }
+
+                // クナイを消す
+                m_scene->GetGame()->GetSoundManager().Play("player_kunai_hit");
                 SetState(State::Dead);
 
                 return;
@@ -109,7 +123,17 @@ void KunaiActor::CheckBlockCollision(Actor* actor)
 
     if (overlapX > 0 && overlapY > 0)
     {
-        OnBlockHit();
+        auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+        if (playScene != nullptr)
+        {
+            playScene->SpawnSmoke(
+                m_transform->GetPosition(),
+                Vector2d(400.0f, 250.0f));
+        }
+
+        // クナイを消す
+        SetState(State::Dead);
         return;
     }
 

@@ -15,12 +15,14 @@ enum class ActorType {
 	Kunai,
 	Enemy,
 	Effect,
+	Smoke,
 	StageBack,
 	StageExit,
 	TreasureBox,
 	Trap,
 	UI,
-	DropItem
+	DropItem,
+	CheckPoint
 };
 
 class Actor {

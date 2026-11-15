@@ -4,6 +4,15 @@
 #include "Scene.h"
 #include "PlayScene.h"
 #include "BlockActor.h"
+#include "StoneSBlock.h"
+#include "StoneLBlock.h"
+#include "WoodSBlock.h"
+#include "WoodLBlock.h"
+#include "HouseBlock.h"
+#include "YaguraSBlock.h"
+#include "YaguraMBlock.h"
+#include "YaguraLBlock.h"
+#include "YaguraLLBlock.h"
 #include "KunaiActor.h"
 #include "TreasureBox.h"
 #include "TransformComponent.h"
@@ -18,12 +27,47 @@
 #include "Game.h"
 #include <Windows.h>
 #include <DxLib.h>
+#include <cmath>
 
+namespace
+{
+constexpr float FOOTSTEP_RAY_EXTRA = 8.0f;
+constexpr float FOOTSTEP_MIN_MOVEMENT = 0.5f;
+constexpr float FOOTSTEP_RUN_INTERVAL = 0.28f;
+constexpr float FOOTSTEP_SQUAT_INTERVAL = 0.42f;
+
+const char* GetFootstepSoundId(const BlockActor* block)
+{
+    if (dynamic_cast<const StoneSBlock*>(block) != nullptr ||
+        dynamic_cast<const StoneLBlock*>(block) != nullptr)
+    {
+        return "stage1_cobblestone_walk";
+    }
+
+    if (dynamic_cast<const WoodSBlock*>(block) != nullptr ||
+        dynamic_cast<const WoodLBlock*>(block) != nullptr ||
+        dynamic_cast<const HouseBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraSBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraMBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraLBlock*>(block) != nullptr ||
+        dynamic_cast<const YaguraLLBlock*>(block) != nullptr)
+    {
+        return "stage1_tatami_walk";
+    }
+
+    return "stage1_grit_walk";
+}
+}
 #define weak1Num 0
 #define weak2Num 1
 #define weak3Num 2
 #define airWeak1Num 3
 #define squatAttackNum 4
+
+#define OCTONum 0
+#define TIGERNum 1
+#define FROGNum 2
+#define ORCANum 3
 
 //                       offset, width, height, damage, metsu
 //AttackHitbox weak1{ Vector2d(100,0), 300, 200, 70, 15 };
@@ -39,11 +83,11 @@
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,0), 300, 200, 70, 15 },
-    { Vector2d(100,50), 300, 200, 70, 15 },
-    { Vector2d(0,0), 450, 100, 70, 15 }
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,50), 300, 200, 70, 0 },
+    { Vector2d(0,0), 450, 100, 70, 0 }
 };
 
 float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
@@ -98,6 +142,10 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_endOcto(false)
     , m_isHide(false)
 
+    , m_tigerTimer(0.0f)
+    , m_tigerFirstAttack(false)
+    , m_tigerSecondAttack(false)
+
     , m_canAttack(true)
     , m_attackLockTimer(0.0f)
 
@@ -134,11 +182,9 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
 
     //Sound
 
-    , m_kunaiSound(nullptr)
     , m_excusionSound(nullptr)
     , m_kamaeSound(nullptr)
     , m_karyuSound(nullptr)
-    , m_weakAttackSound1(nullptr)
     , m_weakAttackSound2(nullptr)
     , m_weakAttackSound3(nullptr)
     , m_weakAttackSound4(nullptr)
@@ -147,6 +193,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_hayabusaAttackSound(nullptr)
     , m_karaburiSound(nullptr)
 {
+    m_lastFootstepX = pos.x;
 }
 
 bool PlayerEntity::Init() {
@@ -159,7 +206,6 @@ bool PlayerEntity::Init() {
 
     //m_sprite = AddComponent<SpriteComponent>();
     m_sprite->LoadTextureDiv("assets/images/entities/players/musashi_sheet.png", 20, 14);
-    m_sprite->LoadTextureDiv("kari/player.png", 6, 4);
 
     m_anim = AddComponent<AnimationComponent>();
     m_anim->SetSprite(m_sprite);
@@ -572,11 +618,6 @@ bool PlayerEntity::Init() {
     m_anim->Play("idle");
     m_state = PlayerState::IDLE;
 
-    m_kunaiSound = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/kunai.wav")
-    );
-    if (m_kunaiSound != nullptr) m_kunaiSound->SetVolume(180);
-
     m_excusionSound = AddComponent<SoundComponent>(
         _T("assets/sounds/player/excusion.wav")
     );
@@ -591,11 +632,6 @@ bool PlayerEntity::Init() {
         _T("assets/sounds/player/karyu.wav")
     );
     if (m_karyuSound != nullptr) m_karyuSound->SetVolume(180);
-
-    m_weakAttackSound1 = AddComponent<SoundComponent>(
-        _T("assets/sounds/player/weakAttack1.wav")
-    );
-    if (m_weakAttackSound1 != nullptr) m_weakAttackSound1->SetVolume(140);
 
     m_weakAttackSound2 = AddComponent<SoundComponent>(
         _T("assets/sounds/player/weakAttack2.wav")
@@ -640,31 +676,43 @@ bool PlayerEntity::Init() {
 
 void PlayerEntity::Update(float deltaTime) {
     EntityActor::Update(deltaTime);
+    UpdateGravity(deltaTime);
+    UpdateMove();
+   
     UpdateIgnorePlatform();
     UpdateInvincible(deltaTime);
-
-    UpdateKamae(deltaTime);
-    UpdateExecution(deltaTime);
+            
+    UpdateStatusDown(deltaTime);    
+    UpdateNinjutsuSeal(deltaTime); 
 
     UpdateSensor();
-    UpdateGravity(deltaTime);
 
     CheckCanStand();
 
     UpdateState(deltaTime);
+    UpdateFootsteps(deltaTime);
+
+    if (Actor::m_state == State::Paused) { m_velocity->SetX(0.0f); }
 
     if (m_anim) m_anim->Update(deltaTime);
 
-    // デバッグ用：4キーを押すとHPが0になる
-#ifdef _DEBUG
-    const Input& input = m_scene->GetGame()->GetInput();
-    if (input.GetKey().IsTrigger(Key::NUM_4)) {
-        if (m_hp) {
-            m_hp->Damage(m_hp->GetMaxHP());
-            std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
-        }
+    if (Actor::m_state == State::Active) {
+        // デバッグ用：4キーを押すとHPが0になる
+        #ifdef _DEBUG
+            const Input& input = m_scene->GetGame()->GetInput();
+            if (input.GetKey().IsTrigger(Key::NUM_4)) {
+                if (m_hp) {
+                    m_hp->Damage(m_hp->GetMaxHP());
+                    std::cout << "[Debug] Player HP set to 0 by pressing 4 key" << std::endl;
+                }
+            }
+            if (input.GetKey().IsTrigger(Key::DIGIT_0)) {
+                m_kunai = 3;
+                std::cout << "[Debug] クナイ回復" << std::endl;
+            }
+        #endif
+
     }
-#endif
 
 }
 
@@ -672,23 +720,116 @@ void PlayerEntity::Update(float deltaTime) {
 // 主人公の描画
 // タコ使用中は約30%暗くする
 // ======================================
+
 void PlayerEntity::Draw()
 {
-    // タコを使用していない場合は通常描画
-    if (!m_isOcto)
+    // 蛸の忍術を使用中か判定
+    if (m_isJutsu[OCTONum])
     {
+        // プレイヤーの明るさを50%にする
+        SetDrawBright(128, 128, 128);
+
+        // プレイヤーの描画
         EntityActor::Draw();
+
+        // 明るさを元に戻す
+        SetDrawBright(255, 255, 255);
+    }
+    else
+    {
+        // 通常時の描画
+        EntityActor::Draw();
+    }
+}
+
+BlockActor* PlayerEntity::FindGroundBelow() const
+{
+    if (m_scene == nullptr || m_collision == nullptr)
+    {
+        return nullptr;
+    }
+
+    const Vector2d playerPos = GetPos();
+    const float footY = playerPos.y + m_collision->GetHeight() * 0.5f;
+    const float rayEndY = footY + FOOTSTEP_RAY_EXTRA;
+    BlockActor* nearest = nullptr;
+    float nearestFootDistance = FOOTSTEP_RAY_EXTRA + 1.0f;
+
+    for (Actor* actor : m_scene->GetActors())
+    {
+        if (actor == nullptr || actor->GetType() != ActorType::Block ||
+            actor->GetState() == Actor::State::Dead)
+        {
+            continue;
+        }
+
+        auto* block = static_cast<BlockActor*>(actor);
+        if (block->GetBlockType() == BlockType::Hide ||
+            (m_ignorePlatform && block == m_ignorePlatformBlock))
+        {
+            continue;
+        }
+
+        const CollisionComponent* collision = block->GetCollision();
+        if (collision == nullptr || collision->GetShape() != CollisionShape::Rect)
+        {
+            continue;
+        }
+
+        const Vector2d blockPos = block->GetPos();
+        if (std::fabs(playerPos.x - blockPos.x) > collision->GetWidth() * 0.5f)
+        {
+            continue;
+        }
+
+        const float blockTop = blockPos.y - collision->GetHeight() * 0.5f;
+        if (blockTop < playerPos.y || blockTop > rayEndY)
+        {
+            continue;
+        }
+
+        const float footDistance = std::fabs(blockTop - footY);
+        if (footDistance <= FOOTSTEP_RAY_EXTRA && footDistance < nearestFootDistance)
+        {
+            nearest = block;
+            nearestFootDistance = footDistance;
+        }
+    }
+
+    return nearest;
+}
+
+void PlayerEntity::UpdateFootsteps(float deltaTime)
+{
+    const float currentX = GetPos().x;
+    const float movedX = std::fabs(currentX - m_lastFootstepX);
+    m_lastFootstepX = currentX;
+
+    const bool walking = m_state == PlayerState::RUN ||
+        m_state == PlayerState::RUN_START || m_state == PlayerState::SQUAT_WALK;
+    if (GetState() != Actor::State::Active || !m_isGround || !walking ||
+        movedX < FOOTSTEP_MIN_MOVEMENT)
+    {
+        m_footstepTimer = 0.0f;
         return;
     }
 
-    // 明るさを約70%にする（約30%暗くする）
-    SetDrawBright(178, 178, 178);
+    m_footstepTimer -= deltaTime;
+    if (m_footstepTimer > 0.0f)
+    {
+        return;
+    }
 
-    // 主人公を描画
-    EntityActor::Draw();
+    BlockActor* ground = FindGroundBelow();
+    if (ground == nullptr || m_scene == nullptr || m_scene->GetGame() == nullptr)
+    {
+        m_footstepTimer = 0.0f;
+        return;
+    }
 
-    // 明るさを元に戻す
-    SetDrawBright(255, 255, 255);
+    m_scene->GetGame()->GetSoundManager().Play(GetFootstepSoundId(ground));
+    m_footstepTimer = m_state == PlayerState::SQUAT_WALK
+        ? FOOTSTEP_SQUAT_INTERVAL : FOOTSTEP_RUN_INTERVAL;
 }
 
 void PlayerEntity::UpdateIgnorePlatform()
@@ -738,197 +879,204 @@ void PlayerEntity::UpdateSensor() {
     m_sensor.frontUpper = CheckSensor({ dir * 130.0f, -60.0f });
     m_sensor.frontBottom = CheckSensor({ dir * 130.0f, 40.0f });
     m_sensor.frontGround = CheckSensor({ dir * 130.0f, 80.0f });
-    m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 80.0f });
-}
-
-
-void PlayerEntity::UpdateJutsuKamae(float deltaTime) {
-    if (!m_jutsuCharge) return;
-    if (m_getHit) return;
-    if (m_dashTimer > 0.0f) return;
-    if (!m_isGround) return;
-    if (m_isKaryu) return;
-
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (input.IsDown(Action::G) && input.IsDown(Action::JUTSU_KAMAE))
-    {
-        if (m_squat) {
-            if (!m_canStand) {
-                return;
-            }
-            else {
-                ExitSquat();
-            }
-        }
-        m_isJutsuKamae = true;
-        m_canMove = false;
-    }
-    else
-    {
-        m_isJutsuKamae = false;
-        if (!m_isKaryu) m_canMove = true;
-    }
-}
-
-void PlayerEntity::UpdateKaryu(float deltaTime) {
-    if (m_state == PlayerState::DEAD) return;
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (m_KaryuTimer <= 0.0f) {
-        if (m_isJutsuKamae && input.IsTrigger(Action::KUNAI))
-        {
-            m_isKaryu = true;
-            m_KaryuTimer = 5.0f;
-            m_invincibleTime = m_KaryuTimer;
-            m_isJutsuKamae = false;
-            m_jutsuGauge = 0;
-            m_jutsuCharge = false;
-            KaryuTextUI* UI = new KaryuTextUI(m_scene);
-            m_scene->SpawnUIActor(UI);
-        }
-        else if (m_isKaryu) {
-            m_isKaryu = false;
-            m_canMove = true;
-
-            auto enemies = CollectEnemiesInScreen();
-
-            for (EnemyEntity* enemy : enemies)
-            {
-                m_combo += 5;
-
-                float dir = m_transform->GetPosition().x - enemy->GetPos().x > 0 ? 1.0f : -1.0f;
-
-                enemy->TakeDamage(1400, { dir * 300.0f, 200.0f });
-            }
-        }
+    if (m_squat) {
+        m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 50.0f });
     }
     else {
-        m_KaryuTimer -= deltaTime;
+        m_sensor.frontNearGround = CheckSensor({ dir * 60.0f, 80.0f });
     }
 }
 
-void PlayerEntity::UpdateKamae(float deltaTime)
-{
-    if (m_getHit) return;
-    if (m_dashTimer > 0.0f) return;
-    if (m_isJutsuKamae) {
-        m_isKamae = false;
-        return;
-    }
-    if (m_isKaryu) return;
 
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (input.IsDown(Action::KAMAE))
-    {
-        if (m_squat) {
-            if (!m_canStand) {
-                return;
-            }
-            else {
-                ExitSquat();
-            }
-        }
-        m_isKamae = true;
-        m_canMove = false;
-    }
-    else
-    {
-        m_isKamae = false;
-        if (!m_isExecution) m_canMove = true;
-    }
-}
-
-void PlayerEntity::UpdateExecution(float deltaTime)
-{
-    if (m_state == PlayerState::DEAD) return;
-    if (!m_isExecution) {
-        if (!m_isKamae) return;
-    }
-
-    const Input& input = m_scene->GetGame()->GetInput();
-
-    if (input.IsTrigger(Action::DASH))
-    {
-        if (!m_isExecution) {
-            CollectExecutionTargets();
-            if (m_executionTargets.empty()) return;
-
-            m_isExecution = true;
-            m_executionTimer = 0.7f;
-            m_invincibleTime = m_executionTimer;
-            auto effect = new EffectActor(m_scene, GetPos(), EffectType::ExecutionStart, !m_dir);
-            effect->SetFollowTarget(this, { m_dir ? -20.0f : 20.0f, -20.0f });
-
-            SpawnEffect(effect);
-        }
-    }
-
-    if (m_executionTimer <= 0.0f)
-    {
-        while (!m_executionTargets.empty())
-        {
-            EnemyEntity* target = m_executionTargets.back();
-            m_executionTargets.pop_back();
-
-            if (target == nullptr)
-                continue;
-
-            PlayScene* play = static_cast<PlayScene*>(m_scene);
-
-            if (!play->IsActorAlive(target))
-                continue;
-
-            if (target->IsDead())
-                continue;
-
-            if (!target->IsMetsu())
-                continue;
-
-            Vector2d prevPos = m_transform->GetPosition();
-            Vector2d lastPos = target->GetPos();
-
-            m_transform->SetPosition(lastPos);
-
-            target->MetsuAttacked();
-
-            if (m_excusionSound != nullptr) {
-                m_excusionSound->Play();
-            }
-
-            m_combo++;
-
-            m_executionTimer = m_invincibleTime = 0.2f;
-
-            if (m_executionTargets.empty())
-            {
-                m_isExecution = false;
-
-                Vector2d dir = lastPos - prevPos;
-
-                if (dir.length() > 0.0f)
-                {
-                    dir = dir.normalize();
-                    dir.y -= 0.3f;
-
-                    m_dir = dir.x > 0.0f ? 1.0f : 0.0f;
-                    m_velocity->Set(dir * m_dashSpeed);
-                }
-            }
-
-            break;
-        }
-
-        if (m_executionTargets.empty())
-        {
-            m_isExecution = false;
-        }
-    }
-    else {
-        m_executionTimer -= deltaTime;
-    }
-}
+//void PlayerEntity::UpdateJutsuKamae(float deltaTime) {
+//    if (!m_jutsuCharge) return;
+//    if (m_getHit) return;
+//    if (m_dashTimer > 0.0f) return;
+//    if (!m_isGround) return;
+//    if (m_isKaryu) return;
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (input.IsDown(Action::G) && input.IsDown(Action::JUTSU_KAMAE))
+//    {
+//        if (m_squat) {
+//            if (!m_canStand) {
+//                return;
+//            }
+//            else {
+//                ExitSquat();
+//            }
+//        }
+//        m_isJutsuKamae = true;
+//        m_canMove = false;
+//    }
+//    else
+//    {
+//        m_isJutsuKamae = false;
+//        if (!m_isKaryu) m_canMove = true;
+//    }
+//}
+//
+//void PlayerEntity::UpdateKaryu(float deltaTime) {
+//    if (m_state == PlayerState::DEAD) return;
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (m_KaryuTimer <= 0.0f) {
+//        if (m_isJutsuKamae && input.IsTrigger(Action::KUNAI))
+//        {
+//            m_isKaryu = true;
+//            m_KaryuTimer = 5.0f;
+//            m_invincibleTime = m_KaryuTimer;
+//            m_isJutsuKamae = false;
+//            m_jutsuGauge = 0;
+//            m_jutsuCharge = false;
+//            KaryuTextUI* UI = new KaryuTextUI(m_scene);
+//            m_scene->SpawnUIActor(UI);
+//        }
+//        else if (m_isKaryu) {
+//            m_isKaryu = false;
+//            m_canMove = true;
+//
+//            auto enemies = CollectEnemiesInScreen();
+//
+//            for (EnemyEntity* enemy : enemies)
+//            {
+//                m_combo += 5;
+//
+//                float dir = m_transform->GetPosition().x - enemy->GetPos().x > 0 ? 1.0f : -1.0f;
+//
+//                enemy->TakeDamage(1400, { dir * 300.0f, 200.0f });
+//            }
+//        }
+//    }
+//    else {
+//        m_KaryuTimer -= deltaTime;
+//    }
+//}
+//
+//void PlayerEntity::UpdateKamae(float deltaTime)
+//{
+//    if (m_getHit) return;
+//    if (m_dashTimer > 0.0f) return;
+//    if (m_isJutsuKamae) {
+//        m_isKamae = false;
+//        return;
+//    }
+//    if (m_isKaryu) return;
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//    const bool sealed = IsNinjutsuSealed() && m_isGround; //封印状態は構えを無視
+//
+//
+//    if (input.IsDown(Action::KAMAE) && !sealed)
+//    {
+//        if (m_squat) {
+//            if (!m_canStand) {
+//                return;
+//            }
+//            else {
+//                ExitSquat();
+//            }
+//        }
+//        m_isKamae = true;
+//        m_canMove = false;
+//    }
+//    else
+//    {
+//        m_isKamae = false;
+//        if (!m_isExecution) m_canMove = true;
+//    }
+//}
+//
+//void PlayerEntity::UpdateExecution(float deltaTime)
+//{
+//    if (m_state == PlayerState::DEAD) return;
+//    if (!m_isExecution) {
+//        if (!m_isKamae) return;
+//    }
+//
+//    const Input& input = m_scene->GetGame()->GetInput();
+//
+//    if (input.IsTrigger(Action::DASH))
+//    {
+//        if (!m_isExecution) {
+//            CollectExecutionTargets();
+//            if (m_executionTargets.empty()) return;
+//
+//            m_isExecution = true;
+//            m_executionTimer = 0.7f;
+//            m_invincibleTime = m_executionTimer;
+//            auto effect = new EffectActor(m_scene, GetPos(), EffectType::ExecutionStart, !m_dir);
+//            effect->SetFollowTarget(this, { m_dir ? -20.0f : 20.0f, -20.0f });
+//
+//            SpawnEffect(effect);
+//        }
+//    }
+//
+//    if (m_executionTimer <= 0.0f)
+//    {
+//        while (!m_executionTargets.empty())
+//        {
+//            EnemyEntity* target = m_executionTargets.back();
+//            m_executionTargets.pop_back();
+//
+//            if (target == nullptr)
+//                continue;
+//
+//            PlayScene* play = static_cast<PlayScene*>(m_scene);
+//
+//            if (!play->IsActorAlive(target))
+//                continue;
+//
+//            if (target->IsDead())
+//                continue;
+//
+//            if (!target->IsMetsu())
+//                continue;
+//
+//            Vector2d prevPos = m_transform->GetPosition();
+//            Vector2d lastPos = target->GetPos();
+//
+//            m_transform->SetPosition(lastPos);
+//
+//            target->MetsuAttacked();
+//
+//            if (m_excusionSound != nullptr) {
+//                m_excusionSound->Play();
+//            }
+//
+//            m_combo++;
+//
+//            m_executionTimer = m_invincibleTime = 0.2f;
+//
+//            if (m_executionTargets.empty())
+//            {
+//                m_isExecution = false;
+//
+//                Vector2d dir = lastPos - prevPos;
+//
+//                if (dir.length() > 0.0f)
+//                {
+//                    dir = dir.normalize();
+//                    dir.y -= 0.3f;
+//
+//                    m_dir = dir.x > 0.0f ? 1.0f : 0.0f;
+//                    m_velocity->Set(dir * m_dashSpeed);
+//                }
+//            }
+//
+//            break;
+//        }
+//
+//        if (m_executionTargets.empty())
+//        {
+//            m_isExecution = false;
+//        }
+//    }
+//    else {
+//        m_executionTimer -= deltaTime;
+//    }
+//}
 
 void PlayerEntity::CollectExecutionTargets() {
 
@@ -961,6 +1109,68 @@ std::vector<EnemyEntity*> PlayerEntity::CollectEnemiesInScreen()
     }
 
     return enemies;
+}
+
+void PlayerEntity::CollectNearEnemies(int width, int height)
+{
+    EnemyEntity* enemies[5] = {};
+
+    Vector2d playerPos = m_transform->GetPosition();
+
+    for (Actor* actor : m_scene->GetActors())
+    {
+        if (actor->GetType() != ActorType::Enemy)
+            continue;
+
+        EnemyEntity* enemy = static_cast<EnemyEntity*>(actor);
+        Vector2d enemyPos = enemy->GetPos();
+
+        // プレイヤーの向いている方向にいる敵だけを対象にする
+        if (m_dir) {
+            if (playerPos.x > enemyPos.x) continue;
+        }
+        else {
+            if (playerPos.x < enemyPos.x) continue;
+        }
+
+        // 探索範囲外の敵を除外する
+        if (std::abs(playerPos.x - enemyPos.x) > width) continue;
+        if (std::abs(playerPos.y - enemyPos.y) > height) continue;
+
+        // X方向の距離が近い位置に挿入する
+        int insertIndex = 0;
+
+        while (insertIndex < 5 && enemies[insertIndex] != nullptr)
+        {
+            Vector2d currentPos = enemies[insertIndex]->GetPos();
+
+            if (std::abs(playerPos.x - enemyPos.x)
+                < std::abs(playerPos.x - currentPos.x))
+            {
+                break;
+            }
+
+            insertIndex++;
+        }
+
+        // 5体の候補に入らない場合は無視する
+        if (insertIndex >= 5)
+            continue;
+
+        // 挿入位置より後ろの敵を1つずつ後ろにずらす
+        for (int j = 4; j > insertIndex; j--)
+        {
+            enemies[j] = enemies[j - 1];
+        }
+
+        enemies[insertIndex] = enemy;
+    }
+
+    // 結果を保存する
+    for (int i = 0; i < 5; i++)
+    {
+        m_nearTargets[i] = enemies[i];
+    }
 }
 
 void PlayerEntity::UpdateScale() {
@@ -1011,6 +1221,9 @@ void PlayerEntity::CheckCanStand()
 
         auto block = static_cast<BlockActor*>(actor);
 
+        if (block->GetBlockType() == BlockType::Hide)   // 追加
+            continue;
+
         CollisionComponent* blockCol = block->GetCollision();
 
         Vector2d blockPos = block->GetPos();
@@ -1045,6 +1258,9 @@ BlockActor* PlayerEntity::CheckSensor(const Vector2d& offset, const Vector2d& si
             continue;
 
         auto block = static_cast<BlockActor*>(actor);
+
+        if (block->GetBlockType() == BlockType::Hide)   // 追加
+            continue;
 
         Vector2d blockPos = block->GetPos();
         CollisionComponent* col = block->GetCollision();
@@ -1159,7 +1375,7 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
                 enemy->Open();
                 continue;
             }
-            enemy->TakeDamage(hitbox.damage, { m_dir ? 150.0f : -150.0f, -300.0f });
+            enemy->TakeDamage(ApplyAttackRatio(hitbox.damage), { m_dir ? 150.0f : -150.0f, -300.0f });
             m_hit = true;
             m_combo++;
 
@@ -1168,11 +1384,44 @@ void PlayerEntity::CheckAttackHit(const AttackHitbox& hitbox)
             );*/
         }
     }
+
+    // =====================================
+// 攻撃命中時のヒット演出
+// =====================================
+    if (m_hit)
+    {
+        PlayScene* playScene =
+            dynamic_cast<PlayScene*>(m_scene);
+
+        if (playScene)
+        {
+            // ダメージの大きい攻撃は演出を強める
+            const bool isStrong = hitbox.damage >= 140;
+
+            if (isStrong)
+            {
+                // 強攻撃：かなり激しく揺れる
+                playScene->RequestHitEffect(
+                    0.08f,  // ヒットストップ
+                    0.22f,  // 揺れる時間
+                    25.0f   // 揺れの強さ
+                );
+            }
+            else
+            {
+                // 弱攻撃：しっかり揺れる
+                playScene->RequestHitEffect(
+                    0.04f,
+                    0.15f,
+                    12.0f
+                );
+            }
+        }
+    }
 }
 
 void PlayerEntity::UpdateState(float deltaTime) {
     PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
-    UpdateMove();
 
     if (m_hp->GetHP() <= 0) {
         if (m_state == PlayerState::DEAD) {
@@ -1191,6 +1440,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     UpdateShadowGauge(deltaTime);
+    UpdateJutsuInterval(deltaTime);
     UpdateKunai(deltaTime);
 
     if (m_state == PlayerState::HIT_TRAP) {
@@ -1233,65 +1483,34 @@ void PlayerEntity::UpdateState(float deltaTime) {
         m_getHit = false;
     }
 
-    if (m_isKaryu) {
-        if (m_state == PlayerState::KARYU_END) {
-            if (!m_anim->IsFinished()) return;
-            else { m_KaryuTimer = 0.0f; }
-        }
-        if (m_state == PlayerState::KARYU_MID) {
-            if (m_KaryuTimer < 0.5f) {
-                ChangeState(PlayerState::KARYU_END);
-            }
-            return;
-        }
-        if (m_state == PlayerState::KARYU_START) {
-            if (m_KaryuTimer < 3.0f) {
-                ChangeState(PlayerState::KARYU_MID);
-            }
-            return;
-        }
-        if (m_KaryuTimer > 0.0f) {
-            ChangeState(PlayerState::KARYU_START);
-            return;
-        }
-    }
-
-    if (m_isJutsuKamae) {
+    /*if (m_isJutsuKamae) {
         ChangeState(PlayerState::JUTSU_KAMAE);
         return;
+    }*/
+
+    const Input* input = nullptr;
+    
+    if (Actor::GetState() == Actor::State::Active) {
+        input = &m_scene->GetGame()->GetInput();
     }
 
-    if (m_isExecution) {
-        if (m_state == PlayerState::EXECUTION_START) {
-            if (m_anim->IsFinished()) {
-                ChangeState(PlayerState::EXECUTION_HORIZON);
-            }
-            return;
-        }
-
-        if (m_state != PlayerState::EXECUTION_HORIZON && m_state != PlayerState::EXECUTION_VERTICAL) {
-            ChangeState(PlayerState::EXECUTION_START);
-            return;
-        }
-        return;
-    }
-
-    if (m_state == PlayerState::EXECUTION_HORIZON || m_state == PlayerState::EXECUTION_VERTICAL) {
-        ChangeState(PlayerState::EXECUTION_END);
-        return;
-    }
-
-    if (m_state == PlayerState::EXECUTION_END) {
-        if (!m_anim->IsFinished()) {
-            m_canMove = true;
-            return;
+    if (input && input->IsTrigger(Action::HEAL)) {
+        if (m_healItem > 0 && (m_hp->GetHP() != m_hp->GetMaxHP())) {
+            m_healItem -= 1;
+            m_hp->Heal(25);
         }
     }
 
-    const Input& input = m_scene->GetGame()->GetInput();
+    if (m_state == PlayerState::TIGER)
+    {
+        UpdateTiger(deltaTime);
+        if (m_tigerTimer < 1.8f) return;
+    }
 
-    if (m_isOcto) {
-        UpdateOcto(deltaTime);
+    if (m_isJutsu[OCTONum]) {
+        if (Actor::GetState() == Actor::State::Active) {
+            UpdateOcto(deltaTime);
+        }
 
         if (m_endOcto) {
             if (m_isGround) {
@@ -1305,6 +1524,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 }
             }
         }
+
+        if (m_isAutoOcto && m_isGround) {
+            ChangeState(PlayerState::OCTO_END);
+            return;
+        }
     }
 
     if (m_state == PlayerState::OCTO_START) {
@@ -1313,6 +1537,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
             m_anim->Play("Kamae");
             return;
         }
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
     }
 
     if (m_state == PlayerState::OCTO_AUTO) {
@@ -1324,9 +1551,13 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
+        m_isJutsu[OCTONum] = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+
         UpdateWallSensor();
         if (m_sensor.frontWall != nullptr) {
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 ChangeState(PlayerState::WALL_CLIMB);
                 return;
             }
@@ -1357,10 +1588,12 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     m_moveSpeed = (m_moveBaseSpeed + m_moveBaseSpeed * m_octoRatio * m_isOcto) * m_buffRatio;
 
-    if (input.IsTrigger(Action::OCTO) && m_isGround) {
-        if (!m_isOcto) {
-            ChangeState(PlayerState::OCTO_START);
-            return;
+    if (input && input->IsTrigger(Action::OCTO) && m_isGround) {
+        if (!m_isJutsu[OCTONum]) {
+            if (GetCanJutsu(OCTONum)) {
+                ChangeState(PlayerState::OCTO_START);
+                return;
+            }
         }
         else {
             ChangeState(PlayerState::OCTO_END);
@@ -1368,13 +1601,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (m_isKamae) {
-        if (m_isGround) {
-            ChangeState(PlayerState::KAMAE);
-        }
-        else {
-            ChangeState(PlayerState::AIR_KAMAE);
-        }
+    if (input && input->IsTrigger(Action::TIGER)
+        && GetCanJutsu(TIGERNum) 
+        && m_isGround) {
+        ChangeState(PlayerState::TIGER);
         return;
     }
 
@@ -1476,11 +1706,18 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::WALL_HOLD) {
-        UpdateDir(input);
+        if (input) {
+            UpdateDir(*input);
+        }
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr) {
             if (!m_isGround) {
-                if (input.IsTrigger(Action::JUMP)) {
+                if (input && input->IsTrigger(Action::JUMP)) {
                     ChangeState(PlayerState::WALL_JUMP);
                     return;
                 }
@@ -1498,7 +1735,9 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::WALL_CLIMB) {
-        UpdateDir(input);
+        if (input) {
+            UpdateDir(*input);
+        }
         UpdateWallSensor();
         if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr) {
             ChangeState(PlayerState::WALL_CLIMB_UP);
@@ -1506,7 +1745,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         if (m_sensor.frontWall != nullptr) {
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 Vector2d vel = m_velocity->Get();
                 vel.x = 0.0f;
                 vel.y = -7000.0f * deltaTime;
@@ -1556,7 +1795,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
+    if (input && input->IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
         if (m_kunai > 0) {
             m_attack = true;
             m_canAttack = false;
@@ -1574,7 +1813,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::WEAK_ATTACK)) {
+    if (input && input->IsTrigger(Action::WEAK_ATTACK)) {
         m_attack = true;
         m_canAttack = false;
         m_canMove = false;
@@ -1642,10 +1881,12 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }
 
-    UpdateDir(input);
+    if (input) {
+        UpdateDir(*input);
+    }
     dir = m_dir ? 1.0f : -1.0f;
 
-    if (input.IsTrigger(Action::DASH)) {
+    if (input && input->IsTrigger(Action::DASH)) {
         if (m_isGround) {
             if (m_sensor.frontBottom != nullptr && m_sensor.frontUpper == nullptr) {
                 ChangeState(PlayerState::SENTEN);
@@ -1663,7 +1904,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
     }
 
-    if (input.IsTrigger(Action::JUMP)) {
+    if (input && input->IsTrigger(Action::JUMP)) {
         if (m_squat) {
             BlockActor* block = CheckSensor({ 0.0f, m_collision->GetHeight() * 0.5f + 2.0f });
             if (block && block->GetBlockType() == BlockType::Platform)
@@ -1708,15 +1949,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_jumpTime < m_maxJumpTime) {
             m_jumpTime += deltaTime;
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 vel.y += -1500.0f * deltaTime;
             }
         }
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 vel.x = -m_moveSpeed;
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 vel.x = m_moveSpeed;
             }
         }
@@ -1735,21 +1976,22 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         if (m_jumpTime < m_maxJumpTime) {
             m_jumpTime += deltaTime;
-            if (input.IsDown(Action::JUMP)) {
+            if (input && input->IsDown(Action::JUMP)) {
                 vel.y += -1500.0f * deltaTime;
             }
         }
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 vel.x = -m_moveSpeed;
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 vel.x = m_moveSpeed;
             }
         }
         m_velocity->Set(vel);
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1760,16 +2002,17 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 m_velocity->SetX(-m_moveSpeed);
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 m_velocity->SetX(m_moveSpeed);
             }
         }
         if (m_anim->IsFinished()) {
             ChangeState(PlayerState::FALL);
+            return;
         }
         return;
     }
@@ -1780,19 +2023,24 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
 
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
-            if (input.IsDown(Action::LEFT)) {
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::LEFT)) {
                 m_velocity->SetX(-m_moveSpeed);
             }
-            if (input.IsDown(Action::RIGHT)) {
+            if (input->IsDown(Action::RIGHT)) {
                 m_velocity->SetX(m_moveSpeed);
             }
         }
 
         UpdateWallSensor();
+        if (m_sensor.upperArea == nullptr && m_sensor.frontWall != nullptr && !m_ignorePlatform) {
+            ChangeState(PlayerState::WALL_CLIMB_UP);
+            return;
+        }
+
         if (m_sensor.frontWall != nullptr){
-            if (m_isOcto) {
-                if (input.IsDown(Action::JUMP)) {
+            if (m_isJutsu[OCTONum]) {
+                if (input && input->IsDown(Action::JUMP)) {
                     ChangeState(PlayerState::WALL_CLIMB);
                     return;
                 }
@@ -1801,7 +2049,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
                     return;
                 }
             }
-            else if (m_shadowGauge >= 5) {
+            else if (GetCanJutsu(OCTONum) && !m_ignorePlatform) {
                 ChangeState(PlayerState::OCTO_AUTO);
                 return;
             }
@@ -1816,12 +2064,22 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
 
     if (m_state == PlayerState::JUMP_LANDING) {
-        if (!(m_anim->IsFinished())) {
-            return;
+        if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
+            if (!(m_anim->IsFinished())) {
+                return;
+            }
         }
     }
 
-    if (input.IsDown(Action::DOWN)) {
+    if (input && input->IsDown(Action::SHADOW_HEAL)) {
+        if (m_squat) {
+            ExitSquat();
+        }
+        ChangeState(PlayerState::KAMAE);
+        return;
+    }
+
+    if (input && input->IsDown(Action::DOWN)) {
 
         if (!m_squat)
         {
@@ -1839,7 +2097,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         if (m_state == PlayerState::SQUAT) {
-            if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
+            if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
                 ChangeState(PlayerState::SQUAT_WALK);
                 return;
             }
@@ -1848,7 +2106,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
         // しゃがみながら移動
         if (m_state == PlayerState::SQUAT_WALK) {
-            if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+            if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
                 ChangeState(PlayerState::SQUAT);
                 return;
             }
@@ -1857,10 +2115,10 @@ void PlayerEntity::UpdateState(float deltaTime) {
                 vel.x = 0.0f;
             }
             else {
-                if (input.IsDown(Action::LEFT)) {
+                if (input && input->IsDown(Action::LEFT)) {
                     m_velocity->SetX(-m_moveSpeed * 0.5f);
                 }
-                if (input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::RIGHT)) {
                     m_velocity->SetX(m_moveSpeed * 0.5f);
                 }
             }
@@ -1876,10 +2134,11 @@ void PlayerEntity::UpdateState(float deltaTime) {
         if (m_canStand)
         {
             ExitSquat();
+            m_scene->GetGame()->GetSoundManager().Play("player_stand");
         }
         else {
             if (m_state == PlayerState::SQUAT) {
-                if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)) {
                     ChangeState(PlayerState::SQUAT_WALK);
                     return;
                 }
@@ -1888,15 +2147,15 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
             // しゃがみながら移動
             if (m_state == PlayerState::SQUAT_WALK) {
-                if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))) {
+                if (!(input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))) {
                     ChangeState(PlayerState::SQUAT);
                     return;
                 }
 
-                if (input.IsDown(Action::LEFT)) {
+                if (input && input->IsDown(Action::LEFT)) {
                     m_velocity->SetX(-m_moveSpeed * 0.5f);
                 }
-                if (input.IsDown(Action::RIGHT)) {
+                if (input && input->IsDown(Action::RIGHT)) {
                     m_velocity->SetX(m_moveSpeed * 0.5f);
                 }
                 return;
@@ -1925,7 +2184,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
 
         // 移動キー離した
-        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)))
+        if (!input || !(input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)))
         {
             ChangeState(PlayerState::STOP_LONG);
             return;
@@ -1937,7 +2196,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (m_state == PlayerState::RUN_START)
     {
-        if (!(input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT)))
+        if (input && !(input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT)))
         {
             ChangeState(PlayerState::STOP_SHORT);
             return;
@@ -1952,7 +2211,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         return;
     }
 
-    if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))
+    if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))
     {
         ChangeState(PlayerState::RUN_START);
         return;
@@ -1960,7 +2219,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if ((m_state == PlayerState::STOP_SHORT) || (m_state == PlayerState::STOP_LONG))
     {
-        if (input.IsDown(Action::LEFT) ^ input.IsDown(Action::RIGHT))
+        if (input && input->IsDown(Action::LEFT) ^ input->IsDown(Action::RIGHT))
         {
             ChangeState(PlayerState::RUN);
             return;
@@ -1994,6 +2253,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     m_state = newState;
     UpdateScale();
+    m_isKamae = false;
 
     switch (m_state)
     {
@@ -2051,6 +2311,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::SQUAT_START:
         m_anim->Play("squatStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_crouch");
         break;
 
     case PlayerState::SQUAT:
@@ -2092,6 +2353,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("jumpStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_jump");
     }   break;
 
     case PlayerState::JUMP:
@@ -2134,6 +2396,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->SetX(move.x);
 
         m_anim->Play("Hien");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::HIEN:
@@ -2154,6 +2417,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("Hien");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::SENTEN:
@@ -2173,6 +2437,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_velocity->Set(vel);
 
         m_anim->Play("Senten");
+        m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::ROLL_LANDING:
@@ -2206,6 +2471,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_transform->SetScale(scale);
 
         m_anim->Play("wallJump");
+        m_scene->GetGame()->GetSoundManager().Play("player_jump");
     }   break;
 
     case PlayerState::WALL_CLIMB:
@@ -2261,12 +2527,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("weakAttack1");
         if (m_hit) {
             AddShadowGauge(5);
-            if (m_weakAttackSound1 != nullptr) {
-                m_weakAttackSound1->Play();
-            }
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_hit");
         }
         else {
-            m_karaburiSound->Play();
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_miss");
         }
         break;
 
@@ -2309,12 +2573,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_anim->Play("weakAirAttack1", true);
         if (m_hit) {
             AddShadowGauge(5);
-            if (m_weakAttackSound1 != nullptr) {
-                m_weakAttackSound1->Play();
-            }
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_hit");
         }
         else {
-            m_karaburiSound->Play();
+            m_scene->GetGame()->GetSoundManager().Play("player_attack1_miss");
         }
     }   break;
 
@@ -2326,10 +2588,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("Kunai");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_AIR:
@@ -2340,18 +2599,12 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("KunaiAir");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_WALL:
         m_anim->Play("wallKunai");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::KUNAI_SQUAT:
@@ -2362,10 +2615,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_kunaiPending = true;
 
         m_anim->Play("KunaiSquat");
-        if (m_kunaiSound != nullptr)
-        {
-            m_kunaiSound->Play();
-        }
+        m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
     case PlayerState::HIT_TRAP:
@@ -2385,8 +2635,10 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::KAMAE:
-        m_anim->Play("Kamae");
+        m_shadowGaugeTimer = 0.0f;
+        m_isKamae = true;
 
+        m_anim->Play("Kamae");
         break;
 
     case PlayerState::KAMAE_END:
@@ -2448,15 +2700,21 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
-        m_isOcto = true;
         m_jutsuTimer = 2.0f;
+        SubShadowGauge(m_jutsuCost[OCTONum]);
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+
         m_anim->Play("OctoStart");
+        m_scene->GetGame()->GetSoundManager().Play("player_octo");
         break;
 
     case PlayerState::OCTO_AUTO:
     {
-        m_isOcto = true;
         m_isAutoOcto = true;
+        m_octoTimer = 0.0f;
+        m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
+        SubShadowGauge(m_jutsuCost[OCTONum]);
 
         Vector2d vel = m_velocity->Get();
         vel.x = 0.0f;
@@ -2467,28 +2725,63 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
+        m_scene->GetGame()->GetSoundManager().Play("player_octo");
         m_anim->Play("wallHold");   // 後ほどOctoAutoに修正
     }   break;
 
+
     case PlayerState::OCTO_END:
-        m_isOcto = false;
+        m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
-        m_anim->Play("Kamae");  //後ほど修正
+
+        // 蛸の使用終了後にクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
+        m_anim->Play("Kamae");
         break;
 
     case PlayerState::OCTO_AUTO_END:
-        m_isOcto = false;
+        m_isJutsu[OCTONum] = false;
         m_isAutoOcto = false;
         m_endOcto = false;
+
+        // 自動発動した蛸の終了時にもクールタイム開始
+        m_jutsuInterval[OCTONum] =
+            m_jutsuMaxInterval[OCTONum];
+
         m_anim->Play("OctoAutoEnd");
         break;
 
+
     case PlayerState::TIGER:
-        m_anim->Play("Tiger");
+    {
+        // 忍術の使用
+        SubShadowGauge(60);
+
+        // 2撃目のタイマーとフラグを初期化
+        m_tigerTimer = 0.0f;
+        m_tigerFirstAttack = false;
+        m_tigerSecondAttack = false;
+        m_canMove = false;
+        m_invincibleTime = 1.0f;
+        m_isJutsu[TIGERNum] = true;
+        m_jutsuInterval[TIGERNum] = m_jutsuMaxInterval[TIGERNum];
+
+        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[0], !m_dir);
+        effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
+
+        SpawnEffect(effect);
+
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger1");
+        m_anim->Play("squatAttack");  // 後ほどTigerに修正
         break;
+    }
 
     case PlayerState::ORCA:
+        m_jutsuInterval[ORCANum] = m_jutsuMaxInterval[ORCANum];
+
         m_anim->Play("Orca");
         break;
 
@@ -2519,9 +2812,33 @@ void PlayerEntity::UpdateShadowGauge(float deltaTime) {
     if (m_shadowGauge == m_shadowGaugeMax) return;
 
     m_shadowGaugeTimer += deltaTime;
-    if (m_shadowGaugeTimer >= 2.0f) {
-        AddShadowGauge(1);
-        m_shadowGaugeTimer -= 2.0f;
+    if (m_isKamae) {
+        if (m_shadowGaugeTimer >= 1.0f) {
+            AddShadowGauge(5);
+            m_shadowGaugeTimer -= 1.0f;
+        }
+    }
+    else {
+        if (m_shadowGaugeTimer >= 2.0f) {
+            AddShadowGauge(1);
+            m_shadowGaugeTimer -= 2.0f;
+        }
+    }
+}
+
+void PlayerEntity::UpdateJutsuInterval(float deltaTime)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (m_jutsuInterval[i] > 0.0f)
+        {
+            m_jutsuInterval[i] -= deltaTime;
+
+            if (m_jutsuInterval[i] < 0.0f)
+            {
+                m_jutsuInterval[i] = 0.0f;
+            }
+        }
     }
 }
 
@@ -2531,13 +2848,94 @@ void PlayerEntity::UpdateOcto(float deltaTime) {
     m_octoTimer += deltaTime;
 
     if (m_octoTimer >= 1.0f) {
-        SubShadowGauge(5);  //　GDDでは1
+        SubShadowGauge(m_jutsuCost[OCTONum]);  //　GDDでは1
         m_octoTimer -= 1.0f;
     }
 
     if (GetShadowGauge() <= 0) {
         m_shadowGauge = 0;
         m_endOcto = true;
+    }
+}
+
+void PlayerEntity::UpdateTiger(float deltaTime)
+{
+    m_tigerTimer += deltaTime;
+    m_invincibleTime = 1.0f;
+
+    if (!m_tigerFirstAttack && m_tigerTimer >= 0.25f)
+    {
+        m_tigerFirstAttack = true;
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger2");
+        // 前方の敵を近い順に取得
+        CollectNearEnemies(700, 250);
+
+        // 一番近い敵が存在する場合、1撃目を行う
+        EnemyEntity* target = m_nearTargets[0];
+
+        if (target != nullptr && !target->IsDead())
+        {
+            Vector2d knockback{
+                m_dir ? 150.0f : -150.0f,
+                -100.0f
+            };
+
+            target->TakeDamage(80, knockback);
+            m_combo++;
+
+            auto effect = new EffectActor(m_scene, target->GetPos(), EffectType::Tiger1, !m_dir);
+
+            SpawnEffect(effect);
+        }
+        else {
+            auto effect = new EffectActor(m_scene, { this->GetPos().x + (m_dir ? 200.0f : -100.0f), this->GetPos().y}, EffectType::Tiger1, !m_dir);
+
+            SpawnEffect(effect);
+        }
+    }
+
+    // 1.45秒経過したら2撃目を判定する
+    if (!m_tigerSecondAttack && m_tigerTimer >= 1.45f)
+    {
+        // 先にフラグを立て、2撃目が重複しないようにする
+        m_tigerSecondAttack = true;
+        m_scene->GetGame()->GetSoundManager().Play("player_tiger3");
+
+        EnemyEntity* target = m_nearTargets[0];
+        PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+        // 対象が存在し、まだ生存している場合のみ攻撃する
+        if (target != nullptr &&
+            playScene != nullptr && playScene->IsActorAlive(target)) {
+            if (target->GetHP()->GetHP() > 0) {
+                Vector2d knockback{
+                    m_dir ? 150.0f : -150.0f,
+                    -100.0f
+                };
+
+                target->TakeDamage(120, knockback, true);
+                m_combo++;
+
+                auto effect = new EffectActor(m_scene, target->GetPos(), EffectType::Tiger2, !m_dir);
+
+                SpawnEffect(effect);
+            }
+        }
+    }
+
+    // アニメーション終了時に忍術を終了する
+    if (m_tigerTimer > 1.8f)
+    {
+        m_canMove = true;
+        m_tigerSecondAttack = false;
+        m_invincibleTime = 0.0f;
+        m_isJutsu[TIGERNum] = false;
+
+        for (int i = 0; i < 5; i++)
+        {
+            m_nearTargets[i] = nullptr;
+        }
+
     }
 }
 
@@ -2627,7 +3025,10 @@ void PlayerEntity::TakeDamage(int damage, const Vector2d& knockback) {
     if (m_invincibleTime > 0) return;
     if (m_dashTimer > 0.0f) return;
 
+    damage = ApplyDefenseRatio(damage);   // 追加
+
     m_hp->Damage(damage);
+    m_scene->GetGame()->GetSoundManager().Play("player_hit");
 
     m_velocity->Set(knockback);
 
@@ -2705,6 +3106,8 @@ std::string PlayerEntity::GetTexturePath() const { return ""; }
 void PlayerEntity::ResetStageState()
 {
     m_velocity->Set({ 0,0 });
+    m_footstepTimer = 0.0f;
+    m_lastFootstepX = GetPos().x;
 
     m_jumpCount = false;
     m_isGround = false;
@@ -2730,6 +3133,7 @@ void PlayerEntity::AddKunai(int value)
 {
     m_kunai += value;
     if (m_kunai < 0) m_kunai = 0;
+    if (m_kunai > 3) m_kunai = 3;
 }
 
 void PlayerEntity::AddHaku(int value)
@@ -2743,9 +3147,32 @@ void PlayerEntity::AddHaku(int value)
         m_haku = m_maxHaku;
 }
 
+void PlayerEntity::GetHeal(int value)
+{
+    m_healItem += value;
+    if (m_healItem < 0)
+        m_healItem = 0;
+
+    if (m_healItem > m_maxHeal)
+        m_healItem = m_maxHeal;
+}
 void PlayerEntity::HealHP(int value)
 {
     if (!m_hp) return;
     m_hp->Heal(value);
 }
 
+/*
+void PlayerEntity::Draw()
+{
+    EntityActor::Draw();   // 既存の描画(スプライトなど)はそのまま
+
+#ifdef _DEBUG
+    // 隠れている間だけ、画面左上にデバッグ文字を表示
+    if (m_isHide && m_isOcto)
+    {
+        DrawString(20, 100, "[DEBUG] HIDING", GetColor(0, 255, 0));
+    }
+#endif
+}
+*/

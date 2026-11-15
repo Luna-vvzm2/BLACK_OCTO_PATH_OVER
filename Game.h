@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Input.h"
 #include "Scene.h"
+#include "SoundManager.h"
 #include <memory>
 
 class Game
@@ -21,6 +22,11 @@ public:
 	//bool tick(float& deltaTime, int targetFPS = 60, float maxDeltaTime = 0.1f);
 
 	bool IsRunning() const { return m_running; }
+	void RequestQuit() { m_running = false; }
+	int GetVolume(int channel) const;
+	void AdjustVolume(int channel, int amount);
+	SoundManager& GetSoundManager() { return m_soundManager; }
+	const SoundManager& GetSoundManager() const { return m_soundManager; }
 	int GetWidth() const { return m_winWidth; }
 	int GetHeight() const { return m_winHeight; }
 
@@ -31,7 +37,13 @@ public:
 	const std::string& GatGameFont() const { return m_gameFont; }
 	const std::string& GatDebugFont() const { return m_debugFont; }
 
-	void ChangeScene(std::unique_ptr<Scene>nextScene); //クリアシーンのために追加 シーンを外部から切り替えるための関数
+	void PushScene(std::unique_ptr<Scene> nextScene);
+	void PopScene();
+	bool CanPopScene() const { return m_sceneStack.size() > 1; }
+	void ChangeScene(std::unique_ptr<Scene> nextScene); //クリアシーンのために追加 シーンを外部から切り替えるための関数
+	void Quit() { m_running = false; }
+
+	Scene* GetCurrentScene() const;
 
 private:
 
@@ -41,9 +53,20 @@ private:
 	HWND m_window;
 	std::unique_ptr<Renderer> m_renderer;
 	Input m_input;
+	SoundManager m_soundManager;
 
-	std::unique_ptr<Scene> m_scene;
-	std::unique_ptr<Scene> m_nextScene{ nullptr };//クリアシーンのために追加
+	std::vector<std::unique_ptr<Scene>> m_sceneStack;
+	enum class PendingAction
+	{
+		None,
+		Push,
+		Pop,
+		Change
+	};
+	PendingAction m_pendingAction;
+	std::unique_ptr<Scene> m_pendingScene;
+
+	void ProccessPendingActions();
 
 	bool m_running;
 	bool m_ended;
@@ -53,7 +76,7 @@ private:
 	int m_winColor;
 	std::string m_gameFont;
 	std::string m_debugFont;
-
+	int m_volumes[3] = { 100, 100, 100 }; // master, effects, BGM
 
 	//	FPS計算用
 	float m_fps = 0.0f;

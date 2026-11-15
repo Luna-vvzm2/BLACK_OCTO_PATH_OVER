@@ -54,6 +54,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="checkpoint.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -120,6 +123,12 @@
     <ClCompile Include="TitleScene.cpp">
       <Filter>ソース ファイル\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="StageSelectScene.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenMenus.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
     <ClCompile Include="PlayScene.cpp">
       <Filter>ソース ファイル\Scene</Filter>
     </ClCompile>
@@ -141,8 +150,8 @@
     <ClCompile Include="WhiteEnemyEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
     </ClCompile>
-    <ClCompile Include="YellowEnemyEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
+    <ClCompile Include="KooniEnemyEntity.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="ArmorEnemyEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity</Filter>
@@ -163,9 +172,6 @@
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
     </ClCompile>
     <ClCompile Include="SekienkiBossEntity.cpp">
-      <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
-    </ClCompile>
-    <ClCompile Include="YoroiBossEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity\EnemyEntity\BossEntity</Filter>
     </ClCompile>
     <ClCompile Include="KunaiActor.cpp">
@@ -255,9 +261,6 @@
     <ClCompile Include="PlatformOboroMBlock.cpp">
       <Filter>ソース ファイル\Actor\Block</Filter>
     </ClCompile>
-    <ClCompile Include="EquipmentMenu.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Menu.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -267,26 +270,17 @@
     <ClCompile Include="MenuPage.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="SkillMenu.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Trap.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="KaryuTextUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
-    <ClCompile Include="ClearScene.cpp">
-      <Filter>ソース ファイル\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="ClearUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
     <ClCompile Include="DropItemEntity.cpp">
       <Filter>ソース ファイル\Actor\Entity</Filter>
-    </ClCompile>
-    <ClCompile Include="GameOverMenuUI.cpp">
-      <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
     <ClCompile Include="Mouse.cpp">
       <Filter>ソース ファイル\Input</Filter>
@@ -297,6 +291,9 @@
     <ClCompile Include="SoundComponent.cpp">
       <Filter>ソース ファイル\Component</Filter>
     </ClCompile>
+    <ClCompile Include="SoundManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="HitboxData.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -306,8 +303,50 @@
     <ClCompile Include="PlayerStatusUI.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="KeyConfigMenu.cpp">
+    <ClCompile Include="ClearScene.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverScene.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverUI.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="DamageTrap.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusDownTrap.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="NinjutsuSealTrap.cpp">
+      <Filter>ソース ファイル\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemySpawnTrap.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TrapEffect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenu.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuMapPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuNewsPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="SubMenuStatusPage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Mapmenu.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="StatusMenu.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="NewsMenu.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -327,6 +366,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Color.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Checkpoint.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
@@ -386,6 +428,12 @@
     <ClInclude Include="TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="StageSelectScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenMenus.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="PlayScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -413,7 +461,7 @@
     <ClInclude Include="WhiteEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="YellowEnemyEntity.h">
+    <ClInclude Include="KooniEnemyEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ArrowEnemyEntity.h">
@@ -435,9 +483,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="SekienkiBossEntity.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="YoroiBossEntity.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="KunaiActor.h">
@@ -527,13 +572,7 @@
     <ClInclude Include="PlatformOboroMBlock.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="SkillMenu.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Menu.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SkillData.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="EquipmentMenu.h">
@@ -543,9 +582,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="MenuCursor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="GameOverMenuUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Mouse.h">
@@ -572,6 +608,9 @@
     <ClInclude Include="SoundComponent.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="SoundManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="EnemySpawner.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -587,7 +626,49 @@
     <ClInclude Include="PlayerStatusUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="KeyConfigMenu.h">
+    <ClInclude Include="GameOverUI.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="DamageTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="StatusDownTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NinjutsuSealTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemySpawnTrap.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TrapEffect.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NewsData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuMapPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuNewsPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SubMenuStatusPage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Mapmenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Statusmenu.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="NewsMenu.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,18 +9,13 @@
 #include "ClearScene.h"
 #include "PlayerEntity.h"
 #include "Game.h"
+#include "Camera.h"
 #include "Actor.h"
-#include "WhiteEnemyEntity.h"
-#include "YellowEnemyEntity.h"
-#include "ArrowEnemyEntity.h"
-#include "HealerEnemyEntity.h"
-#include "ArmorEnemyEntity.h"
-#include "GunnerEnemyEntity.h"
-#include "YoroiBossEntity.h"
-#include "SekienkiBossEntity.h"
 #include "HPComponent.h"
 #include "EnemySpawner.h"
+#include "boss_01.h"
 
+//CSVの分割用関数
 inline std::vector<std::string> SplitCSV(const std::string& line)
 {
 	std::vector<std::string> tokens;
@@ -122,9 +117,10 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 	if (!ifs.is_open()) return;
 
 	std::string text;
-	std::string eventType = "TALK"; //デフォルトのイベントタイプ
+	std::string eventType = ""; 
 	std::vector<std::string> eventTexts;
 
+	//イベントタイプを読み取りキューに追加するラムダ関数
 	auto pushEvent = [&]()
 		{
 			if (eventTexts.empty()) return;
@@ -147,31 +143,34 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 			{
 				m_eventQueue.push_back(std::make_unique<ClearEvent>(m_scene, eventTexts, this));
 			}
+			else if (eventType == "TUTORIAL")
+			{
+				m_eventQueue.push_back(std::make_unique<TutorialEvent>(m_scene, eventTexts, this));
+			}
+			else if (eventType == "GETSKILL")
+			{
+				m_eventQueue.push_back(std::make_unique<GetSkillEvent>(m_scene, eventTexts, this));
+			}
 			eventTexts.clear();
 		};
 
-	bool isHeaderLine = true; //一行目をスキップするフラグ
 
 	while (std::getline(ifs, text))
 	{
-		std::istringstream i_stream(text);
-		if (text.empty() || text.rfind("//", 0) == 0)continue;
+		if (text.empty() || text.rfind("//", 0) == 0) continue;
 
-		if (isHeaderLine)
-		{
-			isHeaderLine = false;
-			continue;
-		}
+		auto tokens = SplitCSV(text);
+		if (tokens.empty()) continue;
 
-		std::stringstream ss(text);
-		std::string type;
-		std::getline(ss, type, ',');
+		if (tokens[0] == "type" || tokens[0] == "enemyType") continue;
 
-		if (!type.empty())
+		const std::string& typeToken = tokens[0];
+		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL" || typeToken == "GETSKILL")
 		{
 			pushEvent();
-			eventType = type;
+			eventType = typeToken;
 		}
+
 		eventTexts.push_back(text);
 	}
 
@@ -278,30 +277,108 @@ void TalkEvent::Init()
 		m_isEnd = false;
 		ShowText();
 	}
+
+	m_actorLY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 50;
+	m_actorRY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 50;
 }
 
 void TalkEvent::Update(float deltaTime)
 {
-	const Input& input = m_scene->GetGame()->GetInput();
-	if (input.IsTrigger(Action::ENTER))
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
 	{
-		NextText();
-	}
-	if (m_isTextTimerActive)
-	{
-		m_textTimer -= deltaTime;
-		if (m_textTimer <= 0.0f)
+		if (m_talkStart)
 		{
-			m_isTextTimerActive = false;
+			if (m_talkerPosition == ActorPosition::Left)
+			{
+				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
+				const int speed = 1;
+
+				if (m_talkStep == 0)
+				{
+					m_talkStep = 1;
+				}
+
+				if (m_talkStep == 1)
+				{
+					m_actorLY -= speed;
+
+					if (m_actorLY <= targetMinY)
+					{
+						m_actorLY = targetMinY;
+						m_talkStep = 2;
+					}
+				}
+
+				else if (m_talkStep == 2)
+				{
+					m_actorLY += speed;
+
+					if (m_actorLY >= targetMinY + 20)
+					{
+						m_talkStart = false;
+						m_talkStep = 0;
+					}
+				}
+			}
+
+			if (m_talkerPosition == ActorPosition::Right)
+			{
+				const int targetMinY = static_cast<int>(m_boxPos.y + m_boxSize.y) - static_cast<int>(m_actorSize.y) + 30;
+				const int speed = 1;
+
+				if (m_talkStep == 0)
+				{
+					m_talkStep = 1;
+				}
+
+				if (m_talkStep == 1)
+				{
+					m_actorRY -= speed;
+
+					if (m_actorRY <= targetMinY)
+					{
+						m_actorRY = targetMinY;
+						m_talkStep = 2;
+					}
+				}
+
+				else if (m_talkStep == 2)
+				{
+					m_actorRY += speed;
+
+					if (m_actorRY >= targetMinY + 20)
+					{
+						m_talkStart = false;
+						m_talkStep = 0;
+					}
+				}
+			}
+		}
+
+		const Input& input = m_scene->GetGame()->GetInput();
+		if (input.IsTrigger(Action::ENTER))
+		{
 			NextText();
 		}
-	}
-
-	if (input.IsDown(Action::ESCAPE)) //スキップ処理
-	{
-		if (input.GetPressFrame(Action::ESCAPE) >= m_skipTimer)
+		if (m_isTextTimerActive)
 		{
-			m_isEnd = true;
+			m_textTimer -= deltaTime;
+			if (m_textTimer <= 0.0f)
+			{
+				m_isTextTimerActive = false;
+				NextText();
+			}
+		}
+
+		if (input.IsDown(Action::ESCAPE)) //スキップ処理
+		{
+			if (input.GetPressFrame(Action::ESCAPE) >= m_skipTimer)
+			{
+				m_isEnd = true;
+			}
 		}
 	}
 }
@@ -357,34 +434,22 @@ void TalkEvent::ShowText()
 	{
 		if (m_eventManager && m_eventManager->GetEventTexture())
 		{
-			m_actorTextureId = m_eventManager->GetEventTexture()->LoadTexture(tokens[4]);
-		}
-
-		//画像のサイズを変更できる機能（必要ないかも）
-		if (tokens.size() > 6 && !tokens[6].empty() && tokens[6] != "None")
-		{
-			m_actorW = std::stoi(tokens[6]);
-		}
-		else
-		{
-			m_actorW = 480;
-		}
-
-		if (tokens.size() > 7 && !tokens[7].empty() && tokens[7] != "None")
-		{
-			m_actorH = std::stoi(tokens[7]);
-		}
-		else
-		{
-			m_actorH = 510;
+			m_actorLTextureId = m_eventManager->GetEventTexture()->LoadTexture(tokens[4]);
 		}
 	}
 
-	if(tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
+	if (tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
 	{
-		m_talkText = tokens[5];
+		if (m_eventManager && m_eventManager->GetEventTexture())
+		{
+			m_actorRTextureId = m_eventManager->GetEventTexture()->LoadTexture(tokens[5]);
+		}
 	}
 
+	if(tokens.size() > 6 && !tokens[6].empty() && tokens[6] != "None")
+	{
+		m_talkText = tokens[6];
+	}
 
 	//改行処理
 	std::string target = "<br>";
@@ -395,6 +460,7 @@ void TalkEvent::ShowText()
 		pos = m_talkText.find(target, pos + 1);
 	}
 
+	m_talkStart = true;
 }
 
 void TalkEvent::NextText()
@@ -412,58 +478,266 @@ void TalkEvent::NextText()
 
 void TalkEvent::Draw()
 {
-	//テキストボックス描画
-	SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-	DrawBox(m_boxX, m_boxY, m_boxW + m_boxX, m_boxH + m_boxY, m_boxColor.ToDxColor(), TRUE);
-	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-
-	//テキストボックスの枠線描画
-	DrawBox(m_boxX, m_boxY, m_boxW + m_boxX, m_boxH + m_boxY, m_nameColor.ToDxColor(), FALSE);
-
-	//立ち絵の描画
-	if (m_actorTextureId != -1)
+	if (m_isStart)
 	{
-		if (m_talkerPosition == ActorPosition::Left)
+		//立ち絵の描画
+		if (m_actorLTextureId != -1 || m_actorRTextureId != -1)
 		{
-			int actorX = m_boxX - 220;
-			int actorY = (m_boxY + m_boxH) - m_actorH + 50;
-			DrawExtendGraph(actorX, actorY, actorX + m_actorW, actorY + m_actorH, m_actorTextureId, TRUE);
+			{
+				if (m_talkerPosition == ActorPosition::Right)
+				{
+					SetDrawBright(100, 100, 100);
+				}
+				int actorX = static_cast<int>(m_boxPos.x) - 220;
+
+				DrawExtendGraph(actorX, m_actorLY + 50, actorX + static_cast<int>(m_actorSize.x), m_actorLY + static_cast<int>(m_actorSize.y) + 50, m_actorLTextureId, TRUE);
+				SetDrawBright(255, 255, 255);
+			}
+
+			{
+				if (m_talkerPosition == ActorPosition::Left)
+				{
+					SetDrawBright(100, 100, 100);
+				}
+				int actorX = static_cast<int>(m_boxPos.x + m_boxSize.x) - static_cast<int>(m_actorSize.x) + 280;
+
+				DrawExtendGraph(actorX, m_actorRY + 50, actorX + static_cast<int>(m_actorSize.x), m_actorRY + static_cast<int>(m_actorSize.y) + 50, m_actorRTextureId, TRUE);
+			}
+
 		}
-		else if (m_talkerPosition == ActorPosition::Right) 
+		SetDrawBright(255, 255, 255);
+
+		//テキストボックス描画
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+		//テキストボックスの枠線描画
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_nameColor.ToDxColor(), FALSE);
+		int textX = static_cast<int>(m_boxPos.x) + 30;
+		int textY = static_cast<int>(m_boxPos.y) + 30;
+
+		//ChangeFont("HGP 明朝 E");
+		SetFontSize(m_fontSize);
+		DrawString(textX, textY, m_talkText.c_str(), m_textColor.ToDxColor());
+
+		if (m_talkerName.empty()) return;
+
+		if (m_talkerPosition == ActorPosition::Right)
 		{
-			int actorX = (m_boxX + m_boxW) - m_actorW + 280;
-			int actorY = (m_boxY + m_boxH) - m_actorH + 50;
-			DrawExtendGraph(actorX, actorY, actorX + m_actorW, actorY + m_actorH, m_actorTextureId, TRUE);
+			m_nameX = static_cast<int>(m_boxPos.x);
+		}
+		else
+		{
+			m_nameX = m_nameX2;
 		}
 
+		DrawString(m_nameX, m_nameY, m_talkerName.c_str(), m_nameColor.ToDxColor());
 	}
-
-	int textX = m_boxX + 30;
-	int textY = m_boxY + 30;
-
-	if (m_actorTextureId > 0 && m_talkerPosition == ActorPosition::Left)
-	{
-		textX += (m_actorW - 250);
-	}
-
-	//ChangeFont("HGP 明朝 E");
-	SetFontSize(m_fontSize);
-	DrawString(textX, textY, m_talkText.c_str(), m_textColor.ToDxColor());
-
-	if (m_talkerName.empty()) return;
-	
-	if (m_talkerPosition == ActorPosition::Right)
-	{
-		m_nameX = m_boxX;
-	}
-	else
-	{
-		m_nameX = m_nameX2;
-	}
-
-	DrawString(m_nameX, m_nameY, m_talkerName.c_str(), m_nameColor.ToDxColor());
 }
 
+TutorialEvent::TutorialEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	LoadTexts(filePath);
+}
+
+TutorialEvent::TutorialEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	m_texts = texts;
+}
+
+TutorialEvent::~TutorialEvent() = default;
+
+void TutorialEvent::Init()
+{
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Paused);
+	}
+
+	if (m_eventManager)
+	{
+		EventTexture* texManager = m_eventManager->GetEventTexture();
+
+		if (texManager)
+		{
+			for (const std::string& text : m_texts)
+			{
+				auto tokens = SplitCSV(text);
+				if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+				{
+					texManager->LoadTexture(tokens[3]);
+				}
+			}
+		}
+
+		m_currentPage = 0;
+		m_isEnd = false;
+		ShowText();
+	}
+}
+
+void TutorialEvent::Update(float deltaTime)
+{
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
+	{
+		const Input& input = m_scene->GetGame()->GetInput();
+		if (input.IsTrigger(Action::ENTER))
+		{
+			m_currentPage++;
+			if (m_currentPage >= static_cast<int>(m_texts.size()))
+			{
+				m_isEnd = true;
+			}
+			else
+			{
+				ShowText();
+			}
+		}
+		else if (input.IsMenuTrigger(Action::RIGHT))
+		{
+			if (m_currentPage < static_cast<int>(m_texts.size() - 1))
+			{
+				m_currentPage++;
+				ShowText();
+			}
+		}
+		else if (input.IsMenuTrigger(Action::LEFT))
+		{
+			if (m_currentPage > 0)
+			{
+				m_currentPage--;
+				ShowText();
+			}
+		}
+	}
+}
+
+void TutorialEvent::End()
+{
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Active);
+	}
+
+	if (m_eventManager)
+	{
+		EventTexture* texManager = m_eventManager->GetEventTexture();
+		if (texManager)
+		{
+			texManager->Clear();
+		}
+	}
+	DeleteTexts();
+}
+
+bool TutorialEvent::IsEnd() const
+{
+	return m_isEnd;
+}
+
+void TutorialEvent::ShowText()
+{
+	if (m_currentPage < 0 || m_currentPage >= static_cast<int>(m_texts.size())) return;
+
+	const std::string& text = m_texts[m_currentPage];
+	auto tokens = SplitCSV(text);
+
+	if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+	{
+		m_headerText = tokens[1];
+	}
+
+	if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+	{
+		m_bodyText = tokens[2];
+	}
+
+	if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+	{
+		if (m_eventManager && m_eventManager->GetEventTexture())
+		{
+			m_explanationImageId = m_eventManager->GetEventTexture()->LoadTexture(tokens[3]);
+		}
+	}
+
+	//改行処理
+	std::string target = "<br>";
+	size_t pos = m_bodyText.find(target);
+	while (pos != std::string::npos)
+	{
+		m_bodyText.replace(pos, target.length(), "\n");
+		pos = m_bodyText.find(target, pos + 1);
+	}
+}
+
+void TutorialEvent::Draw()
+{
+	if (m_isStart)
+	{
+		//ボックス描画
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+
+		//ボックスの枠線描画
+		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxBorderColor.ToDxColor(), FALSE, 5);
+
+
+		//立ち絵の描画
+		static int imgPosX = static_cast<int>((1280.0f - m_imageSize.x) * 0.5f);
+		static int imgPosY = static_cast<int>(m_boxPos.y + 100.0f);
+
+		if (m_explanationImageId != -1)
+		{
+			DrawExtendGraph(imgPosX, imgPosY, static_cast<int>(imgPosX + m_imageSize.x), static_cast<int>(imgPosY + m_imageSize.y), m_explanationImageId, TRUE);
+		}
+
+		int textSizeX = 0;
+		int textSizeY = 0;
+		int lineCount = 0;
+
+		//見出しの描画
+		//ChangeFont("HGP 明朝 E");
+		SetFontSize(m_headerFontSize);
+		GetDrawStringSize(&textSizeX, &textSizeY, &lineCount, m_headerText.c_str(), static_cast<int>(m_headerText.length()));
+
+		static int headerTextX = static_cast<int>((1280.0f - textSizeX) * 0.5f);
+		static int headerTextY = static_cast<int>((m_boxPos.y + 30.0f));
+		DrawString(headerTextX, headerTextY, m_headerText.c_str(), m_textColor.ToDxColor());
+
+		//説明文の描画
+		SetFontSize(m_bodyFontSize);
+		static int bodyTextX = imgPosX;
+		static int bodyTextY = static_cast<int>(imgPosY + m_imageSize.y + 30.0f);
+		DrawString(bodyTextX, bodyTextY, m_bodyText.c_str(), m_textColor.ToDxColor());
+
+		//現在ページを表す円の描画
+		int n = static_cast<int>(m_texts.size());
+		int width = (n * 10) + ((n - 1) * 50);
+		int startX = static_cast<int>((1280.0f - width) * 0.5f);
+		int circleY = static_cast<int>(m_boxPos.y + m_boxSize.y + 30);
+		for (int i = 0; i < n; ++i)
+		{
+			int circleX = startX + i * 60;
+
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
+			DrawCircle(circleX, circleY, 10, m_boxColor.ToDxColor());
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+			if (i == m_currentPage)
+			{
+				DrawCircle(circleX, circleY, 6, m_textColor.ToDxColor());
+			}
+		}
+	}
+}
 
 BattleEvent::BattleEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
 	: m_scene(scene)
@@ -485,7 +759,7 @@ void BattleEvent::Init()
 {
 	m_areaXMin = -64.0f;
 	m_areaXMax = 1016.0f;
-
+	
 	for (auto actor : m_scene->GetActors())
 	{
 		if (actor->GetType() == ActorType::Player)
@@ -511,43 +785,51 @@ void BattleEvent::Update(float deltaTime)
 {
 	if (!m_isSpawned)
 	{
+		Vector2d triggerPos = m_eventManager->GetTriggerPosition();
+
 		for (const std::string& text : m_texts)
 		{
 			auto tokens = SplitCSV(text);
-			if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+			if (tokens.empty()) continue;
+
+			if (tokens[0] == "BATTLE")
 			{
-				Vector2d triggerPos = m_eventManager->GetTriggerPosition();
-				m_areaXMin = std::stof(tokens[1]);
-				m_areaXMin += triggerPos.x;
+				if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+				{
+					m_areaXMin = triggerPos.x + std::stof(tokens[1]);
+				}
+
+				if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+				{
+					m_areaXMax = triggerPos.x + std::stof(tokens[2]);
+				}
+				m_isAreaSet = true;
+				continue;
 			}
 
-			if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
-			{
-				m_areaXMax = std::stof(tokens[2]);
-				m_areaXMax += m_areaXMin;
-			}
 
-			if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+			if (!tokens[0].empty() && tokens[0] != "None")
 			{
-				m_enemyType = std::stoi(tokens[3]);
-			}
+				m_enemyType = std::stoi(tokens[0]);
 
-			if (tokens.size() > 4 && !tokens[4].empty() && tokens[4] != "None")
-			{
-				m_enemyPos.x = std::stof(tokens[4]);
-			}
+				if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+				{
+					m_enemyPos.x = std::stof(tokens[1]);
+				}
 
-			if (tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
-			{
-				m_enemyPos.y = -std::stof(tokens[5]);
+				if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+				{
+					m_enemyPos.y = -std::stof(tokens[2]);
+				}
+
+				EnemySpawn(); 
 			}
-			EnemySpawn();
 		}
 		m_isSpawned = true;
 		std::cerr << "生成された敵の数: " << m_actors.size() << "\n";
 		return;
 	}
-
+	
 	const auto& sceneActors = m_scene->GetActors();
 
 	auto newEnd = std::remove_if(m_actors.begin(), m_actors.end(), [&](Actor* enemy)
@@ -557,6 +839,14 @@ void BattleEvent::Update(float deltaTime)
 			if (it == sceneActors.end() || enemy->GetState() == Actor::State::Dead)
 			{
 				return true;
+			}
+			else
+			{
+				Boss_01* sujou = dynamic_cast<Boss_01*>(enemy); // 洲条戦はActorStateがDeadにならないため
+				if (sujou->IsBattleFinished())
+				{
+					return true;
+				}
 			}
 			return false;
 		});
@@ -582,7 +872,7 @@ void BattleEvent::Update(float deltaTime)
 					m_isPlayerInsideArea = false;
 					continue;
 				}
-
+				
 				auto transform = actor->GetComponent<TransformComponent>();
 				if (!transform) continue;
 
@@ -693,44 +983,11 @@ void BattleEvent::EnemySpawn()
 	switch (m_enemyType)
 	{
 	case 1:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<WhiteEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 2:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<YellowEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 3:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<ArrowEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 4:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<HealerEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 5:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<ArmorEnemyEntity>(playScene, spawnPos);
-	}break;
-
+		break;
+		
 	case 6:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<GunnerEnemyEntity>(playScene, spawnPos);
-	}break;
-
-	case 7:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<YoroiBossEntity>(playScene, spawnPos,"assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-	}break;
-
-	case 8:
-	{
-		spawnedEnemy = EnemySpawner::SpawnEnemy<SekienkiBossEntity>(playScene, spawnPos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-	}break;
+		spawnedEnemy = EnemySpawner::SpawnEnemy<Boss_01>(playScene, spawnPos);
+		break;
 
 	default:
 		std::cerr << "無効な値のため敵を生成できません。\n";
@@ -806,7 +1063,7 @@ void CutInEvent::Init()
 
 				if (tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
 				{
-					m_musashiTextureId = texManager->LoadTexture(tokens[5]);
+					m_heroTextureId = texManager->LoadTexture(tokens[5]);
 				}
 
 				if (tokens.size() > 6 && !tokens[6].empty() && tokens[6] != "None")
@@ -822,43 +1079,50 @@ void CutInEvent::Init()
 
 void CutInEvent::Update(float deltaTime)
 {
-	if(m_timer <= m_displayTime)
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
 	{
-		if ((m_timer < m_displayTime * 0.1f))
+
+		if (m_timer <= m_displayTime)
 		{
-			m_graphSpeed = 100;
-		}
-		else if ((m_timer >= m_displayTime * 0.1f) && (m_timer <= m_displayTime * 0.75f))
-		{
-			m_graphSpeed = 1;
-			if (m_rBossNameX > 200)
+			if ((m_timer < m_displayTime * 0.1f))
 			{
+				m_graphSpeed = 100;
+			}
+			else if ((m_timer >= m_displayTime * 0.1f) && (m_timer <= m_displayTime * 0.75f))
+			{
+				m_graphSpeed = 1;
+				if (m_rBossNamePos.x > 200)
+				{
+					m_nameSpeed = 100;
+				}
+				else
+				{
+					m_nameSpeed = 1;
+				}
+			}
+			else if (m_timer > m_displayTime * 0.7f)
+			{
+				m_graphSpeed = 100;
 				m_nameSpeed = 100;
 			}
-			else
-			{
-				m_nameSpeed = 1;
-			}
+
+
+			m_bossPos.x -= m_graphSpeed;
+			m_heroPos.x += m_graphSpeed;
+
+			m_rBossNamePos.x -= m_nameSpeed;
+			m_jBossNamePos.x -= m_nameSpeed;
+
+			m_timer++;
 		}
-		else if (m_timer > m_displayTime * 0.7f)
+		else
 		{
-			m_graphSpeed = 100;
-			m_nameSpeed = 100;
+			m_isEnd = true;
+			return;
 		}
-
-
-		m_bossX -= m_graphSpeed;
-		m_musashiX += m_graphSpeed;
-
-		m_rBossNameX -= m_nameSpeed;
-		m_jBossNameX -= m_nameSpeed;
-
-		m_timer++;
-	}
-	else
-	{
-		m_isEnd = true;
-		return;
 	}
 }
 
@@ -890,22 +1154,193 @@ void CutInEvent::Draw()
 {
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
-	if((m_bossTextureId != -1) && (m_musashiTextureId != -1))
+	if((m_bossTextureId != -1) && (m_heroTextureId != -1))
 	{
-		DrawExtendGraph(m_bandX, m_bandY, m_bandX + m_bandW, m_bandY + m_bandH, m_bandTextureId, TRUE);
-		DrawExtendGraph(m_bossX, m_bossY, m_bossX + m_bossW, m_bossY + m_bossH, m_bossTextureId, TRUE);
-		DrawExtendGraph(m_musashiX, m_musashiY, m_musashiX + m_musashiW, m_musashiY + m_musashiH, m_musashiTextureId, TRUE);
+		DrawExtendGraph(static_cast<int>(m_bandPos.x), static_cast<int>(m_bandPos.y), static_cast<int>(m_bandPos.x + m_bandSize.x), static_cast<int>(m_bandPos.y + m_bandSize.y), m_bandTextureId, TRUE);
+		DrawExtendGraph(static_cast<int>(m_bossPos.x), static_cast<int>(m_bossPos.y), static_cast<int>(m_bossPos.x + m_bossSize.x), static_cast<int>(m_bossPos.y + m_bossSize.y), m_bossTextureId, TRUE);
+		DrawExtendGraph(static_cast<int>(m_heroPos.x), static_cast<int>(m_heroPos.y), static_cast<int>(m_heroPos.x + m_heroSize.x), static_cast<int>(m_heroPos.y + m_heroSize.y), m_heroTextureId, TRUE);
 	}
 
 	//ChangeFont("Nexus Sans");
 	SetFontSize(m_rFontSize);
-	DrawString(m_rBossNameX, m_rBossNameY, m_rBossName.c_str(), m_rBossNameColor.ToDxColor());
+	DrawString(static_cast<int>(m_rBossNamePos.x), static_cast<int>(m_rBossNamePos.y), m_rBossName.c_str(), m_rBossNameColor.ToDxColor());
 
 	//ChangeFont("HGP 明朝 E");
 	SetFontSize(m_jFontSize);
-	DrawString(m_jBossNameX, m_jBossNameY, m_jBossName.c_str(), m_jBossNameColor.ToDxColor());
+	DrawString(static_cast<int>(m_jBossNamePos.x), static_cast<int>(m_jBossNamePos.y), m_jBossName.c_str(), m_jBossNameColor.ToDxColor());
 }
 
+GetSkillEvent::GetSkillEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	LoadTexts(filePath);
+}
+
+GetSkillEvent::GetSkillEvent(Scene* scene, const std::vector<std::string>& texts, EventManager* eventManager)
+	: m_scene(scene)
+	, m_eventManager(eventManager)
+{
+	m_texts = texts;
+}
+
+GetSkillEvent::~GetSkillEvent() = default;
+
+void GetSkillEvent::Init()
+{
+	if (m_eventManager)
+	{
+
+		for (auto actor : m_scene->GetActors())
+		{
+			actor->SetState(Actor::State::Paused);
+		}
+
+		for (const std::string& text : m_texts)
+		{
+			auto tokens = SplitCSV(text);
+
+			if (tokens.size() > 1 && !tokens[1].empty() && tokens[1] != "None")
+			{
+				m_phaze = std::stoi(tokens[1]);
+			}
+
+			if (tokens.size() > 2 && !tokens[2].empty() && tokens[2] != "None")
+			{
+				m_viewTimer = std::stof(tokens[2]);
+			}
+
+			if (tokens.size() > 3 && !tokens[3].empty() && tokens[3] != "None")
+			{
+				m_skillType = static_cast<SkillType>(std::stoi(tokens[3]));
+			}
+
+			if (tokens.size() > 4 && !tokens[4].empty() && tokens[4] != "None")
+			{
+				m_targetPos.x = std::stof(tokens[4]);
+			}
+
+			if (tokens.size() > 5 && !tokens[5].empty() && tokens[5] != "None")
+			{
+				m_targetPos.y = std::stof(tokens[5]);
+			}
+		}
+
+		auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+		if (playScene)
+		{
+			Camera& camera = playScene->GetCamera();
+
+			if (m_phaze == 1)
+			{
+				m_targetPos += camera.GetCenter();
+				m_isCameraMoving = true;
+			}
+			else if (m_phaze == 2)
+			{
+				m_targetPos = camera.GetCenter() - m_targetPos;
+				m_isCameraMoving = false;
+			}
+		}
+
+		m_isMoveEnd = false;
+		m_isEnd = false;
+	}
+
+}
+
+void GetSkillEvent::Update(float deltaTime)
+{
+	auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+	m_isStart = playScene->GetPlayer()->OnGround();
+
+	if (m_isStart)
+	{
+		if (!m_isMoveEnd)
+		{
+			Camera& camera = playScene->GetCamera();
+			Vector2d camPos = camera.GetCenter();
+
+			if (camPos != m_targetPos && m_isCameraMoving)
+			{
+				Vector2d direction = m_targetPos - camPos;
+				float distance = direction.length();
+
+				Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
+				if (moveVector.length() >= distance)
+				{
+					if (m_viewTimer >= 0.0f)
+					{
+						m_viewTimer -= deltaTime;
+					}
+					else
+					{
+						m_isCameraMoving = false;
+						m_isEnd = true;
+					}
+				}
+				else
+				{
+					camera.SetCenter(camPos + moveVector);
+				}
+			}
+			else
+			{
+				if (m_viewTimer >= 0.0f)
+				{
+					m_viewTimer -= deltaTime;
+				}
+				else 
+				{
+					if (!m_isCameraMoving)
+					{
+						Vector2d direction = m_targetPos - camPos;
+						float distance = direction.length();
+
+						Vector2d moveVector = direction.normalize() * m_moveSpeed * deltaTime;// 正規化し移動速度をかける
+						if (moveVector.length() >= distance)
+						{
+							m_isMoveEnd = true;
+						}
+						else
+						{
+							camera.SetCenter(camPos + moveVector);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			// 入手処理
+			PlayerEntity* player = playScene->GetPlayer();
+			bool skillType = player->GetCanJutsu(static_cast<int>(m_skillType));
+			if (!skillType)
+			{
+				player->ToggleJutsu(static_cast<int>(m_skillType)); // スキルの獲得
+				player->AddShadowGaugeMax(); // 影ゲージの増加
+			}
+
+			m_isEnd = true;
+		}
+	}
+}
+
+void GetSkillEvent::End()
+{
+	for (auto actor : m_scene->GetActors())
+	{
+		actor->SetState(Actor::State::Active);
+	}
+
+	DeleteTexts();
+}
+
+bool GetSkillEvent::IsEnd() const
+{
+	return m_isEnd;
+}
 
 ClearEvent::ClearEvent(Scene* scene, const std::string& filePath, EventManager* eventManager)
 	: m_scene(scene)

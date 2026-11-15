@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <filesystem>
 #include <algorithm>
 #include <vector>
 
@@ -15,6 +16,7 @@ bool SaveManager::Save(const SaveData& data)
     saveData["stageClear"] = data.stageClear;
     saveData["playTime"] = data.playTime;
     saveData["kunaiCount"] = data.kunaiCount;
+    saveData["newsOwned"] = data.newsOwned;
 
     // キー設定を保存
     saveData["keyBindings"] = data.keyBindings;
@@ -64,6 +66,19 @@ bool SaveManager::Load(SaveData& data)
         }
     }
 
+    if (saveData.contains("newsOwned") &&
+        saveData["newsOwned"].is_array())
+    {
+        for (size_t i = 0; i < data.newsOwned.size(); ++i)
+        {
+            if (i < saveData["newsOwned"].size())
+            {
+                data.newsOwned[i] =
+                    saveData["newsOwned"][i].get<bool>();
+            }
+        }
+    }
+
     // キー割り当てを読み込む
     if (saveData.contains("keyBindings") &&
         saveData["keyBindings"].is_array())
@@ -90,11 +105,8 @@ bool SaveManager::Load(SaveData& data)
                 }
             }
 
-            // 空の割り当ては読み込まない
-            if (!keys.empty())
-            {
-                data.keyBindings[i] = std::move(keys);
-            }
+            data.keyBindings[i] = std::move(keys);
+            data.hasKeyBinding[i] = true;
         }
     }
 

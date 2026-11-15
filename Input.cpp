@@ -6,7 +6,6 @@ Input::Input() {
 }
 
 void Input::Init() {
-
     m_actionInputModes.fill(InputMode::Hold);
     m_toggleStates.fill(false);
 
@@ -29,6 +28,7 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::KAMAE)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::G)] = { Key::G };
     m_actionKeyMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Key::H };
+    m_actionKeyMap[static_cast<size_t>(Action::SHADOW_HEAL)] = { Key::Z };
     m_actionKeyMap[static_cast<size_t>(Action::OCTO)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::TIGER)] = { Key::E };
     m_actionKeyMap[static_cast<size_t>(Action::ORCA)] = { Key::F };
@@ -38,6 +38,8 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::MENU)] = { Key::M };
     m_actionKeyMap[static_cast<size_t>(Action::PAGE_UP)] = { Key::PAGE_UP };
     m_actionKeyMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Key::PAGE_DOWN };
+    m_actionKeyMap[static_cast<size_t>(Action::ZOOM_IN)] = { Key::Q };
+    m_actionKeyMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Key::E };
 
     // ジョイパッドも同様に
     m_actionPadMap[static_cast<size_t>(Action::UP)] = { Joypad::UP };
@@ -51,6 +53,7 @@ void Input::Init() {
     m_actionPadMap[static_cast<size_t>(Action::KAMAE)] = { Joypad::LB };
     m_actionPadMap[static_cast<size_t>(Action::G)] = { Joypad::LT };
     m_actionPadMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Joypad::RT };
+    m_actionPadMap[static_cast<size_t>(Action::SHADOW_HEAL)] = {};
     m_actionPadMap[static_cast<size_t>(Action::OCTO)] = {};
     m_actionPadMap[static_cast<size_t>(Action::TIGER)] = {};
     m_actionPadMap[static_cast<size_t>(Action::ORCA)] = {};
@@ -60,12 +63,15 @@ void Input::Init() {
     m_actionPadMap[static_cast<size_t>(Action::MENU)] = { Joypad::BACK };
     m_actionPadMap[static_cast<size_t>(Action::PAGE_UP)] = { Joypad::LB };
     m_actionPadMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Joypad::RB };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_IN)] = { Joypad::RS_UP };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Joypad::RS_DOWN };
     m_key.Init();
     m_pad.Init();
 }
 
-void Input::Update()
-{
+
+
+void Input::Update() {
     m_key.Update();
     m_pad.Update();
 
@@ -82,10 +88,10 @@ void Input::Update()
     }
 }
 
-bool Input::IsDown(Action action) const
-{
+bool Input::IsDown(Action action) const {
     const size_t index = static_cast<size_t>(action);
 
+    // キーボード側チェック
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
         return false;
 
@@ -100,10 +106,15 @@ bool Input::IsDown(Action action) const
             return true;
     }
 
+    // パッド側チェック
     for (auto button : m_actionPadMap[index])
     {
         if (m_pad.IsDown(button))
             return true;
+    }
+
+    if (action == Action::SHADOW_HEAL) {
+        return m_pad.IsDown(Joypad::LT) && m_pad.IsDown(Joypad::RT);
     }
 
     return false;
@@ -195,6 +206,10 @@ int Input::GetKeyBinding(Action action) const
 
 bool Input::SetKeyBinding(Action action, int keyIndex)
 {
+    // ENTER / ESCAPE は固定。割り当て変更を一切受け付けない
+    if (action == Action::ENTER || action == Action::ESCAPE)
+        return false;
+
     const size_t index = static_cast<size_t>(action);
 
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
@@ -203,10 +218,26 @@ bool Input::SetKeyBinding(Action action, int keyIndex)
     if (keyIndex < 0 || keyIndex >= Key::KEY_COUNT)
         return false;
 
-    auto& keys = m_actionKeyMap[index];
+    auto targetKey = static_cast<Key::KeyIndex>(keyIndex);
 
-    keys.clear();
-    keys.push_back(static_cast<Key::KeyIndex>(keyIndex));
+    // 割り当て不可キー
+    if (targetKey == Key::ESCAPE || targetKey == Key::ENTER)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
+    {
+        if (i == index) continue;
+
+        auto& keys = m_actionKeyMap[i];
+        keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
+    }
+
+    auto& targetKeys = m_actionKeyMap[index];
+
+    targetKeys.clear();
+    targetKeys.push_back(targetKey);
 
     return true;
 }
@@ -255,13 +286,13 @@ bool Input::SetKeyBindings(
     Action action,
     const std::vector<int>& keyIndices)
 {
+    // ENTER / ESCAPE は固定。割り当て変更を一切受け付けない
+    if (action == Action::ENTER || action == Action::ESCAPE)
+        return false;
+
     const size_t index = static_cast<size_t>(action);
 
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
-        return false;
-
-    // 空の割り当ては受け付けない
-    if (keyIndices.empty())
         return false;
 
     std::vector<Key::KeyIndex> newKeys;
@@ -273,11 +304,28 @@ bool Input::SetKeyBindings(
 
         auto key = static_cast<Key::KeyIndex>(keyIndex);
 
+        // 割り当て不可キー
+        if (key == Key::ESCAPE || key == Key::ENTER)
+        {
+            return false;
+        }
+
         // 同じキーが重複しないようにする
         if (std::find(newKeys.begin(), newKeys.end(), key)
             == newKeys.end())
         {
             newKeys.push_back(key);
+        }
+    }
+
+    for (auto targetKey : newKeys)
+    {
+        for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
+        {
+            if (i == index) continue;
+
+            auto& keys = m_actionKeyMap[i];
+            keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
         }
     }
 
@@ -292,28 +340,32 @@ bool Input::IsMenuDown(Action action) const
     {
     case Action::UP:
         return m_key.IsDown(Key::W) ||
-            m_key.IsDown(Key::UP);
+            m_key.IsDown(Key::UP) ||
+            m_pad.IsDown(Joypad::UP);
 
     case Action::DOWN:
         return m_key.IsDown(Key::S) ||
-            m_key.IsDown(Key::DOWN);
+            m_key.IsDown(Key::DOWN) ||
+            m_pad.IsDown(Joypad::DOWN);
 
     case Action::LEFT:
         return m_key.IsDown(Key::A) ||
-            m_key.IsDown(Key::LEFT);
+            m_key.IsDown(Key::LEFT) ||
+            m_pad.IsDown(Joypad::LEFT);
 
     case Action::RIGHT:
         return m_key.IsDown(Key::D) ||
-            m_key.IsDown(Key::RIGHT);
+            m_key.IsDown(Key::RIGHT) ||
+            m_pad.IsDown(Joypad::RIGHT);
 
     case Action::ENTER:
-        return m_key.IsDown(Key::ENTER);
+        return m_key.IsDown(Key::ENTER) || m_pad.IsDown(Joypad::B);
 
     case Action::ESCAPE:
-        return m_key.IsDown(Key::ESCAPE);
+        return m_key.IsDown(Key::ESCAPE) || m_pad.IsDown(Joypad::START);
 
     case Action::MENU:
-        return m_key.IsDown(Key::M);
+        return m_key.IsDown(Key::M) || m_pad.IsDown(Joypad::BACK);
 
     default:
         return false;
@@ -326,28 +378,32 @@ bool Input::IsMenuTrigger(Action action) const
     {
     case Action::UP:
         return m_key.IsTrigger(Key::W) ||
-            m_key.IsTrigger(Key::UP);
+            m_key.IsTrigger(Key::UP) ||
+            m_pad.IsTrigger(Joypad::UP);
 
     case Action::DOWN:
         return m_key.IsTrigger(Key::S) ||
-            m_key.IsTrigger(Key::DOWN);
+            m_key.IsTrigger(Key::DOWN) ||
+            m_pad.IsTrigger(Joypad::DOWN);
 
     case Action::LEFT:
         return m_key.IsTrigger(Key::A) ||
-            m_key.IsTrigger(Key::LEFT);
+            m_key.IsTrigger(Key::LEFT) ||
+            m_pad.IsTrigger(Joypad::LEFT);
 
     case Action::RIGHT:
         return m_key.IsTrigger(Key::D) ||
-            m_key.IsTrigger(Key::RIGHT);
+            m_key.IsTrigger(Key::RIGHT) ||
+            m_pad.IsTrigger(Joypad::RIGHT);
 
     case Action::ENTER:
-        return m_key.IsTrigger(Key::ENTER);
+        return m_key.IsTrigger(Key::ENTER) || m_pad.IsTrigger(Joypad::B);
 
     case Action::ESCAPE:
-        return m_key.IsTrigger(Key::ESCAPE);
+        return m_key.IsTrigger(Key::ESCAPE) || m_pad.IsTrigger(Joypad::START);
 
     case Action::MENU:
-        return m_key.IsTrigger(Key::M);
+        return m_key.IsTrigger(Key::M) || m_pad.IsTrigger(Joypad::BACK);
 
     default:
         return false;

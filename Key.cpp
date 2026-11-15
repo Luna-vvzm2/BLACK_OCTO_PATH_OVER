@@ -19,6 +19,7 @@ void Key::Init() {
 	m_keyMap[F] = KEY_INPUT_F;
 	m_keyMap[G] = KEY_INPUT_G;
 	m_keyMap[H] = KEY_INPUT_H;
+	m_keyMap[Z] = KEY_INPUT_Z;
 	m_keyMap[M] = KEY_INPUT_M;
 	m_keyMap[ESCAPE] = KEY_INPUT_ESCAPE;
 	m_keyMap[SPACE] = KEY_INPUT_SPACE;
@@ -69,7 +70,6 @@ void Key::Init() {
     // í«â¡ÅFÇªÇÃëº
     m_keyMap[TAB] = KEY_INPUT_TAB;
     m_keyMap[BACKSPACE] = KEY_INPUT_BACK;
-
 
 	for (int i = 0; i < KEY_COUNT; i++) {
 		m_nowKeys[i] = CheckHitKey(m_keyMap[i]) != 0;

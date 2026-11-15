@@ -1,6 +1,7 @@
 #pragma once
 #include "Scene.h"
 #include "Vector2d.h"
+#include "ScreenMenus.h"
 
 class TitleScene : public Scene
 {
@@ -19,5 +20,7 @@ public:
 private:
 
 	Vector2d titlePos;
+	SettingsMenu m_settings;
+	int m_cursor = 0;
 };
 

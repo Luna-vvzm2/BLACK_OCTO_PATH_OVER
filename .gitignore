@@ -365,3 +365,4 @@ FodyWeavers.xsd
 
 # vcpkg
 vcpkg_installed/
+/Log.txt

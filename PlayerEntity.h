@@ -131,15 +131,16 @@ public:
     void UpdateInvincible(float deltaTime);
     void UpdateSensor();
 
-    void UpdateJutsuKamae(float deltaTime);
-    void UpdateKaryu(float deltaTime);
+    /*void UpdateJutsuKamae(float deltaTime);
+    void UpdateKaryu(float deltaTime);*/
     bool GetIsKaryu() { return m_isKaryu; }
     float GetKaryuTimer() { return m_KaryuTimer; }
 
-    void UpdateKamae(float deltaTime);
-    void UpdateExecution(float deltaTime);
+    /*void UpdateKamae(float deltaTime);
+    void UpdateExecution(float deltaTime);*/
     void CollectExecutionTargets();
     std::vector<EnemyEntity*> CollectEnemiesInScreen();
+    void CollectNearEnemies(int width, int height);
 
     void UpdateScale();
     void UpdateGravity(float deltaTime);
@@ -148,7 +149,9 @@ public:
     void ChangeState(PlayerState newState);
     void UpdateMove();
     void UpdateShadowGauge(float deltaTime);
+    void UpdateJutsuInterval(float deltaTime);
     void UpdateOcto(float deltaTime);
+    void UpdateTiger(float deltaTime);
     void UpdateWallSensor();
     void UpdateKunai(float deltaTime);
     void UpdateDir(const Input& input);
@@ -169,6 +172,33 @@ public:
     int GetJutsuGaugeAmount() const { return m_jutsuGauge; }
 
     bool GetOwnJutsu(int idx);      // 忍術の獲得状況フラグ。　蛸 = 0、虎 = 1、蛙 = 2、鯱 = 3
+    bool GetCanJutsu(int idx) { return m_ownJutsu[idx] && m_shadowGauge >= m_jutsuCost[idx] && m_jutsuInterval[idx] <= 0.0f; }
+    float GetJutsuInterval(int idx) { return m_jutsuInterval[idx]; }
+
+    // 忍術が使用中かを取得する
+    bool GetIsJutsu(int idx) const
+    {
+        if (idx < 0 || idx >= 4)
+            return false;
+
+        return m_isJutsu[idx];
+    }
+
+    // 忍術の獲得状況を切り替える
+    void ToggleJutsu(int idx) {
+        if (idx >= 0 && idx < 4) {
+            m_ownJutsu[idx] = !m_ownJutsu[idx];
+        }
+    }
+
+    // 忍術の最大クールタイムを取得する
+    float GetJutsuMaxInterval(int idx) const
+    {
+        if (idx < 0 || idx >= 4)
+            return 0.0f;
+
+        return m_jutsuMaxInterval[idx];
+    }
 
     bool OnGround() const { return m_isGround; }
     bool GetCanMove() { return m_canMove; }
@@ -199,8 +229,8 @@ public:
     void SpawnKunai();
 
     bool GetIsOcto() { return m_isOcto; }
-    bool SetIsHide(bool flag) { m_isHide = flag; }
-    bool GetIsHide() { return m_isHide; }
+    void SetIsHide(bool flag) { m_isHide = flag; }
+    bool GetIsHide() const { return m_isHide && m_isOcto; }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);
@@ -218,10 +248,56 @@ public:
 
     void ResetStageState();
 
+    //ステータス増減
+        // ステータスダウン(攻撃力・防御力半減)
+    void ApplyStatusDown(float duration) { m_statusDownTimer = duration; }
+    bool IsStatusDown() const { return m_statusDownTimer > 0.0f; }
+    float GetStatusDownTimer() const { return m_statusDownTimer; }
+    void UpdateStatusDown(float deltaTime)
+    {
+        if (m_statusDownTimer > 0.0f)
+        {
+            m_statusDownTimer -= deltaTime;
+            if (m_statusDownTimer < 0.0f) m_statusDownTimer = 0.0f;
+        }
+    }
+    int ApplyAttackRatio(int damage) const    // 与えるダメージ ×0.5(端数切り捨て、最低1)
+    {
+        if (!IsStatusDown() || damage <= 0) return damage;
+        int d = static_cast<int>(damage * 0.5f);
+        return d < 1 ? 1 : d;
+    }
+    int ApplyDefenseRatio(int damage) const   // 受けるダメージ ×2(防御力半減の扱い)
+    {
+        return IsStatusDown() ? damage * 2 : damage;
+    }
+
+    //忍術封印（使用不可の状態）
+    void ApplyNinjutsuSeal(float duration) 
+    { 
+        m_ninjutsuSealTimer = duration;
+        std::cout << "[Player] 忍術封印  for " << duration << " sec\n";
+    }
+    bool IsNinjutsuSealed() const { return m_ninjutsuSealTimer > 0.0f; }
+    float GetNinjustuSealTimer() const { return m_ninjutsuSealTimer; }
+    void UpdateNinjutsuSeal(float deltaTime)
+    {
+        if (m_ninjutsuSealTimer > 0.0f)
+        {
+            m_ninjutsuSealTimer -= deltaTime;
+            if (m_ninjutsuSealTimer <= 0.0f)
+            {
+                m_ninjutsuSealTimer = 0.0f;
+                std::cout << "[Player] 忍術封印 END\n";
+            }
+        }
+    }
+
     // ===== ドロップアイテム用 =====
     void AddCoin(int value);
     void AddKunai(int value);
     void AddHaku(int value);
+    void GetHeal(int value);
     void HealHP(int value);
 
     int GetCoin() const { return m_coin; }
@@ -230,6 +306,8 @@ public:
     int GetHealItem() const { return m_healItem; }  // 回復アイテム所持数
 
 private:
+    BlockActor* FindGroundBelow() const;
+    void UpdateFootsteps(float deltaTime);
     HPComponent* m_hp;
     int m_hpMax;
     GravityComponent* m_gravity;
@@ -277,12 +355,23 @@ private:
     float m_attackLockTimer;
 
     bool m_ownJutsu[4] = { true, false, false, false }; // 忍術獲得済フラグ。　蛸、虎、蛙、鯱
+    bool m_isJutsu[4] = { false , false, false, false };    // 忍術使用中フラグ
+    int m_jutsuCost[4] = { 5, 60, 10, 60 }; // 忍術消費影ゲージ量
+    float m_jutsuInterval[4] = {};
+    float m_jutsuMaxInterval[4] = { 1.0f, 30.0f, 100.0f, 30.0f };
     bool m_isOcto;
     bool m_isAutoOcto;
     float m_octoRatio;
     float m_octoTimer;
     bool m_endOcto;
     bool m_isHide;
+    float m_ninjutsuSealTimer = 0.0f; //忍術封印トラップ
+
+    float m_tigerTimer;
+    bool m_tigerFirstAttack;
+    bool m_tigerSecondAttack;
+
+    float m_statusDownTimer = 0.0f;
 
     bool m_getHit;
     float m_getHitTimer;
@@ -307,12 +396,15 @@ private:
     bool m_isKamae;
     bool m_isExecution;
     std::vector<EnemyEntity*> m_executionTargets;
+    EnemyEntity* m_nearTargets[5] = {};
     float m_executionTimer;
 
     bool m_ignorePlatform;
     BlockActor* m_ignorePlatformBlock = nullptr;
 
     SensorData m_sensor;
+    float m_footstepTimer = 0.0f;
+    float m_lastFootstepX = 0.0f;
 
     bool m_isDeadTriggered = false; // 死亡時の初回処理用フラグ
 
@@ -321,7 +413,7 @@ private:
     int m_coin;
     int m_haku;
     int m_maxHaku;
-
+    int m_maxHeal = 4;
     std::string GetTexturePath() const override;
 
     //サウンド関係
@@ -329,8 +421,6 @@ private:
     SoundComponent* m_excusionSound;
     SoundComponent* m_kamaeSound;
     SoundComponent* m_karyuSound;
-    SoundComponent* m_kunaiSound;
-    SoundComponent* m_weakAttackSound1;
     SoundComponent* m_weakAttackSound2;
     SoundComponent* m_weakAttackSound3;
     SoundComponent* m_weakAttackSound4;
@@ -342,7 +432,6 @@ private:
     SoundComponent* m_hayabusaAttackSound;
 
     SoundComponent* m_karaburiSound;
-
 
 };
 

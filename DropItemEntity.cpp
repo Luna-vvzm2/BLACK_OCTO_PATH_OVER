@@ -11,7 +11,7 @@
 
 DropItemEntity::DropItemEntity(Scene* scene, const Vector2d& pos, ItemType type) 
 	: EntityActor(scene, pos, Vector2d(48, 48))
-	, m_itemType(type) 
+	, m_itemType(type)
 {
 
 }
@@ -70,6 +70,7 @@ void DropItemEntity::Update(float deltaTime)
         if (m_spawnTimer >= 0.2f)
         {
             m_velocity->Set(Vector2d::Zero());
+            
             m_state = DropState::Follow;
         }
         break;
@@ -87,8 +88,16 @@ void DropItemEntity::Update(float deltaTime)
 
         if (dist > 0.01f)
         {
+            m_followTime += deltaTime;
+
+            m_followSpeed = 2.0f + m_followTime * 4.0f;
+
+            if (m_followSpeed > 20.0f)
+            {
+                m_followSpeed = 20.0f;
+            }
             dir.normalize();
-            m_velocity->Set(dir * 5.0f);
+            m_velocity->Set(dir * m_followSpeed);
         }
         break;
     }
@@ -123,7 +132,7 @@ void DropItemEntity::ApplyEffect(PlayerEntity* player)
 
     case ItemType::Heal:
         // —áFHP‰ñ•œ
-        player->HealHP(20);
+        player->GetHeal(1);
         break;
 
     case ItemType::Kunai:

@@ -6,6 +6,71 @@
 #include <string>
 #include <DxLib.h>
 
+#include <cmath>
+
+// クールタイムの赤い円形ゲージ
+// 12時方向から時計回りに増加
+static void DrawCooldownArc(
+	int centerX,
+	int centerY,
+	int radius,
+	float progress)
+{
+	if (progress <= 0.0f)
+		return;
+
+	if (progress > 1.0f)
+		progress = 1.0f;
+
+	constexpr float PI = 3.14159265358979323846f;
+	constexpr int SEGMENTS = 72;
+
+	const int color = GetColor(220, 25, 35);
+	const int thickness = 6;
+
+	for (int i = 0; i < SEGMENTS; ++i)
+	{
+		float startProgress =
+			static_cast<float>(i) / SEGMENTS;
+
+		if (startProgress >= progress)
+			break;
+
+		float endProgress =
+			static_cast<float>(i + 1) / SEGMENTS;
+
+		if (endProgress > progress)
+			endProgress = progress;
+
+		// -90度を開始位置にする（12時方向）
+		float angle1 =
+			-PI / 2.0f + startProgress * 2.0f * PI;
+
+		float angle2 =
+			-PI / 2.0f + endProgress * 2.0f * PI;
+
+		int x1 = centerX +
+			static_cast<int>(std::cos(angle1) * radius);
+
+		int y1 = centerY +
+			static_cast<int>(std::sin(angle1) * radius);
+
+		int x2 = centerX +
+			static_cast<int>(std::cos(angle2) * radius);
+
+		int y2 = centerY +
+			static_cast<int>(std::sin(angle2) * radius);
+
+		DrawLine(
+			x1, y1,
+			x2, y2,
+			color,
+			thickness
+		);
+	}
+}
+
+
 PlayerStatusUI::PlayerStatusUI(
 	Scene* scene,
 	PlayerEntity* player,
@@ -18,6 +83,12 @@ PlayerStatusUI::PlayerStatusUI(
 {
 }
 
+PlayerStatusUI::~PlayerStatusUI()
+{
+	if (m_jutsuIconHandle >= 0) DeleteGraph(m_jutsuIconHandle);
+	if (m_healIconHandle >= 0) DeleteGraph(m_healIconHandle);
+}
+
 bool PlayerStatusUI::Init()
 {
 	if (!UIActor::Init())
@@ -28,7 +99,9 @@ bool PlayerStatusUI::Init()
 	m_jutsuIconHandle =
 		LoadGraph("assets/images/uies/ninjutu_icon_sheet.png");
 
-	if (m_jutsuIconHandle == -1)
+	m_healIconHandle = LoadGraph("assets/images/icon/healItem.png");
+
+	if (m_jutsuIconHandle == -1 || m_healIconHandle == -1)
 	{
 		return false;
 	}
@@ -43,360 +116,210 @@ void PlayerStatusUI::Update(float deltaTime)
 
 void PlayerStatusUI::Draw()
 {
-	if (!m_player)
-	{
-		return;
-	}
-
-	Game* game = m_scene->GetGame();
-
-	if (!game)
-	{
-		return;
-	}
-
-	Renderer* renderer = game->GetRenderer();
-
-	if (!renderer)
-	{
-		return;
-	}
-
-	const std::string& font = game->GatDebugFont();
-
-	// =========================
-	// 背景パネル
-	// =========================
-
-	const int panelX = static_cast<int>(m_x);
-	const int panelY = static_cast<int>(m_y);
-
-	const int panelWidth = 300;
-	const int panelHeight = 215;
-
-	DrawBox(
-		panelX,
-		panelY,
-		panelX + panelWidth,
-		panelY + panelHeight,
-		GetColor(20, 20, 20),
-		TRUE
-	);
-
-	DrawBox(
-		panelX,
-		panelY,
-		panelX + panelWidth,
-		panelY + panelHeight,
-		GetColor(255, 255, 255),
-		FALSE
-	);
-
-	// =========================
-	// 回復アイテム
-	// =========================
-
-	const int healCount = m_player->GetHealItem();
-
-	renderer->DrawTextL(
-		Vector2d(
-			m_x + 10.0f,
-			m_y + 8.0f
-		),
-		"Heal x" + std::to_string(healCount),
-		Color(255, 255, 255),
-		font,
-		24,
-		false
-	);
-
-	// =========================
-// 忍術アイコン
-// =========================
-
-	const float slotSize = 62.0f;
-	const float slotGap = 8.0f;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		const float slotX =
-			m_x + 8.0f +
-			i * (slotSize + slotGap);
-
-		const float slotY =
-			m_y + 42.0f;
-
-		const bool own =
-			m_player->GetOwnJutsu(i);
-
-		int srcX = 0;
-		int srcY = 0;
-
-		switch (i)
-		{
-		case 0: // 蛸
-			if (own)
-			{
-				srcX = 750;
-				srcY = 400;
-			}
-			else
-			{
-				srcX = 400;
-				srcY = 400;
-			}
-			break;
-
-		case 1: // 虎
-			if (own)
-			{
-				srcX = 400;
-				srcY = 750;
-			}
-			else
-			{
-				srcX = 50;
-				srcY = 750;
-			}
-			break;
-
-		case 2: // 蛙
-			if (own)
-			{
-				srcX = 400;
-				srcY = 50;
-			}
-			else
-			{
-				srcX = 50;
-				srcY = 50;
-			}
-			break;
-
-		case 3: // 鯱
-			if (own)
-			{
-				srcX = 50;
-				srcY = 400;
-			}
-			else
-			{
-				srcX = 750;
-				srcY = 50;
-			}
-			break;
-		}
-
-		DrawRectExtendGraph(
-			static_cast<int>(slotX),
-			static_cast<int>(slotY),
-			static_cast<int>(slotX + slotSize),
-			static_cast<int>(slotY + slotSize),
-			srcX,
-			srcY,
-			250,
-			250,
-			m_jutsuIconHandle,
-			TRUE
-		);
-	}
-
-	// =========================
-// 影ゲージ
-// =========================
-
-	const int shadowGauge = m_player->GetShadowGauge();
-	const int shadowGaugeMax = m_player->GetShadowGaugeMax();
-
-	float shadowRate = 0.0f;
-
-	if (shadowGaugeMax > 0)
-	{
-		shadowRate =
-			static_cast<float>(shadowGauge) /
-			static_cast<float>(shadowGaugeMax);
-	}
-
-	if (shadowRate < 0.0f)
-	{
-		shadowRate = 0.0f;
-	}
-
-	if (shadowRate > 1.0f)
-	{
-		shadowRate = 1.0f;
-	}
-
-	const int shadowBarX = panelX + 10;
-	const int shadowBarY = panelY + 125;
-	const int shadowBarWidth = 280;
-	const int shadowBarHeight = 18;
-
-	renderer->DrawTextL(
-		Vector2d(
-			m_x + 10.0f,
-			m_y + 108.0f
-		),
-		"Shadow",
-		Color(255, 255, 255),
-		font,
-		18,
-		false
-	);
-
-	// ゲージ背景
-	DrawBox(
-		shadowBarX,
-		shadowBarY,
-		shadowBarX + shadowBarWidth,
-		shadowBarY + shadowBarHeight,
-		GetColor(60, 60, 60),
-		TRUE
-	);
-
-	// ゲージ本体
-	DrawBox(
-		shadowBarX,
-		shadowBarY,
-		shadowBarX +
-		static_cast<int>(shadowBarWidth * shadowRate),
-		shadowBarY + shadowBarHeight,
-		GetColor(180, 180, 180),
-		TRUE
-	);
-
-	// ゲージ枠
-	DrawBox(
-		shadowBarX,
-		shadowBarY,
-		shadowBarX + shadowBarWidth,
-		shadowBarY + shadowBarHeight,
-		GetColor(255, 255, 255),
-		FALSE
-	);
-
-	renderer->DrawTextL(
-		Vector2d(
-			m_x + 115.0f,
-			m_y + 108.0f
-		),
-		std::to_string(shadowGauge)
-		+ " / "
-		+ std::to_string(shadowGaugeMax),
-		Color(255, 255, 255),
-		font,
-		18,
-		false
-	);
+    if (!m_player || !m_scene) return;
+    Game* game = m_scene->GetGame();
+    if (!game) return;
+    Renderer* renderer = game->GetRenderer();
+    if (!renderer) return;
 
 
-	// =========================
-	// クナイ回復ゲージ
-	// =========================
+    // ======================================
+    // 回復アイテムUI（クナイ3本の右側）
+    // ======================================
 
-	const int kunai = m_player->GetKunai();
-	const float kunaiTimer = m_player->GetKunaiTimer();
+    // クナイ3本の表示幅
+    // 48pxの画像を34px間隔で3本並べている
+    const int kunaiWidth = 48 + 34 * 2;
 
-	float kunaiRate = 0.0f;
+    // クナイの右端から12px離す
+    const int healX =
+        static_cast<int>(m_x) + kunaiWidth + 12;
 
-	if (kunai >= 3)
-	{
-		kunaiRate = 1.0f;
-	}
-	else
-	{
-		kunaiRate = kunaiTimer / 20.0f;
-	}
+    // 回復アイテムのサイズ
+    const int itemSize = 60;
 
-	if (kunaiRate < 0.0f)
-	{
-		kunaiRate = 0.0f;
-	}
+    // クナイと縦方向の中心を揃える
+    const int healY =
+        static_cast<int>(m_y) - 6;
 
-	if (kunaiRate > 1.0f)
-	{
-		kunaiRate = 1.0f;
-	}
+    // 回復アイテムの画像を描画
+    if (m_healIconHandle >= 0)
+    {
+        DrawExtendGraph(
+            healX,
+            healY,
+            healX + itemSize,
+            healY + itemSize,
+            m_healIconHandle,
+            TRUE
+        );
+    }
 
-	const int kunaiBarX = panelX + 10;
-	const int kunaiBarY = panelY + 172;
-	const int kunaiBarWidth = 280;
-	const int kunaiBarHeight = 18;
+    // 回復アイテムの所持数
+    const std::string healCount =
+        std::to_string(m_player->GetHealItem());
 
-	renderer->DrawTextL(
-		Vector2d(
-			m_x + 10.0f,
-			m_y + 155.0f
-		),
-		"Kunai",
-		Color(255, 255, 255),
-		font,
-		18,
-		false
-	);
+    const std::string& font =
+        game->GatDebugFont();
 
-	// クナイ回復ゲージ背景
-	DrawBox(
-		kunaiBarX,
-		kunaiBarY,
-		kunaiBarX + kunaiBarWidth,
-		kunaiBarY + kunaiBarHeight,
-		GetColor(60, 60, 60),
-		TRUE
-	);
+    // 所持数の影
+    renderer->DrawTextL(
+        Vector2d(healX + 54.0f, healY + 13.0f),
+        healCount,
+        Color(20, 20, 20),
+        font,
+        38,
+        false
+    );
 
-	// クナイ回復ゲージ本体
-	DrawBox(
-		kunaiBarX,
-		kunaiBarY,
-		kunaiBarX +
-		static_cast<int>(kunaiBarWidth * kunaiRate),
-		kunaiBarY + kunaiBarHeight,
-		GetColor(180, 180, 180),
-		TRUE
-	);
+    // 所持数の文字
+    renderer->DrawTextL(
+        Vector2d(healX + 52.0f, healY + 11.0f),
+        healCount,
+        Color(255, 255, 255),
+        font,
+        38,
+        false
+    );
 
-	// クナイ回復ゲージ枠
-	DrawBox(
-		kunaiBarX,
-		kunaiBarY,
-		kunaiBarX + kunaiBarWidth,
-		kunaiBarY + kunaiBarHeight,
-		GetColor(255, 255, 255),
-		FALSE
-	);
+    const float slotSize = 72.0f;
+    const float slotGap = 16.0f;
 
-	if (kunai >= 3)
-	{
-		renderer->DrawTextL(
-			Vector2d(
-				m_x + 110.0f,
-				m_y + 155.0f
-			),
-			"MAX",
-			Color(255, 255, 255),
-			font,
-			18,
-			false
-		);
-	}
-	else
-	{
-		const float remainTime = 20.0f - kunaiTimer;
+    for (int i = 0; i < 4; ++i)
+    {
+        const float slotX =
+            m_x + i * (slotSize + slotGap);
 
-		renderer->DrawTextL(
-			Vector2d(
-				m_x + 110.0f,
-				m_y + 132.0f
-			),
-			std::to_string(
-				static_cast<int>(remainTime)
-			) + "s",
-			Color(255, 255, 255),
-			font,
-			18,
-			false
-		);
-	}
+        const float slotY =
+            static_cast<float>(game->GetHeight())
+            - slotSize - 18.0f;
+
+        const bool own = m_player->GetOwnJutsu(i);
+
+        // クールタイムの残り時間
+        float interval = m_player->GetJutsuInterval(i);
+
+        // 最大クールタイム
+        float maxInterval =
+            m_player->GetJutsuMaxInterval(i);
+
+        // 文字入りアイコンを表示するか
+        bool showText = false;
+
+        if (i == 0)
+        {
+            // 蛸：使用中 または クールタイム中 は文字
+            showText =
+                m_player->GetIsJutsu(0) ||
+                interval > 0.0f;
+        }
+        else
+        {
+            // 虎・蛙・鯱：クールタイム中は文字
+            showText = interval > 0.0f;
+        }
+
+        // 未習得の場合は既存の表示を維持
+        if (!own)
+        {
+            showText = (i != 0);
+        }
+
+        int srcX = 0;
+        int srcY = 0;
+
+        switch (i)
+        {
+        case 0: // 蛸
+            srcX = showText ? 750 : 400;
+            srcY = 400;
+            break;
+
+        case 1: // 虎
+            srcX = showText ? 50 : 400;
+            srcY = 750;
+            break;
+
+        case 2: // 蛙
+            srcX = showText ? 50 : 400;
+            srcY = 50;
+            break;
+
+        case 3: // 鯱
+            if (showText)
+            {
+                srcX = 750;
+                srcY = 50;
+            }
+            else
+            {
+                srcX = 50;
+                srcY = 400;
+            }
+            break;
+        }
+
+        // ===========================
+        // アイコンの描画
+        // ===========================
+
+        DrawRectExtendGraph(
+            static_cast<int>(slotX),
+            static_cast<int>(slotY),
+            static_cast<int>(slotX + slotSize),
+            static_cast<int>(slotY + slotSize),
+            srcX,
+            srcY,
+            250,
+            250,
+            m_jutsuIconHandle,
+            TRUE
+        );
+
+
+
+        // ==========================================
+        // 赤いクールタイムゲージ
+        // ==========================================
+
+     
+        // 未習得の場合は表示しない
+        if (!own)
+            continue;
+
+        // クールタイム中のみ表示
+        if (interval <= 0.0f || maxInterval <= 0.0f)
+            continue;
+
+        // クールタイムの経過割合を計算
+        float progress = 1.0f - (interval / maxInterval);
+
+        // 0～1の範囲に制限
+        if (progress < 0.0f)
+            progress = 0.0f;
+
+        if (progress > 1.0f)
+            progress = 1.0f;
+
+        // 開始直後でも見えるように最低4%表示
+        if (progress < 0.04f)
+            progress = 0.04f;
+
+        // アイコンの中心座標
+        const int centerX =
+            static_cast<int>(slotX + slotSize / 2.0f);
+
+        const int centerY =
+            static_cast<int>(slotY + slotSize / 2.0f);
+
+        // 赤い円形ゲージを描画
+        DrawCooldownArc(
+            centerX,
+            centerY,
+            35,
+            progress
+        );
+
+    }
 
 }

@@ -1,27 +1,21 @@
 #define NOMINMAX
 #include "PlayScene.h"
 #include "TitleScene.h"
+#include "StageSelectScene.h"
+#include "GameOverScene.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
-#include "SoundComponent.h"
 #include "HPComponent.h"
-#include "GameOverMenuUI.h"
 #include "Game.h"
 #include "Renderer.h"
 #include "Input.h"
 #include "PlayerEntity.h"
-#include "ScarecrowEnemyEntity.h"
 #include "EnemyEntity.h"
 #include "DropItemEntity.h"
-#include "WhiteEnemyEntity.h"
-#include "YellowEnemyEntity.h"
-#include "ArrowEnemyEntity.h"
-#include "HealerEnemyEntity.h"
-#include "ArmorEnemyEntity.h"
-#include "GunnerEnemyEntity.h"
-#include "YoroiBossEntity.h"
-#include "SekienkiBossEntity.h"
+#include "KooniEnemyEntity.h"
+#include "KasaTenguEnemyEntity.h"
 #include "EffectActor.h"
+#include "SmokeActor.h"
 #include "StageBackActor.h"
 #include "StageExitActor.h"
 #include "GroundBlock.h"
@@ -43,14 +37,25 @@
 #include "StructureABlock.h"
 #include "StructureBBlock.h"
 #include "Trap.h"
+#include "DamageTrap.h"
+#include "StatusDownTrap.h"
+#include "NinjutsuSealTrap.h"
+#include "EnemySpawnTrap.h"
 #include "HPBarUI.h"
 #include "BackGroundUI.h"
 #include "TreasureBox.h"
+#include "NewsBox.h"
 #include "JutsuChargeUI.h"
 #include "EnemyHPBar.h"
 #include "EnemySpawner.h"
 #include "SaveManager.h"
+#include "Checkpoint.h"
 #include "PlayerStatusUI.h"
+#include "boss_01.h"
+
+#include "SpiritEnemyEntity.h"
+#include "HideBlock.h"
+
 
 //イベントのため変更
 #include "EventManager.h"
@@ -59,6 +64,8 @@
 #include <DxLib.h>
 #include <algorithm>
 
+#include <cmath>
+
 #include <unordered_set>
 #include <type_traits>
 
@@ -66,9 +73,9 @@
 PlayScene::PlayScene(Game* game)
 	: Scene(game),
 	m_menu(this),
+	m_pauseMenu(game, false),
 	m_player(nullptr),
 	m_camera(static_cast<float>(game->GetWidth()), static_cast<float>(game->GetHeight())),
-	m_stageBgm(nullptr),
 	m_stageIndex(0),
 	m_comboCount(0),
 	m_currentStage(1),
@@ -76,13 +83,79 @@ PlayScene::PlayScene(Game* game)
 	m_fgHandle(-1),
 	m_eventTexture(std::make_unique<EventTexture>()),
 	m_eventManager(std::make_unique<EventManager>(this, m_eventTexture.get())), //イベントのため変更
-	m_respawnPos(200, 800),
-	m_gameOverMenu(nullptr),
-	m_isGameOver(false),
-	m_isPaused(false)
+	m_respawnPos(200, 800)
 {
 
 }
+
+
+void PlayScene::RequestHitEffect(
+	float hitStopTime,
+	float shakeTime,
+	float shakeStrength)
+{
+	if (m_fadeState != FadeState::None)
+		return;
+
+	// ヒットストップを設定
+	if (hitStopTime > m_hitStopTimer)
+	{
+		m_hitStopTimer = hitStopTime;
+	}
+
+	// 画面揺れを設定
+	if (shakeTime > 0.0f && shakeStrength > 0.0f)
+	{
+		m_shakeTimer = shakeTime;
+		m_shakeDuration = shakeTime;
+		m_shakeStrength = shakeStrength;
+		m_shakeClock = 0.0f;
+	}
+}
+
+void PlayScene::UpdateCameraShake(float deltaTime)
+{
+	if (m_shakeTimer <= 0.0f)
+		return;
+
+	m_shakeTimer -= deltaTime;
+
+	if (m_shakeTimer < 0.0f)
+		m_shakeTimer = 0.0f;
+
+	m_shakeClock += deltaTime;
+
+	// 時間経過とともに揺れを弱める
+	float power = 0.0f;
+
+	if (m_shakeDuration > 0.0f)
+	{
+		power = m_shakeTimer / m_shakeDuration;
+	}
+
+	// 横方向と縦方向で異なる揺れを作る
+	const float offsetX =
+		std::sin(m_shakeClock * 83.0f) *
+		m_shakeStrength * power;
+
+	const float offsetY =
+		std::cos(m_shakeClock * 117.0f) *
+		m_shakeStrength * power;
+
+	m_appliedShakeOffset =
+		Vector2d(offsetX, offsetY);
+
+	// カメラに揺れを加える
+	m_camera.SetCenter(
+		m_camera.GetCenter() + m_appliedShakeOffset
+	);
+
+	if (m_shakeTimer <= 0.0f)
+	{
+		m_shakeStrength = 0.0f;
+	}
+}
+
 
 bool PlayScene::Init() {
 	m_isRunning = true;
@@ -95,9 +168,11 @@ bool PlayScene::Init() {
 	{
 		m_stageIndex = m_saveData.currentStage;
 		m_playTimer = m_saveData.playTime;
+		for (int i = 0; i < static_cast<int>(m_saveData.newsOwned.size()); ++i)
+		{
+			m_menu.SetNewsOwned(i, m_saveData.newsOwned[i]);
+		}
 	}
-
-
 
 	// 保存されている操作設定を復元
 	Input& input = m_game->GetInput();
@@ -107,7 +182,7 @@ bool PlayScene::Init() {
 		Action action = static_cast<Action>(i);
 
 		// キー割り当てを復元
-		if (!m_saveData.keyBindings[i].empty())
+		if (m_saveData.hasKeyBinding[i])
 		{
 			input.SetKeyBindings(
 				action,
@@ -147,6 +222,7 @@ bool PlayScene::Init() {
 
 	StageInit(m_stageIndex);
 
+	m_respawnPos = m_playerSpawnPoints[0];
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
 
@@ -164,7 +240,7 @@ bool PlayScene::Init() {
 	AddUIActor(hpBar);
 	m_hpBarUI = hpBar;
 	
-	ShurikenUI* shuriken = new ShurikenUI(this, 18, 60);
+	ShurikenUI* shuriken = new ShurikenUI(this, 18, 135);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
 
@@ -172,8 +248,8 @@ bool PlayScene::Init() {
 	m_playerStatusUI = new PlayerStatusUI(
 		this,
 		m_player,
-		20.0f,
-		160.0f
+		18.0f,
+		135.0f
 	);
 
 	AddUIActor(m_playerStatusUI);
@@ -210,15 +286,6 @@ bool PlayScene::Init() {
 	// Renderer に Camera をセット
 	m_game->GetRenderer()->SetCamera(&m_camera);
 
-	m_stageBgm = m_player->AddComponent<SoundComponent>(
-		_T("assets/sounds/bgm.wav")
-	);
-
-	if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->SetVolume(90);
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
-	}
 	return true;
 }
 
@@ -332,6 +399,10 @@ bool PlayScene::StageInit(int stageNo) {
 				pos = Vector2d(x * tileSize, y * tileSize + tileSize * 0.625f);
 				AddActor(new ClearPlatformBlock(this, pos, Vector2d(tileSize * 3.0f, tileSize * 0.25f)));
 				break;
+			case 45:
+				pos = Vector2d(x * tileSize + tileSize * 0.5f, y * tileSize - tileSize * 1.0f);
+				AddActor(new HideBlock(this, pos, Vector2d(tileSize * 2.0f, tileSize * 3.0f)));
+				break;
 			}
 		}
 	}
@@ -353,8 +424,12 @@ bool PlayScene::StageInit(int stageNo) {
 			switch (objID)
 			{
 			case 1:
+				m_playerSpawnPoints.push_back(pos);
+				break;
+
 			case 3:
 				m_playerSpawnPoints.push_back(pos);
+				AddActor(new Checkpoint(this, pos));
 				break;
 
 			case 2:
@@ -370,8 +445,44 @@ bool PlayScene::StageInit(int stageNo) {
 				break;
 			}
 
+			// 新聞の宝箱: オブジェクトID 301~306 → 新聞ID 1~6(仮ID: マップエディタに合わせる)
+			case 301: case 302: case 303: case 304: case 305: case 306:
+			{
+				pos += Vector2d(-tileSize * 0.5f, 20.0f);
+				const int newsId = objID - 300;
+
+				if (m_menu.IsNewsOwned(newsId - 1))
+				{
+					break;         // 入手済み
+				}
+				else
+				{
+					AddActor(new NewsBoxEntity(this, pos, newsId));     // 未入手
+				}
+			} break;
+
 			case 9:
 				AddActor(new Trap(this, pos, Vector2d(192, 192)));
+				break;
+
+			case 10:    // 仮ID
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new DamageTrap(this, pos, Vector2d(tileSize,50.0f)));
+				break;
+
+			case 11:   // 仮ID
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, 50.0f)));
+				break;
+
+			case 12: //仮ID
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new NinjutsuSealTrap(this, pos, Vector2d(tileSize, 50.0f)));
+				break;
+
+			case 13: //仮ID
+				pos += Vector2d(0.0f, 30.0f);
+				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 14:
@@ -390,48 +501,23 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 201:
 			{
-				AddActor(new ScarecrowEnemyEntity(this, pos));
+				AddActor(new KooniEnemyEntity(this, pos));
 			}
 			break;
 
 			case 202:
 			{
-				auto* whiteEnemy = EnemySpawner::SpawnEnemy<WhiteEnemyEntity>(this, pos);
+				auto* spiritEnemy = EnemySpawner::SpawnEnemy<SpiritEnemyEntity>(this, pos);
 			} break;
 
 			case 203:
 			{
-				auto* yellowEnemy = EnemySpawner::SpawnEnemy<YellowEnemyEntity>(this, pos);
+				auto* kasaTenguEnemy = EnemySpawner::SpawnEnemy<KasaTenguEnemyEntity>(this, pos);
 			} break;
 
 			case 204:
 			{
-				auto* arrowEnemy = EnemySpawner::SpawnEnemy<ArrowEnemyEntity>(this, pos);
-			} break;
-
-			case 208:
-			{
-				auto* healereEnemy = EnemySpawner::SpawnEnemy<HealerEnemyEntity>(this, pos);
-			} break;
-
-			case 206:
-			{
-				auto* armorEnemy = EnemySpawner::SpawnEnemy<ArmorEnemyEntity>(this, pos);
-			} break;
-
-			case 207:
-			{
-				auto* gunnernemy = EnemySpawner::SpawnEnemy<GunnerEnemyEntity>(this, pos);
-			} break;
-
-			case 205:
-			{
-				auto* yoroiBoss = EnemySpawner::SpawnEnemy<YoroiBossEntity>(this, pos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
-			} break;
-
-			case 210:
-			{
-				auto* sekienkiBoss = EnemySpawner::SpawnEnemy<SekienkiBossEntity>(this, pos, "assets/images/uies/HP_enemy_black.png", Vector2d(192, 192));
+				AddActor(new Boss_01(this, pos));
 			} break;
 
 			default:
@@ -444,9 +530,6 @@ bool PlayScene::StageInit(int stageNo) {
 		} // for x
 	} // for y
 
-	// ---- ゲームオーバーメニューUI 作成 ----
-	m_gameOverMenu = new GameOverMenuUI(this);
-	AddUIActor(m_gameOverMenu);
 
 	BackGroundUI* back = new BackGroundUI(this, "assets/images/uies/bg.png");
 	AddBackActor(back);
@@ -507,6 +590,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 	}
 
 	m_stageIndex = index;
+	m_game->GetSoundManager().SetScope(index + 2);
 
 	ClearStageActors();
 	StageInit(index);
@@ -523,6 +607,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 		spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
 	{
 		m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
+		m_respawnPos = m_playerSpawnPoints[spawnIndex];
 
 		Vector2d playerPos = m_player->GetPos();
 
@@ -531,13 +616,6 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 
 		m_camera.SetCenter(camPos);
 	}
-
-		if (m_stageBgm != nullptr)
-	{
-		m_stageBgm->Stop();
-		m_stageBgm->Play(DX_PLAYTYPE_LOOP, true);
-	}
-
 	// ステージ進行を自動保存
 	AutoSave();
 }
@@ -553,6 +631,7 @@ void PlayScene::ClearStageActors()
 		case ActorType::Effect:
 		case ActorType::StageExit:
 		case ActorType::StageBack:
+		case ActorType::CheckPoint:
 		case ActorType::TreasureBox:
 			actor->SetState(Actor::State::Dead);
 			break;
@@ -594,13 +673,57 @@ void PlayScene::RequestStageChange(int stage, int spawnIndex)
 		(int)m_fadeState);
 }
 
-void PlayScene::Update(float deltaTime) {
-	// ====== フェード遷移中はゲームロジックを止める ======
+void PlayScene::Update(float deltaTime)
+{
+	const Input& input = m_game->GetInput();
+
+	// 前フレームのカメラ揺れを取り除く
+	// カメラ追従との位置ずれを防止
+	if (m_appliedShakeOffset.x != 0.0f ||
+		m_appliedShakeOffset.y != 0.0f)
+	{
+		m_camera.SetCenter(
+			m_camera.GetCenter() - m_appliedShakeOffset
+		);
+
+		m_appliedShakeOffset = Vector2d(0.0f, 0.0f);
+	}
+
 	if (m_fadeState != FadeState::None) {
 		UpdateFade(deltaTime);
-		// フェード中も UI（ゲームオーバーメニュー等）は動かしたいならここで
 		updateActors(m_UIactors, deltaTime);
-		return; // 通常更新はスキップ
+		return;
+	}
+
+	if (m_pauseMenu.IsOpen()) {
+		const PauseMenu::Result result = m_pauseMenu.Update();
+		if (result == PauseMenu::Result::Resume) {
+			// PauseMenu closes itself on Resume; keep it drawn while fading out.
+			m_pauseMenu.Open();
+			StartFadeToPause(false);
+		}
+		if (result == PauseMenu::Result::StageSelect)
+		{
+			//Game* game = GetGame(); 
+			//m_game->PushScene(std::make_unique<GameOverScene>(game));
+			m_game->PushScene(std::make_unique<StageSelectScene>(m_game, this));
+		}
+
+		else if (result == PauseMenu::Result::Quit) m_game->RequestQuit();
+		return;
+	}
+
+	// Events use a held Escape input to skip dialogue; the pause shortcut
+	// must not consume that input. Game over also owns its own menu.
+	if (m_fadeState == FadeState::None && !m_eventManager->IsRunning()) {
+		if (m_menu.IsOpen() && input.IsMenuTrigger(Action::ESCAPE)) {
+			m_menu.Toggle();
+			return;
+		}
+		if (!m_menu.IsOpen() && input.IsMenuTrigger(Action::ESCAPE)) {
+			StartFadeToPause(true);
+			return;
+		}
 	}
 
 	if (m_requestStageChange)
@@ -608,9 +731,6 @@ void PlayScene::Update(float deltaTime) {
 		m_requestStageChange = false;
 		StartFadeToStage(m_nextStage, m_nextSpawnIndex);
 	}
-
-	//イベントのため変更
-	m_playTimer += deltaTime; //クリアシーンのために追加
 
 	// 自動セーブ
 	m_autoSaveTimer += deltaTime;
@@ -621,26 +741,10 @@ void PlayScene::Update(float deltaTime) {
 		m_autoSaveTimer = 0.0f;
 	}
 
-	if (m_eventManager->IsRunning())
-	{
-		m_eventManager->Update(deltaTime);
-
-		if (!m_eventManager->IsBattleEvent())
-		{
-			return;
-		}
-	}
-	updateActors(m_backactors, deltaTime);
-
-
-	const Input& input = m_game->GetInput();
-
-	if (input.IsMenuTrigger(Action::MENU) &&
-		!m_menu.IsCapturingKey())
+	if (input.IsMenuTrigger(Action::MENU))
 	{
 		if (m_player->GetState() != Actor::State::Paused)
 			m_menu.Toggle();
-
 		return;
 	}
 
@@ -650,56 +754,56 @@ void PlayScene::Update(float deltaTime) {
 		return;
 	}
 
+// =====================================
+// ヒットストップ中の処理
+// =====================================
+	if (m_hitStopTimer > 0.0f)
+	{
+		m_hitStopTimer -= deltaTime;
+
+		if (m_hitStopTimer < 0.0f)
+			m_hitStopTimer = 0.0f;
+
+		// 画面揺れは止めずに更新
+		UpdateCameraShake(deltaTime);
+
+		// UIのアニメーションは更新する
+		updateActors(m_UIactors, deltaTime);
+
+		// プレイヤー・敵・ゲーム内の更新を停止
+		return;
+	}
+
 	if (m_shurikenUI && m_player) {
 		m_shurikenUI->SetCount(m_player->GetKunai());
+	}
+	
+#ifdef _DEBUG
+	static bool prevN = false;
+	const bool nowN = CheckHitKey(KEY_INPUT_N) != 0;
+	if (nowN && !prevN) ShowNews(4);
+	prevN = nowN;
+#endif
+
+	// 新聞の表示中はゲーム画面を止める(決定キーで閉じる)
+	if (m_newsViewer.IsOpen())
+	{
+		m_newsViewer.Update(deltaTime, m_game->GetInput());
+		return;
 	}
 
 	updateActors(m_backactors, deltaTime);
 	updateActors(m_actors, deltaTime);
 	updateActors(m_UIactors, deltaTime);
 
-	// ゲームオーバーメニューの処理
-	if (m_gameOverMenu && m_gameOverMenu->IsActive()) {
-		if (m_gameOverMenu->IsDecided()) {
-			m_gameOverMenu->ResetDecided();
-
-			switch (m_gameOverMenu->GetSelectedItem()) {
-			case GameOverMenuUI::MenuItem::CONTINUE:
-				// コンティニュー：リスポーン
-				m_isPaused = false;
-				m_isGameOver = false;
-				m_gameOverMenu->SetActive(false);
-				if (m_hpBarUI) {
-					m_hpBarUI->SetVisible(true);
-				}
-				if (m_shurikenUI) {
-					m_shurikenUI->SetVisible(true);
-				}
-				if (m_jutsuChargeUI) {
-					m_jutsuChargeUI->SetVisible(true);
-				}
-				RespawnPlayer();
-				break;
-
-			case GameOverMenuUI::MenuItem::WORLD_MAP:
-				// ワールドマップ画面へ移動
-				// TODO: ワールドマップシーンへの遷移処理を追加
-				std::cout << "Transition to World Map (not implemented yet)" << std::endl;
-				break;
-
-			case GameOverMenuUI::MenuItem::TITLE:
-				// タイトル画面へ移動
-			{
-				Game* game = m_eventManager->GetGame();
-				if (game)
-				{
-					game->ChangeScene(std::make_unique<TitleScene>(game));
-				}
-			}	break;
-
-			default:
-				break;
-			}
+	//イベントのため変更
+	m_playTimer += deltaTime; //クリアシーンのために追加
+	if (m_eventManager->IsRunning())
+	{
+		m_eventManager->Update(deltaTime);
+		if (!m_eventManager->IsBattleEvent())
+		{
+			return;
 		}
 	}
 
@@ -720,6 +824,9 @@ void PlayScene::Update(float deltaTime) {
 
 			// 前期と同じ滑らかな追従
 			m_camera.UpdateFollow(cameraTarget, deltaTime);
+
+			// カメラ追従の後に画面揺れを適用
+			UpdateCameraShake(deltaTime);
 
 			m_camera.SetZoom(1.0f);
 		}
@@ -896,6 +1003,7 @@ void PlayScene::Draw()
 			return
 				type == ActorType::Block ||
 				type == ActorType::Trap ||
+				type == ActorType::CheckPoint ||
 				type == ActorType::StageExit ||
 				type == ActorType::StageBack ||
 				dynamic_cast<DropItemEntity*>(actor) != nullptr;
@@ -990,7 +1098,7 @@ void PlayScene::Draw()
 			Actor* target = effect->GetFollowTarget();
 
 			if (!target)
-				return false;
+				return true;
 
 			if (target->GetType() == ActorType::TreasureBox)
 				return false;
@@ -1045,21 +1153,27 @@ void PlayScene::Draw()
 			EffectActor* effect =
 				dynamic_cast<EffectActor*>(actor);
 
-			if (!effect)
-				return false;
-
-			if (effect->GetRenderLayer() !=
-				EffectActor::RenderLayer::Front)
+			if (effect)
 			{
-				return false;
+				if (effect->GetRenderLayer() !=
+					EffectActor::RenderLayer::Front)
+				{
+					return false;
+				}
+
+				Actor* target = effect->GetFollowTarget();
+
+				if (!target)
+					return false;
+
+				return dynamic_cast<PlayerEntity*>(target) != nullptr;
 			}
 
-			Actor* target = effect->GetFollowTarget();
-
-			if (!target)
-				return false;
-
-			return dynamic_cast<PlayerEntity*>(target) != nullptr;
+			if (actor && actor->GetType() == ActorType::Smoke) 
+			{
+				return true;
+			}
+			return false;
 		});
 
 
@@ -1153,31 +1267,7 @@ void PlayScene::Draw()
 		if (actor == nullptr || actor->IsDead())
 			continue;
 
-		// GameOverMenuUIは最後に描く
-		if (actor == m_gameOverMenu)
-			continue;
-
 		actor->Draw();
-	}
-
-	// コンボ表示
-	if (m_player && m_player->GetCombo() > 0)
-	{
-		const std::string& debugFont =
-			m_game->GatDebugFont();
-
-		std::string comboText =
-			std::to_string(m_player->GetCombo()) +
-			" Hits";
-
-		renderer->DrawTextL(
-			Vector2d(20.0f, 120.0f),
-			comboText,
-			Color(0, 0, 0),
-			debugFont,
-			60,
-			false
-		);
 	}
 
 	// 結果表示
@@ -1215,6 +1305,7 @@ void PlayScene::Draw()
 		m_eventManager->Draw();
 	}
 
+	m_newsViewer.Draw();   // 追加
 
 	// =====================================================
 	// ⑬ メニュー
@@ -1285,43 +1376,29 @@ void PlayScene::Draw()
 				EffectActor::RenderLayer::Global;
 		});
 
-
-	// =====================================================
-	// ⑮ ゲームオーバー画面
-	// =====================================================
-
-	if (m_gameOverMenu &&
-		m_gameOverMenu->IsActive())
-	{
-		m_gameOverMenu->Draw();
-	}
-
-
 	// =====================================================
 	// フェード
 	// =====================================================
 
-	if (m_fadeState == FadeState::Loading)
-	{
-		DrawLoadingScreen();
-	}
-	else
-	{
-		DrawFadeOverlay();
-	}
-
+	if (m_fadeState == FadeState::Loading) DrawLoadingScreen();
+	int pauseAlpha = 255;
+	if (m_fadeState == FadeState::PauseFadeIn)
+		pauseAlpha = static_cast<int>(255.0f * m_fadeTimer / FADE_IN_DURATION);
+	else if (m_fadeState == FadeState::PauseFadeOut)
+		pauseAlpha = static_cast<int>(255.0f * (1.0f - m_fadeTimer / FADE_OUT_DURATION));
+	m_pauseMenu.Draw(pauseAlpha);
 
 	// =====================================================
 	// デバッグ
 	// =====================================================
 
 #ifdef _DEBUG
-
+	const std::string& debugFont = m_game->GatDebugFont();
 	// sensor描画
 	if (m_player)
 	{
 		Vector2d Pos = m_player->GetPos();
-		Vector2d offset = { 0.0f, 50.0f };
+		Vector2d offset = { 0.0f, 80.0f };
 
 		if (m_player->GetDir())
 		{
@@ -1336,16 +1413,13 @@ void PlayScene::Draw()
 
 		renderer->DrawRectCenter(
 			Pos,
-			4.0f,
-			4.0f,
+			600.0f,
+			500.0f,
 			GetColor(0, 255, 0),
 			false,
 			true
 		);
 	}
-
-	const std::string& debugFont =
-		m_game->GatDebugFont();
 
 	renderer->DrawTextL(
 		Vector2d(
@@ -1360,6 +1434,7 @@ void PlayScene::Draw()
 	);
 
 #endif
+	DrawFadeOverlay();
 }
 
 bool PlayScene::IsActorAlive(Actor* actor) const
@@ -1386,10 +1461,10 @@ void PlayScene::RespawnPlayer() {
 	TransformComponent* transform = m_player->GetComponent<TransformComponent>();
 
 	if (transform) {
-		transform->SetPosition(m_playerSpawnPoints[0]);
+		transform->SetPosition(m_respawnPos);
 
 		// リスポーンした瞬間にカメラも戻す
-		Vector2d cameraPos = m_playerSpawnPoints[0];
+		Vector2d cameraPos = m_respawnPos;
 		cameraPos.y -= 150.0f;
 
 		m_camera.SetCenter(cameraPos);
@@ -1407,7 +1482,7 @@ void PlayScene::RespawnPlayer() {
 		hp->Heal(hp->GetMaxHP());
 	}
 	m_player->SetState(Actor::State::Active);
-	std::cout << "Player respawned at: " << m_playerSpawnPoints[0].x << ", " << m_playerSpawnPoints[0].y << std::endl;
+	std::cout << "Player respawned at: " << m_respawnPos.x << ", " << m_respawnPos.y << std::endl;
 }
 
 void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
@@ -1418,33 +1493,26 @@ void PlayScene::RegisterEnemyHPBar(EnemyEntity* enemy, EnemyHPBar* hpBar)
 	}
 }
 
-void PlayScene::ShowGameOverMenu() {
-	m_isGameOver = true;
-	m_isPaused = true;
+void PlayScene::ShowGameOverMenu()
+{
+	Game* game = GetGame();
 
-	auto it = std::find(m_UIactors.begin(), m_UIactors.end(), m_gameOverMenu);
-	if (it != m_UIactors.end())
+	game->PushScene(std::make_unique<GameOverScene>(game));
+}
+
+void PlayScene::OnResume()
+{
+	if (m_returnToPauseMenu)
 	{
-		m_UIactors.erase(it);
-		m_UIactors.push_back(m_gameOverMenu);
+		m_returnToPauseMenu = false;
+		return;
 	}
 
-	if (m_hpBarUI) {
-		m_hpBarUI->SetVisible(false);
-	}
+	RespawnPlayer();
 
-	if (m_shurikenUI) {
-		m_shurikenUI->SetVisible(false);
-	}
-
-	if (m_jutsuChargeUI) {
-		m_jutsuChargeUI->SetVisible(false);
-		std::cout << "m_jutsuChargeUI = false;" << std::endl;
-	}
-
-	if (m_gameOverMenu) {
-		m_gameOverMenu->SetActive(true);
-		std::cout << "Game Over Menu displayed" << std::endl;
+	if (m_pauseMenu.IsOpen())
+	{
+		m_pauseMenu.Toggle();
 	}
 }
 
@@ -1455,6 +1523,76 @@ void PlayScene::ShowGameOverMenu() {
 //	
 //}
 
+void PlayScene::SpawnSmoke(
+	const Vector2d& position,
+	const Vector2d& size)
+{
+	auto* smoke = new SmokeActor(this, position, size);
+	AddActor(smoke);
+
+	// 発生時点で範囲内にいる敵へ適用
+	for (Actor* actor : GetActors())
+	{
+		if (actor == nullptr || actor->IsDead())
+			continue;
+
+		auto* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+		if (enemy == nullptr || enemy->IsDead())
+			continue;
+
+		if (smoke->IsSmokeActive() && smoke->Contains(enemy->GetPos()))
+		{
+			enemy->ApplySmoke();
+		}
+	}
+}
+
+void PlayScene::OnSmokeExpired(SmokeActor* smoke)
+{
+	if (smoke == nullptr)
+		return;
+
+	for (Actor* actor : GetActors())
+	{
+		auto* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+		if (enemy == nullptr || enemy->IsDead())
+			continue;
+
+		if (!smoke->Contains(enemy->GetPos()))
+			continue;
+
+		if (IsCoveredBySmoke(enemy, smoke))
+			continue;
+
+		enemy->EndSmoke();
+	}
+}
+
+bool PlayScene::IsCoveredBySmoke(
+	const EnemyEntity* enemy,
+	const SmokeActor* excludedSmoke) const
+{
+	if (enemy == nullptr)
+		return false;
+
+	for (Actor* actor : GetActors())
+	{
+		auto* smoke = dynamic_cast<SmokeActor*>(actor);
+
+		if (smoke == nullptr || smoke == excludedSmoke)
+			continue;
+
+		if (smoke->IsDead() || !smoke->IsSmokeActive())
+			continue;
+
+		if (smoke->Contains(enemy->GetPos()))
+			return true;
+	}
+
+	return false;
+}
 
 // ====================================================
 // フェード遷移
@@ -1465,6 +1603,7 @@ void PlayScene::StartFadeToStage(int idx, int spawnIndex)
 	// すでに遷移中なら無視
 	if (m_fadeState != FadeState::None) return;
 
+	m_game->GetSoundManager().Play("select_game_start");
 	m_pendingStageIndex = idx;
 	m_nextSpawnIndex = spawnIndex;
 	m_fadeState = FadeState::FadeOut;
@@ -1480,12 +1619,37 @@ void PlayScene::StartFadeToStage(int idx, int spawnIndex)
 	}
 }
 
+void PlayScene::StartFadeToPause(bool opening)
+{
+	if (m_fadeState != FadeState::None) return;
+	if (opening) m_pauseMenu.Open();
+	m_fadeState = opening ? FadeState::PauseFadeIn : FadeState::PauseFadeOut;
+	m_fadeTimer = 0.0f;
+}
+
 void PlayScene::UpdateFade(float deltaTime)
 {
 	m_fadeTimer += deltaTime;
 
 	switch (m_fadeState)
 	{
+	case FadeState::PauseFadeOut:
+		if (m_fadeTimer >= FADE_OUT_DURATION)
+		{
+			m_pauseMenu.Toggle();
+			m_fadeState = FadeState::None;
+			m_fadeTimer = 0.0f;
+		}
+		break;
+
+	case FadeState::PauseFadeIn:
+		if (m_fadeTimer >= FADE_IN_DURATION)
+		{
+			m_fadeState = FadeState::None;
+			m_fadeTimer = 0.0f;
+		}
+		break;
+
 	case FadeState::FadeOut:
 	{
 		if (m_fadeTimer >= FADE_OUT_DURATION)
@@ -1749,47 +1913,22 @@ bool PlayScene::UpdateStageLoading()
 		{
 		case 201:
 			success =
-				PreloadEnemy<ScarecrowEnemyEntity>(this);
+				PreloadEnemy<KooniEnemyEntity>(this);
 			break;
 
 		case 202:
 			success =
-				PreloadEnemy<WhiteEnemyEntity>(this);
+				PreloadEnemy<SpiritEnemyEntity>(this);
 			break;
 
 		case 203:
 			success =
-				PreloadEnemy<YellowEnemyEntity>(this);
+				PreloadEnemy<KasaTenguEnemyEntity>(this);
 			break;
 
 		case 204:
 			success =
-				PreloadEnemy<ArrowEnemyEntity>(this);
-			break;
-
-		case 205:
-			success =
-				PreloadEnemy<YoroiBossEntity>(this);
-			break;
-
-		case 206:
-			success =
-				PreloadEnemy<ArmorEnemyEntity>(this);
-			break;
-
-		case 207:
-			success =
-				PreloadEnemy<GunnerEnemyEntity>(this);
-			break;
-
-		case 208:
-			success =
-				PreloadEnemy<HealerEnemyEntity>(this);
-			break;
-
-		case 210:
-			success =
-				PreloadEnemy<SekienkiBossEntity>(this);
+				PreloadEnemy<Boss_01>(this);
 			break;
 
 		default:
@@ -1936,7 +2075,6 @@ void PlayScene::AutoSave()
 		m_saveData.kunaiCount = m_player->GetKunai();
 	}
 
-	// 現在の操作設定を保存データに反映
 	Input& input = m_game->GetInput();
 
 	for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
@@ -1953,6 +2091,25 @@ void PlayScene::AutoSave()
 	SaveManager::Save(m_saveData);
 }
 
+void PlayScene::ShowNews(int id)
+{
+	static const std::vector<NewsData> newsList = GetDefaultNewsList();
+
+	for (const NewsData& news : newsList)
+	{
+		if (news.id != id) continue;
+
+		// 所持品画面の新聞ページに反映する(新聞ID 1~6 は、一覧の順番 0~5 に対応)
+		m_menu.SetNewsOwned(id - 1, true);
+
+		// 自動保存(ドキュメント18-1「宝箱開封・回収時」)
+		m_saveData.newsOwned[id - 1] = true;
+		AutoSave();
+
+		m_newsViewer.Open(news);    // 新聞を表示する(ゲームは Update で止まる)
+		return;
+	}
+}
 // 操作設定画面から即時保存するための公開関数
 void PlayScene::SaveCurrentSettings()
 {

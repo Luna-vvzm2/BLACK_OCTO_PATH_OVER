@@ -1,108 +1,343 @@
+
 #include "HPBarUI.h"
 #include "HPComponent.h"
 #include "TransformComponent.h"
-#include "SpriteComponent.h"
+#include "PlayScene.h"
+#include "PlayerEntity.h"
 #include "Game.h"
-#include <iostream>
 
-static const std::string DEFAULT_BAR = "assets/images/uies/hpBar.png";
-static const std::string DEFAULT_FRAME = "assets/images/uies/hpBarFrame.png";
+#include <DxLib.h>
+#include <cmath>
+
+// 新しいHP・影ゲージ画像
+static const char* STATUS_BAR_IMAGE =
+"assets/images/uies/hp.png";
+
+// 元画像サイズ
+static constexpr int IMAGE_WIDTH = 1418;
+
+// 画像の上下の余白をカット
+static constexpr int CROP_TOP = 260;
+static constexpr int CROP_HEIGHT = 270;
 
 HPBarUI::HPBarUI(Scene* scene, HPComponent* hpComp)
     : UIActor(scene)
     , m_hp(hpComp)
-    , m_maxWidth(180.0f)
-    , m_height(12.0f)
+    , m_maxWidth(610.0f)
+    , m_height(34.0f)
 {
     m_transform = AddComponent<TransformComponent>();
-    m_backBar = AddComponent<SpriteComponent>("assets/images/uies/hpBarFrame.png", false);
-    // m_sprite = AddComponent<SpriteComponent>("assets/images/uies/hpBar.png");
 
     SetName("HPBarUI");
 }
 
+HPBarUI::~HPBarUI()
+{
+    if (m_frameHandle >= 0)
+    {
+        DeleteGraph(m_frameHandle);
+        m_frameHandle = -1;
+    }
+}
+
 bool HPBarUI::Init()
 {
-    if (!UIActor::Init()) return false;
+    if (!UIActor::Init())
+        return false;
 
-    // 左上に小さく配置
-    m_transform->SetPosition({ 0, -120 });
+    // 背景画像を読み込み
+    m_frameHandle = LoadGraph(STATUS_BAR_IMAGE);
 
-    // バーの最大幅（画像に合わせて調整）
-    //m_maxWidth = 60.0f;   // ← 小さくする
+    if (m_frameHandle < 0)
+        return false;
+
+    // 左上を基準に配置
+    m_transform->SetPosition({ 0.0f, 0.0f });
 
     return true;
 }
-
 
 void HPBarUI::Update(float deltaTime)
 {
     UIActor::Update(deltaTime);
 
-    if (m_hp)
+    // 影ゲージの波を動かす
+    m_shadowWaveTime += deltaTime;
+
+    if (!m_hp)
+        return;
+
+    const float maxHP =
+        static_cast<float>(m_hp->GetMaxHP());
+
+    float targetRatio = 0.0f;
+
+    if (maxHP > 0.0f)
     {
-        // 【滑らかに減らす演出を入れる場合】
-        float targetRatio = (float)m_hp->GetHP() / m_hp->GetMaxHP();
-        m_displayRatio += (targetRatio - m_displayRatio) * 5.0f * deltaTime;
-        if (fabs(m_displayRatio - targetRatio) < 0.001f) m_displayRatio = targetRatio;
+        targetRatio =
+            static_cast<float>(m_hp->GetHP()) / maxHP;
+    }
+
+    if (targetRatio < 0.0f)
+        targetRatio = 0.0f;
+
+    if (targetRatio > 1.0f)
+        targetRatio = 1.0f;
+
+    // HPの滑らかな減少演出
+    float speed = 5.0f * deltaTime;
+
+    if (speed < 0.0f)
+        speed = 0.0f;
+
+    if (speed > 1.0f)
+        speed = 1.0f;
+
+    m_displayRatio +=
+        (targetRatio - m_displayRatio) * speed;
+
+    if (std::fabs(m_displayRatio - targetRatio) < 0.001f)
+    {
+        m_displayRatio = targetRatio;
     }
 }
 
-void HPBarUI::Draw() {
-    if (!m_isVisible || !m_backBar || !m_hp) return;
+void HPBarUI::Draw()
+{
+    if (!m_isVisible || !m_hp || !m_transform)
+        return;
+
+    if (!m_scene)
+        return;
+
+    Game* game = m_scene->GetGame();
+
+    if (!game || m_frameHandle < 0)
+        return;
+
+    PlayScene* playScene =
+        dynamic_cast<PlayScene*>(m_scene);
+
+    if (!playScene)
+        return;
+
+    PlayerEntity* player = playScene->GetPlayer();
+
+    if (!player)
+        return;
+
+    // ======================================
+    // 画面サイズに対応
+    // ======================================
+
+    const float screenScaleX =
+        game->GetWidth() / 1280.0f;
+
+    const float screenScaleY =
+        game->GetHeight() / 720.0f;
+
+    // HPバーの幅と高さに合わせて
+    // 元画像の表示倍率を決定
+    const float sx =
+        (m_maxWidth / 1306.0f) * screenScaleX;
+
+    const float sy =
+        (m_height / 73.0f) * screenScaleY;
 
     Vector2d pos = m_transform->GetPosition();
-    float scale = 0.7f;
 
-    // --- フレーム描画 ---
-    m_scene->GetGame()->GetRenderer()->DrawSpriteEx(
-        pos,
-        scale, scale,
-        0.0f,
-        m_backBar->GetHandle(),
-        true,
-        Vector2d(0, 0),
-        255,
-        false, false, false
+    const float left = pos.x * screenScaleX;
+    const float top = pos.y * screenScaleY;
+
+    // 元画像の座標を画面座標に変換
+    auto TX = [&](float x) -> int
+        {
+            return static_cast<int>(left + x * sx);
+        };
+
+    auto TY = [&](float y) -> int
+        {
+            return static_cast<int>(
+                top + (y - CROP_TOP) * sy
+                );
+        };
+
+    // ======================================
+    // ① 背景画像を描画
+    // ======================================
+
+    DrawRectExtendGraph(
+        TX(0),
+        TY(CROP_TOP),
+        TX(IMAGE_WIDTH),
+        TY(CROP_TOP + CROP_HEIGHT),
+        0,
+        CROP_TOP,
+        IMAGE_WIDTH,
+        CROP_HEIGHT,
+        m_frameHandle,
+        TRUE
     );
 
-    // --- HP割合の計算（★ここを m_displayRatio に変更） ---
-    // これにより、実際のHPが減ってもゲージの描画幅がスルスルと滑らかに縮みます
-    float barWidth = m_maxWidth * m_displayRatio;
+    // ======================================
+    // ② HPゲージ（緑）
+    // ======================================
 
-    int skew = 14; // ★斜めの傾き具合（ドット数）。数値を大きくするともっと傾きます。
+    float hpRatio = m_displayRatio;
 
-    // 基本となる左上の開始位置
-    int baseLeft = static_cast<int>(pos.x + 135);
-    int baseTop = static_cast<int>(pos.y + 165);
+    if (hpRatio < 0.0f) hpRatio = 0.0f;
+    if (hpRatio > 1.0f) hpRatio = 1.0f;
 
-    // 4頂点の座標を計算（時計回りに指定します：左上 -> 右上 -> 右下 -> 左下）
-    int x1 = baseLeft;                 // 1. 左上 (右にずらす)
-    int y1 = baseTop;
+    // 元画像内のHPバー内側の座標
+    const float hpLeft = 4.0f;
+    const float hpTop = 311.0f;
+    const float hpBottom = 384.0f;
 
-    int x2 = static_cast<int>(baseLeft + barWidth); // 2. 右上
-    int y2 = baseTop;
+    // 右側は斜めの形状
+    const float hpRightTop = 1309.0f;
+    const float hpRightBottom = 1257.0f;
 
-    int x3 = static_cast<int>(baseLeft + barWidth - skew); // 3. 右下
-    if (x3 < baseLeft + skew) {
-		x3 = baseLeft + skew;
+    if (hpRatio > 0.0f)
+    {
+        const float fillRightTop =
+            hpLeft +
+            (hpRightTop - hpLeft) * hpRatio;
+
+        const float fillRightBottom =
+            hpLeft +
+            (hpRightBottom - hpLeft) * hpRatio;
+
+        DrawQuadrangle(
+            TX(hpLeft),
+            TY(hpTop),
+
+            TX(fillRightTop),
+            TY(hpTop),
+
+            TX(fillRightBottom),
+            TY(hpBottom),
+
+            TX(hpLeft),
+            TY(hpBottom),
+
+            GetColor(0, 210, 65),
+            TRUE
+        );
     }
-    int y3 = static_cast<int>(baseTop + m_height);
 
-    int x4 = baseLeft + skew;                        // 4. 左下 (ずらさない)
-    int y4 = y3;
+    // ======================================
+    // ③ 影ゲージ（黒）
+    // ======================================
 
-    // HPが0より大きいときだけ描画（幅が0のときの誤描画を防ぐ安全策）
-    if (barWidth > 0.0f) {
-        // DrawQuadrangle(左上X, 左上Y, 右上X, 右上Y, 右下X, 右下Y, 左下X, 左下Y, 色, 塗りつぶしフラグ)
-        DrawQuadrangle(x1, y1, x2, y2, x3, y3, x4, y4, GetColor(255, 0, 0), TRUE);
+    const float shadow =
+        static_cast<float>(player->GetShadowGauge());
+
+    const float maxShadow =
+        static_cast<float>(player->GetShadowGaugeMax());
+
+    float shadowRatio = 0.0f;
+
+    if (maxShadow > 0.0f)
+    {
+        shadowRatio = shadow / maxShadow;
     }
+
+    if (shadowRatio < 0.0f)
+        shadowRatio = 0.0f;
+
+    if (shadowRatio > 1.0f)
+        shadowRatio = 1.0f;
+
+    // 元画像内の影ゲージ内側の座標
+    const float shadowLeft = 4.0f;
+    const float shadowTop = 390.0f;
+    const float shadowBottom = 432.0f;
+
+    const float shadowRightTop = 1033.0f;
+    const float shadowRightBottom = 1004.0f;
+
+
+    if (shadowRatio > 0.0f)
+    {
+        // =====================================
+        // 影ゲージの波アニメーション
+        // =====================================
+
+        // 波の設定
+        const float waveAmplitude = 7.0f;  // 波の高さ
+        const float waveFrequency = 0.028f; // 波の細かさ
+        const float waveSpeed = 3.0f;      // 波の移動速度
+
+        // 波の中心位置
+        const float waveBaseY = shadowTop + 9.0f;
+
+        // ゲージの右端位置
+        const float fillRightTop =
+            shadowLeft +
+            (shadowRightTop - shadowLeft) * shadowRatio;
+
+        const float fillRightBottom =
+            shadowLeft +
+            (shadowRightBottom - shadowLeft) * shadowRatio;
+
+        // 波を細かい四角形に分割して描画
+        constexpr int SEGMENTS = 80;
+
+        for (int i = 0; i < SEGMENTS; ++i)
+        {
+            float t1 =
+                static_cast<float>(i) / SEGMENTS;
+
+            float t2 =
+                static_cast<float>(i + 1) / SEGMENTS;
+
+            // 上側のX座標
+            float x1 = shadowLeft +
+                (fillRightTop - shadowLeft) * t1;
+
+            float x2 = shadowLeft +
+                (fillRightTop - shadowLeft) * t2;
+
+            // 下側のX座標
+            float bottomX1 = shadowLeft +
+                (fillRightBottom - shadowLeft) * t1;
+
+            float bottomX2 = shadowLeft +
+                (fillRightBottom - shadowLeft) * t2;
+
+            // sin関数で波を生成
+            float y1 = waveBaseY +
+                std::sin(
+                    x1 * waveFrequency -
+                    m_shadowWaveTime * waveSpeed
+                ) * waveAmplitude;
+
+            float y2 = waveBaseY +
+                std::sin(
+                    x2 * waveFrequency -
+                    m_shadowWaveTime * waveSpeed
+                ) * waveAmplitude;
+
+            // 波の表面から下側まで黒く塗る
+            DrawQuadrangle(
+                TX(x1), TY(y1),
+                TX(x2), TY(y2),
+                TX(bottomX2), TY(shadowBottom),
+                TX(bottomX1), TY(shadowBottom),
+                GetColor(0, 0, 0),
+                TRUE
+            );
+        }
+    }
+
 }
 
 void HPBarUI::SetPosition(float x, float y)
 {
     if (m_transform)
+    {
         m_transform->SetPosition({ x, y });
+    }
 }
 
 void HPBarUI::SetBarSize(float w, float h)

@@ -1,11 +1,14 @@
 #pragma once
 
+#include "MapMenu.h"
+#include "StatusMenu.h"
+#include "NewsMenu.h"
 #include "SkillMenu.h"
 #include "EquipmentMenu.h"
 #include "MenuCursor.h"
-#include "KeyConfigMenu.h"
 
 class PlayScene;
+class PlayerEntity;
 class Game;
 
 class Menu
@@ -14,22 +17,18 @@ public:
     explicit Menu(PlayScene* owner);
 
     void Initialize();
-
     void Update(float deltaTime);
-
     void Draw();
-
-    void SaveSettings();
 
     enum class MenuCursorArea
     {
         Tab,
         SkillList,
-        EquipmentList,
-        KeyConfigList
+        EquipmentList
     };
 
     Game* GetGame() const;
+    PlayerEntity* GetPlayer() const;
 
     bool IsOpen() const;
     void Toggle();
@@ -38,9 +37,7 @@ public:
 
     int GetTabCursor() const;
 
-    int GetLockedSkillIcon() const;
-
-    bool IsCapturingKey() const;
+    int GetLockedSkillIcon() const;;
 
     MenuCursor& GetCursor()
     {
@@ -49,17 +46,23 @@ public:
 
     void SetCursorArea(MenuCursorArea area);
 
-private:
+    // 新聞の入手状況(所持品画面の新聞ページに反映される)
+    void SetNewsOwned(int index, bool owned) { m_newsMenu.SetOwned(index, owned); }
+    bool IsNewsOwned(int index) const { return m_newsMenu.IsOwned(index); }
 
-    void DrawTabs();
-    MenuCursor m_cursor;
+private:
+    void DrawTabs() const;
+    void ChangeTab(int delta);
 
     PlayScene* m_owner;
+    MenuCursor m_cursor;
 
     SkillMenu m_skillMenu;
     EquipmentMenu m_equipmentMenu;
 
-    KeyConfigMenu m_keyConfigMenu;
+    MapMenu    m_mapMenu;
+    StatusMenu m_statusMenu;
+    NewsMenu   m_newsMenu;
 
     int m_tabCursor = 0;
     int m_lockedSkillIcon = -1;
@@ -68,15 +71,13 @@ private:
 
     enum class Tab
     {
-        Skill,
-        Equipment,
-        KeyConfig
+        Map = 0,
+        Status,
+        News,
+        Count
     };
 
-    Tab m_currentTab = Tab::Skill;
+    Tab m_currentTab = Tab::Map;
 
     bool m_isOpen = false;
-
-
-
 };

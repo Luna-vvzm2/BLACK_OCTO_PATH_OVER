@@ -7,16 +7,20 @@
 #include "CollisionComponent.h"
 #include "SpriteComponent.h"
 #include "AnimationComponent.h"
+#include "AlertGaugeComponent.h"
 #include "Game.h"
 #include "PlayScene.h"
 #include "DropData.h"
 #include "DropItemEntity.h"
+#include "PlayerEntity.h"
 #include <cstdlib>
+#include <iostream>
 
 EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size)
     : EntityActor(scene, pos, size)
     , m_hp(nullptr)
     , m_hpMax(100)
+    , m_alertGauge(nullptr)
     , m_gravity(nullptr)
     , m_anim(nullptr)
 
@@ -45,6 +49,9 @@ EnemyEntity::EnemyEntity(Scene* scene, const Vector2d& pos, const Vector2d& size
     , m_actionLock(false)
 
     , m_canMove(true)
+    ,m_alertGaugeTimer(0.0f)
+    , m_alertChangeTimer(0.0f)
+    , m_wasPlayerInSearchRange(false)
 {
 }
 
@@ -54,33 +61,35 @@ bool EnemyEntity::Init() {
 
     m_hp = AddComponent<HPComponent>(GetMaxHP());
     m_gravity = AddComponent<GravityComponent>(2800.0f);
+    m_alertGauge = AddComponent<AlertGaugeComponent>();
 
     // テスト用：必ずコインを1つ落とす
     m_dropTable.clear();
-    m_dropTable.push_back({ ItemType::Coin, 1.0f });
-    m_dropTable.push_back({ ItemType::Kunai,0.9f });
-    m_dropTable.push_back({ ItemType::Heal,0.9f });
+    m_dropTable.push_back({ ItemType::Coin, 0.0f });
+    m_dropTable.push_back({ ItemType::Kunai,0.0f });
+    m_dropTable.push_back({ ItemType::Heal,1.15f });
     return true;
+
 }
 
-void EnemyEntity::Update(float deltaTime) {
-   
+void EnemyEntity::Update(float deltaTime)
+{
     EntityActor::Update(deltaTime);
 
-   
     if (GetState() == Actor::State::Dead)
+    {
         return;
-
-  
+    }
 
     UpdateAI();
 
+    if (UseAlertGauge())
+    {
+        UpdateAlertGauge(deltaTime);
+    }
+
     UpdateGravity(deltaTime);
-
-
-
 }
-
 void EnemyEntity::UpdateGravity(float deltaTime)
 {
     if (!m_velocity)
@@ -134,27 +143,150 @@ void EnemyEntity::OnDead()
 }
 
 
-void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback)
+void EnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {   
     if (m_hp == nullptr)
     {
         return;
     }
+    
+    int finalDamage = damage;
 
-    m_hp->Damage(damage);
+    //無防備状態か判定
+    const bool isDefenseless = m_alertGauge != nullptr && m_alertGauge->IsDefenseless();
+
+    const bool isCombat = m_alertGauge != nullptr && m_alertGauge->IsCombat();
+    float multiplier = 1.0f;
+
+    if (isDefenseless)
+    {
+        ;
+        //無防備状態の倍率
+        switch (m_enemyRank)
+        {
+        case EnemyRank::Small:
+            multiplier = 20.0f;
+            break;
+
+        case EnemyRank::Elite:
+            multiplier = 3.0f;
+            break;
+
+        case EnemyRank::Boss:
+            multiplier = 2.0f;
+            break;
+        }
+    }
+    else if (isCombat)
+    {
+        //プレイヤーの位置から攻撃方向を判定
+        PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+        PlayerEntity* player = nullptr;
+        if (playScene != nullptr)
+        {
+            player = playScene->GetPlayer();
+        }
+
+        if (player != nullptr && !player->IsDead())
+        {
+            const float playerX = player->GetPos().x;
+            const float enemyX = GetPos().x;
+
+            //m_dir == true は右向きと仮定
+            bool isPlayerInFront = m_dir ? playerX > enemyX : playerX < enemyX;
+            if (attackDir) { isPlayerInFront = !isPlayerInFront; }
+
+            if (isPlayerInFront)
+            {
+                //前方からの攻撃
+                switch (m_enemyRank)
+                {
+                case EnemyRank::Small:
+                    multiplier = 0.7f;
+                    break;
+
+                case EnemyRank::Elite:
+                    multiplier = 0.5f;
+                    break;
+
+                case EnemyRank::Boss:
+                    multiplier = 0.3f;
+                    break;
+                }
+            }
+            else
+            {
+                //後方からの攻撃
+                switch (m_enemyRank)
+                {
+                case EnemyRank::Small:
+                    multiplier = 20.0f;
+                    break;
+
+                case EnemyRank::Elite:
+                    multiplier = 3.0f;
+                    break;
+
+                case EnemyRank::Boss:
+                    multiplier = 2.0f;
+                    break;
+                }
+            }
+        }
+    }
+
+    finalDamage = static_cast<int>(damage * multiplier);
+
+    //ダメージを適用
+    m_hp->Damage(finalDamage);
+
+    if (m_alertGauge != nullptr)
+    {
+        if (isDefenseless)
+        {
+            //ダメージ適用後、ゲージを0にリセット
+            m_alertGauge->SetGauge(0.0f);
+
+            //10秒間、ゲージがマイナスになるのを制限
+            m_defenselessLockTimer = 10.0f;
+
+
+            if (m_isInSmoke)
+            {
+                m_isInSmoke = false;
+
+                // 警戒ゲージを臨戦状態にする
+                m_alertGauge->SetGauge(100.0f);
+
+                // 煙幕による追跡解除状態を解除し、
+                // 臨戦状態のAI処理へ移行する
+            }
+        }
+        else
+        {
+            //通常攻撃では、攻撃命中ごとに＋8
+            m_alertGauge->AddGauge(8.0f);
+        }
+    }
 
     if (m_hp->GetHP() <= 0)
     {
-        OnDeadFromDamage(damage, knockback);
-
+        OnDeadFromDamage(finalDamage, knockback);
         return;
     }
+
+    if (m_velocity != nullptr)
+    {
+        m_velocity->Set(knockback);
+    }
+
+    OnDamaged(finalDamage, knockback);
 
     Vector2d vel = m_velocity->Get();
     vel = knockback;
     m_velocity->Set(vel);
 
-    OnDamaged(damage, knockback);
 }
 
 void EnemyEntity::TakeMetsu(int metsu)
@@ -225,4 +357,136 @@ void EnemyEntity::UpdateAttack(float deltaTime)
 
 void EnemyEntity::UpdateState()
 {
+}
+
+bool EnemyEntity::IsPlayerInSearchRange() const
+{
+    PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+    if (playScene == nullptr)
+    {
+        return false;
+    }
+
+    PlayerEntity* player = playScene->GetPlayer();
+
+    if (player == nullptr || player->IsDead())
+    {
+        return false;
+    }
+
+    Vector2d enemyPos = GetPos();
+    Vector2d playerPos = player->GetPos();
+
+    float distanceX = std::abs(playerPos.x - enemyPos.x);
+    float distanceY = std::abs(playerPos.y - enemyPos.y);
+
+    return distanceX <= SEARCH_RANGE_X &&
+        distanceY <= SEARCH_RANGE_Y;
+}
+
+void EnemyEntity::UpdateAlertGauge(float deltaTime)
+{
+    // 無防備状態解除後の制限時間を減らす
+    if (m_defenselessLockTimer > 0.0f)
+    {
+        m_defenselessLockTimer -= deltaTime;
+
+        if (m_defenselessLockTimer < 0.0f)
+        {
+            m_defenselessLockTimer = 0.0f;
+        }
+    }
+
+    if (m_alertGauge == nullptr)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer += deltaTime;
+
+    if (m_alertGaugeTimer < 1.0f)
+    {
+        return;
+    }
+
+    m_alertGaugeTimer = 0.0f;
+
+    const bool isPlayerInRange = IsPlayerInSearchRange();
+    // 範囲内・範囲外が切り替わったら増減量をリセット
+    if (isPlayerInRange != m_wasPlayerInSearchRange)
+    {
+        m_alertChangeTimer = 0.0f;
+    }
+
+    m_wasPlayerInSearchRange = isPlayerInRange;
+
+    // 1 → 2 → 3 → ... → 10
+    m_alertChangeTimer += 1.0f;
+
+    float changeAmount = m_alertChangeTimer;
+
+    if (changeAmount > 10.0f)
+    {
+        changeAmount = 10.0f;
+    }
+
+    if (isPlayerInRange)
+    {
+        // +1 → +10
+        m_alertGauge->AddGauge(changeAmount);
+    }
+    else
+    {
+        if (m_defenselessLockTimer > 0.0f)
+        {
+            if (m_alertGauge->GetGauge() > 0.0f)
+            {
+                m_alertGauge->AddGauge(-1.0f);
+
+                if (m_alertGauge->GetGauge() < 0.0f)
+                {
+                    m_alertGauge->SetGauge(0.0f);
+                }
+            }
+        }
+        else
+        {
+            //通常の減少処理
+            // -1 → -10
+            m_alertGauge->AddGauge(-changeAmount);
+        }
+    }
+    
+}
+bool EnemyEntity::UseAlertGauge() const
+{
+    return true;
+}
+
+void EnemyEntity::SetEnemyRank(EnemyRank rank)
+{
+    m_enemyRank = rank;
+}
+
+void EnemyEntity::ApplySmoke()
+{
+    m_isInSmoke = true;
+
+    // 警戒ゲージを無防備状態にする
+    m_alertGauge->SetGauge(-100.0f);
+
+    // プレイヤーの追跡を解除
+    // 攻撃中なら攻撃をキャンセル
+}
+
+void EnemyEntity::EndSmoke()
+{
+    if (!m_isInSmoke)
+        return;
+
+    m_isInSmoke = false;
+
+    // 警戒ゲージを警戒状態にする
+    m_alertGauge->SetGauge(0.0f);
 }

@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Key.h"
 #include "Joypad.h"
 #include <array>
@@ -15,6 +14,7 @@ enum class Action {
     WEAK_ATTACK,
     KUNAI,
     HEAL,
+    SHADOW_HEAL,
     KAMAE,
     G,
     JUTSU_KAMAE,
@@ -27,10 +27,11 @@ enum class Action {
     MENU,
     PAGE_UP,
     PAGE_DOWN,
+    ZOOM_IN,
+    ZOOM_OUT,
     ACTION_COUNT
 };
 
-// 操作方式
 enum class InputMode {
     Hold = 0,   // 長押し
     Toggle = 1  // 押すたびにON/OFF切り替え
@@ -39,7 +40,6 @@ enum class InputMode {
 class Input {
 public:
     Input();
-
     void Init();
     void Update();
 
@@ -77,7 +77,6 @@ private:
     Key m_key;
     Joypad m_pad;
 
-    // アクションとキーの対応
     std::array<
         std::vector<Key::KeyIndex>,
         static_cast<size_t>(Action::ACTION_COUNT)

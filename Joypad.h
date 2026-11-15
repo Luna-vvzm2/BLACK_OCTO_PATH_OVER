@@ -23,6 +23,8 @@ public:
 		START,
 		LT,
 		RT,
+		RS_UP,    // Rスティック上
+		RS_DOWN,  // Rスティック下
 		BUTTON_COUNT
 
 	};

@@ -2,12 +2,16 @@
 #include "Scene.h"
 #include "Vector2d.h"
 #include "Camera.h"
+#include "Checkpoint.h"
 #include "MapData.h"
 #include "ShurikenUI.h"
 #include "MoneyUI.h"
 
 #include "Menu.h"
 #include "SaveData.h"
+
+#include "ScreenMenus.h"
+#include "NewsViewer.h"
 
 #include <memory>
 #include <unordered_map>
@@ -16,10 +20,9 @@
 
 class PlayerEntity;
 class EnemyEntity;
+class SmokeActor;
 class HPBarUI;
 class EnemyHPBar;
-class SoundComponent;
-class GameOverMenuUI;
 class JutsuChargeUI;
 class PlayerStatusUI;
 
@@ -46,7 +49,15 @@ public:
 	void Update(float deltaTime) override;
 	void Draw() override;
 
+	// 攻撃命中時の演出
+	void RequestHitEffect(
+		float hitStopTime,
+		float shakeTime,
+		float shakeStrength
+	);
+
 	PlayerEntity* GetPlayer() const { return m_player; }
+	int GetStageIndex() const { return m_stageIndex; }
 
 	// 衝突イベント時に呼ぶ
 	//void SpawnHitEffect(const Vector2d& pos);
@@ -70,6 +81,8 @@ public:
 
 	// プレイヤーをリスポーン位置に戻す
 	void RespawnPlayer();
+	void SetRespawnPosition(const Vector2d& position) { m_respawnPos = position; }
+	bool IsRespawnPosition(const Vector2d& position) const { return m_respawnPos.x == position.x && m_respawnPos.y == position.y; }
 
 	//敵HPバー処理に使用
 	void AddUIActorFromExternal(UIActor* uiActor) { AddUIActor(uiActor); }
@@ -77,12 +90,19 @@ public:
 
 	// ゲームオーバー時の処理
 	void ShowGameOverMenu();
+	void OnResume() override;
+	void ReturnToPauseMenu() { m_returnToPauseMenu = true; }
 
-	// 現在のゲーム情報と操作設定を保存する
+	// 宝箱から呼ぶ: 新聞を入手して表示する
+	void ShowNews(int id);
 	void SaveCurrentSettings();
 
 	int m_bgHandle;
 	int m_fgHandle;
+
+	void SpawnSmoke(const Vector2d& position, const Vector2d& size);
+	void OnSmokeExpired(SmokeActor* smoke);
+
 private:
 	
 	PlayerEntity* m_player;
@@ -94,9 +114,29 @@ private:
 	int m_nextSpawnIndex = 0;
 
 	Menu m_menu;
+	PauseMenu m_pauseMenu;
+	bool m_returnToPauseMenu = false;
 
 	Camera m_camera;
-	SoundComponent* m_stageBgm;
+
+// =====================================
+// ヒットストップ
+// =====================================
+	float m_hitStopTimer = 0.0f;
+
+	// =====================================
+	// 画面揺れ
+	// =====================================
+	float m_shakeTimer = 0.0f;
+	float m_shakeDuration = 0.0f;
+	float m_shakeStrength = 0.0f;
+	float m_shakeClock = 0.0f;
+
+	// 前フレームでカメラに加えた揺れ
+	Vector2d m_appliedShakeOffset = { 0.0f, 0.0f };
+
+	// 画面揺れの更新
+	void UpdateCameraShake(float deltaTime);
 
 	int m_stageIndex;
 	int m_comboCount = 0;
@@ -131,11 +171,6 @@ private:
 	// リスポーン位置（初期位置）
 	Vector2d m_respawnPos;
 
-	// ゲームオーバーメニュー
-	GameOverMenuUI* m_gameOverMenu;
-	bool m_isGameOver;
-	bool m_isPaused;  // ゲームが一時停止中か
-
 	// 最初に配置された地面のY座標
 	float m_initialGroundY = 0.0f;
 
@@ -145,7 +180,9 @@ private:
 		FadeOut,    // 暗転中（次ステージへ）
 		Loading, //ロード中
 		Hold,       // 完全な黒画面のホールド
-		FadeIn      // 明転中（新ステージ開始）
+		FadeIn,     // 明転中（新ステージ開始）
+		PauseFadeOut,
+		PauseFadeIn
 	};
 
 	FadeState m_fadeState = FadeState::None;
@@ -159,6 +196,7 @@ private:
 
 	// フェード遷移を開始する（次ステージへ） 
 	void StartFadeToStage(int idx, int spawnIndex);
+	void StartFadeToPause(bool opening);
 
 	// フェード状態を更新 
 	void UpdateFade(float deltaTime);
@@ -193,4 +231,9 @@ private:
 
 	// ロード画面を描画
 	void DrawLoadingScreen();
+
+	// 煙幕
+	bool IsCoveredBySmoke(const EnemyEntity* enemy, const SmokeActor* excludedSmoke) const;
+
+	NewsViewer m_newsViewer;
 };

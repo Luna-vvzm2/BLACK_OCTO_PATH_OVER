@@ -1,6 +1,5 @@
-#pragma once
-
-#include <DxLib.h>
+#pragma once 
+#include <DxLib.h> 
 #include <array>
 
 class Key {

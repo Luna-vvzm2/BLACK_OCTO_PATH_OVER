@@ -236,6 +236,26 @@ bool EffectActor::LoadEffects()
     executionEnemy.size = { 64,64 };
     s_effects[EffectType::ExecutionEnemy] = executionEnemy;
 
+    LoadEffectTexture("assets/images/effects/TORA_sheet.png", 3, 24, attackHandles);
+
+    EffectData tiger1;
+    tiger1.handles = attackHandles;
+    tiger1.clip.frames = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
+    tiger1.clip.speed = 0.07f;
+    tiger1.clip.loop = false;
+    tiger1.size = { 100, 100 };
+    s_effects[EffectType::Tiger1] = tiger1;
+
+    EffectData tiger2;
+    tiger2.handles = attackHandles;
+    tiger2.clip.frames = { 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71 };
+    tiger2.clip.speed = 0.05f;
+    tiger2.clip.loop = false;
+    tiger2.size = { 100, 100 };
+    s_effects[EffectType::Tiger2] = tiger2;
+
+
+
     return true;
 }
 
