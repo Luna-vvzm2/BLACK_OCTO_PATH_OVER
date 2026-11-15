@@ -190,15 +190,6 @@ bool PlayScene::Init() {
 			);
 		}
 
-		// ‘€ì•û®‚ğ•œŒ³
-		if (m_saveData.inputModes[i] == 0 ||
-			m_saveData.inputModes[i] == 1)
-		{
-			input.SetInputMode(
-				action,
-				static_cast<InputMode>(m_saveData.inputModes[i])
-			);
-		}
 	}
 
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
@@ -2084,8 +2075,6 @@ void PlayScene::AutoSave()
 		m_saveData.keyBindings[i] =
 			input.GetKeyBindings(action);
 
-		m_saveData.inputModes[i] =
-			static_cast<int>(input.GetInputMode(action));
 	}
 
 	SaveManager::Save(m_saveData);

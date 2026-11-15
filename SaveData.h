@@ -33,8 +33,4 @@ struct SaveData
     std::array<std::vector<int>, ActionCount> keyBindings{};
     std::array<bool, ActionCount> hasKeyBinding{};
 
-    // ‘€ì•û®
-    // 0 = ’·‰Ÿ‚µ
-    // 1 = ƒgƒOƒ‹
-    std::array<int, ActionCount> inputModes{};
 };

@@ -15,8 +15,8 @@ namespace
 {
     constexpr int MAX_KUNAI = 3;
 
-    constexpr int ICON_SIZE = 48;
-    constexpr int ICON_SPACING = 34;
+    constexpr int ICON_SIZE = 64;
+    constexpr int ICON_SPACING = 46;
 
     // 回復の2秒前から演出開始
     constexpr float SPIN_START = 2.0f;

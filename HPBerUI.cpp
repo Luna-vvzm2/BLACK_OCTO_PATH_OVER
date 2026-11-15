@@ -24,7 +24,7 @@ HPBarUI::HPBarUI(Scene* scene, HPComponent* hpComp)
     : UIActor(scene)
     , m_hp(hpComp)
     , m_maxWidth(610.0f)
-    , m_height(34.0f)
+    , m_height(27.0f)
 {
     m_transform = AddComponent<TransformComponent>();
 
@@ -33,6 +33,9 @@ HPBarUI::HPBarUI(Scene* scene, HPComponent* hpComp)
 
 HPBarUI::~HPBarUI()
 {
+    if (m_shadowSurface >= 0)
+        DeleteGraph(m_shadowSurface);
+
     if (m_frameHandle >= 0)
     {
         DeleteGraph(m_frameHandle);
@@ -60,9 +63,6 @@ bool HPBarUI::Init()
 void HPBarUI::Update(float deltaTime)
 {
     UIActor::Update(deltaTime);
-
-    // ‰eƒQ[ƒW‚Ì”g‚ğ“®‚©‚·
-    m_shadowWaveTime += deltaTime;
 
     if (!m_hp)
         return;
@@ -264,12 +264,60 @@ void HPBarUI::Draw()
         // =====================================
 
         // ”g‚Ìİ’è
-        const float waveAmplitude = 7.0f;  // ”g‚Ì‚‚³
-        const float waveFrequency = 0.028f; // ”g‚Ì×‚©‚³
-        const float waveSpeed = 3.0f;      // ”g‚ÌˆÚ“®‘¬“x
+        const float waveAmplitude = 6.0f;  // ”g‚Ì‚‚³
+        const float waveFrequency = 0.018f; // ”g‚Ì×‚©‚³
+        const float waveSpeed = 1.8f;      // ”g‚ÌˆÚ“®‘¬“x
 
         // ”g‚Ì’†SˆÊ’u
         const float waveBaseY = shadowTop + 9.0f;
+
+        // Advance at render time, independently of the fixed gameplay update.
+        constexpr double TWO_PI = 6.283185307179586;
+        const float wavePhase = static_cast<float>(std::fmod(
+            GetNowHiPerformanceCount() * 0.000001 * waveSpeed, TWO_PI));
+        // Render the wave at twice the screen resolution, then filter it down.
+        // Keep this surface local to the shadow gauge so the HP frame stays sharp.
+        constexpr float SAMPLE_SCALE = 2.0f;
+        constexpr float PADDING = 2.0f;
+        const float surfaceLeft = left + shadowLeft * sx - PADDING;
+        const float surfaceTop = top + (shadowTop - CROP_TOP) * sy - PADDING;
+        const int surfaceWidth = static_cast<int>(std::ceil(
+            (shadowRightTop - shadowLeft) * sx + PADDING * 2.0f)) * 2;
+        const int surfaceHeight = static_cast<int>(std::ceil(
+            (shadowBottom - shadowTop) * sy + PADDING * 2.0f)) * 2;
+        int oldWidth = 0, oldHeight = 0;
+        if (m_shadowSurface >= 0)
+            GetGraphSize(m_shadowSurface, &oldWidth, &oldHeight);
+        if (oldWidth != surfaceWidth || oldHeight != surfaceHeight)
+        {
+            if (m_shadowSurface >= 0) DeleteGraph(m_shadowSurface);
+            m_shadowSurface = MakeScreen(surfaceWidth, surfaceHeight, TRUE);
+        }
+
+        const int previousScreen = GetDrawScreen();
+        const int previousMode = GetDrawMode();
+        int previousBlend = 0, previousAlpha = 0;
+        GetDrawBlendMode(&previousBlend, &previousAlpha);
+        RECT previousArea;
+        GetDrawArea(&previousArea);
+        const bool supersampling = m_shadowSurface >= 0;
+        if (supersampling)
+        {
+            SetDrawScreen(m_shadowSurface);
+            SetDrawArea(0, 0, surfaceWidth, surfaceHeight);
+            ClearDrawScreen();
+            SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+        }
+        auto waveX = [&](float x)
+        {
+            const float screenX = left + x * sx;
+            return supersampling ? (screenX - surfaceLeft) * SAMPLE_SCALE : screenX;
+        };
+        auto waveY = [&](float y)
+        {
+            const float screenY = top + (y - CROP_TOP) * sy;
+            return supersampling ? (screenY - surfaceTop) * SAMPLE_SCALE : screenY;
+        };
 
         // ƒQ[ƒW‚Ì‰E’[ˆÊ’u
         const float fillRightTop =
@@ -281,8 +329,9 @@ void HPBarUI::Draw()
             (shadowRightBottom - shadowLeft) * shadowRatio;
 
         // ”g‚ğ×‚©‚¢lŠpŒ`‚É•ªŠ„‚µ‚Ä•`‰æ
-        constexpr int SEGMENTS = 80;
+        constexpr int SEGMENTS = 128;
 
+        BeginAADraw();
         for (int i = 0; i < SEGMENTS; ++i)
         {
             float t1 =
@@ -309,24 +358,36 @@ void HPBarUI::Draw()
             float y1 = waveBaseY +
                 std::sin(
                     x1 * waveFrequency -
-                    m_shadowWaveTime * waveSpeed
+                    wavePhase
                 ) * waveAmplitude;
 
             float y2 = waveBaseY +
                 std::sin(
                     x2 * waveFrequency -
-                    m_shadowWaveTime * waveSpeed
+                    wavePhase
                 ) * waveAmplitude;
 
             // ”g‚Ì•\–Ê‚©‚ç‰º‘¤‚Ü‚Å•‚­“h‚é
-            DrawQuadrangle(
-                TX(x1), TY(y1),
-                TX(x2), TY(y2),
-                TX(bottomX2), TY(shadowBottom),
-                TX(bottomX1), TY(shadowBottom),
+            DrawQuadrangleAA(
+                waveX(x1), waveY(y1),
+                waveX(x2), waveY(y2),
+                waveX(bottomX2), waveY(shadowBottom),
+                waveX(bottomX1), waveY(shadowBottom),
                 GetColor(0, 0, 0),
                 TRUE
             );
+        }
+        EndAADraw();
+        if (supersampling)
+        {
+            SetDrawScreen(previousScreen);
+            SetDrawArea(previousArea.left, previousArea.top, previousArea.right, previousArea.bottom);
+            SetDrawBlendMode(previousBlend, previousAlpha);
+            SetDrawMode(DX_DRAWMODE_BILINEAR);
+            DrawExtendGraphF(surfaceLeft, surfaceTop,
+                surfaceLeft + surfaceWidth / SAMPLE_SCALE,
+                surfaceTop + surfaceHeight / SAMPLE_SCALE, m_shadowSurface, TRUE);
+            SetDrawMode(previousMode);
         }
     }
 

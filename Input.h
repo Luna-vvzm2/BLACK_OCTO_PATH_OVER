@@ -32,15 +32,12 @@ enum class Action {
     ACTION_COUNT
 };
 
-enum class InputMode {
-    Hold = 0,   // 長押し
-    Toggle = 1  // 押すたびにON/OFF切り替え
-};
 
 class Input {
 public:
     Input();
     void Init();
+    void ResetKeyBindings();
     void Update();
 
     // アクション単位で入力取得
@@ -62,9 +59,6 @@ public:
         const std::vector<int>& keyIndices
     );
 
-    // 操作方式の取得・変更
-    InputMode GetInputMode(Action action) const;
-    void SetInputMode(Action action, InputMode mode);
 
     const Key& GetKey() const { return m_key; }
     const Joypad& GetPad() const { return m_pad; }
@@ -87,15 +81,4 @@ private:
         static_cast<size_t>(Action::ACTION_COUNT)
     > m_actionPadMap;
 
-    // 操作方式
-    std::array<
-        InputMode,
-        static_cast<size_t>(Action::ACTION_COUNT)
-    > m_actionInputModes{};
-
-    // トグル方式で現在ONになっているか
-    std::array<
-        bool,
-        static_cast<size_t>(Action::ACTION_COUNT)
-    > m_toggleStates{};
 };
