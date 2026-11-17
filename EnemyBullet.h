@@ -25,10 +25,11 @@ public:
 
 	ActorType GetType() const override { return ActorType::Ball; }
 
-private:
+
 	bool TryDamagePlayer();
 	std::string GetTexturePath() const override;
-
+protected:
+	virtual bool UseBlockCollision() const { return false; }
 private:
 	Vector2d m_startPos;
 	Vector2d m_bulletVelocity;

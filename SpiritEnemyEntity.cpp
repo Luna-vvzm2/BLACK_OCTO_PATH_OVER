@@ -11,6 +11,7 @@
 #include "SpiritBulletEntity.h"
 #include "AlertGaugeComponent.h"
 
+#include <cstdlib>
 #include <cmath>
 
 SpiritEnemyEntity::SpiritEnemyEntity(
@@ -20,6 +21,7 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     : EnemyEntity(scene, pos, Vector2d(80.0f, 80.0f))
     , m_state(Idle)
     , m_animation(nullptr)
+    , m_sprite(nullptr)
     , m_attackSound(nullptr)
     , m_floatTimer(0.0f)
     , m_attackTimer(0.0f)
@@ -31,6 +33,13 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     , m_isDying(false)
     , m_targetPosition(Vector2d::Zero())
     , m_hasTargetPosition(false)
+    , m_wallBlocked(false)
+    , m_isAvoidingWall(false)
+    , m_wallBlockedTimer(0.0f)
+    , m_wallAvoidTimer(0.0f)
+    , m_wallAvoidDirection(-1.0f)
+    , m_isBlockedByWall(false)
+    , m_blockedPlayerPosition(Vector2d::Zero())
 {
 }
 
@@ -87,7 +96,7 @@ bool SpiritEnemyEntity::Init()
     // 待機アニメーション
     AnimationClip idleClip;
     idleClip.frames = { 5, 6, 7 };
-    idleClip.speed = 0.15f;
+    idleClip.speed = 0.30f;
     idleClip.loop = true;
 
     m_animation->AddClip("Idle", idleClip);
@@ -95,7 +104,7 @@ bool SpiritEnemyEntity::Init()
     // 移動アニメーション
     AnimationClip moveClip;
     moveClip.frames = { 5, 6, 7 };
-    moveClip.speed = 0.1f;
+    moveClip.speed = 0.30f;
     moveClip.loop = true;
 
     m_animation->AddClip("Move", moveClip);
@@ -103,14 +112,14 @@ bool SpiritEnemyEntity::Init()
     // 攻撃アニメーション
     AnimationClip attackClip;
     attackClip.frames = { 0, 1, 2 };
-    attackClip.speed = 0.12f;
+    attackClip.speed = 0.30f;
     attackClip.loop = false;
 
     m_animation->AddClip("Attack", attackClip);
 
     AnimationClip hitClip;
     hitClip.frames = { 3,4 };
-    hitClip.speed = 0.1f;
+    hitClip.speed = 0.30f;
     hitClip.loop = false;
 
     m_animation->AddClip("Hit", hitClip);
@@ -118,7 +127,7 @@ bool SpiritEnemyEntity::Init()
     // 撃破アニメーション
     AnimationClip deadClip;
     deadClip.frames = { 3,4 };
-    deadClip.speed = 0.15f;
+    deadClip.speed = 0.30f;
     deadClip.loop = false;
 
     m_animation->AddClip("Dead", deadClip);
@@ -132,8 +141,20 @@ bool SpiritEnemyEntity::Init()
 
 void SpiritEnemyEntity::Update(float deltaTime)
 {
-    if (GetState() == Actor::State::Dead)
+    if (m_isDying)
     {
+        SetVel(Vector2d::Zero());
+
+        UpdateAnimation();
+        if (m_animation != nullptr)
+        {
+            m_animation->Update(deltaTime);
+
+            if (m_animation->IsFinished())
+            {
+                SetState(Actor::State::Dead);
+            }
+        }
         return;
     }
 
@@ -187,12 +208,43 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
 
     // 怨霊は重力を使用しない
-    Vector2d pos = GetPos();
+    /*Vector2d pos = GetPos();
     Vector2d vel = GetVel();
-
     pos += vel * deltaTime;
-
     SetPos(pos);
+    */
+
+    Vector2d beforePos = GetPos();
+    Vector2d beforeVel = GetVel();
+
+    MoveAndCollide(deltaTime);
+
+    Vector2d afterPos = GetPos();
+
+    // CombatMove中に壁で横移動を阻まれたか確認
+    if (m_state == CombatMove &&
+        !m_isBlockedByWall &&
+        std::abs(beforeVel.x) > 1.0f)
+    {
+        float expectedMove = std::abs(beforeVel.x * deltaTime);
+        float actualMove = std::abs(afterPos.x - beforePos.x);
+
+        if (expectedMove > 0.0f &&
+            actualMove < expectedMove * 0.5f)
+        {
+            PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+            if (playScene != nullptr && playScene->GetPlayer() != nullptr)
+            {
+                m_isBlockedByWall = true;
+                m_blockedPlayerPosition =
+                    playScene->GetPlayer()->GetPos();
+
+                m_hasTargetPosition = false;
+                SetVel(Vector2d::Zero());
+            }
+        }
+    }
 
     if (m_animation != nullptr)
     {
@@ -264,6 +316,26 @@ void SpiritEnemyEntity::UpdateAI()
 
     case CombatMove:
     {
+        // 壁に阻まれている場合
+        if (m_isBlockedByWall)
+        {
+            float playerMoveDistance =
+                (playerPos - m_blockedPlayerPosition).length();
+
+            // プレイヤーが20px以上移動したら追跡を再開
+            if (playerMoveDistance < 20.0f)
+            {
+                SetVel(Vector2d(
+                    0.0f,
+                    std::sin(m_floatTimer) * 10.0f
+                ));
+                break;
+            }
+
+            // プレイヤーが移動したので再追跡
+            m_isBlockedByWall = false;
+            m_hasTargetPosition = false;
+        }
         float distanceX = playerPos.x - myPos.x;
         float absDistanceX = std::abs(distanceX);
 
@@ -526,9 +598,8 @@ void SpiritEnemyEntity::TakeDamage(
         attackDir
     );
 
-    if (GetState() == Actor::State::Dead)
+    if (m_isDying)
     {
-        m_state = Dead;
         return;
     }
 
@@ -536,6 +607,20 @@ void SpiritEnemyEntity::TakeDamage(
     m_attackTimer = 0.0f;
 }
 
+void SpiritEnemyEntity::OnDead()
+{
+    if (m_isDying)
+    {
+        return;
+    }
+
+    m_isDying = true;
+    m_state = Dead;
+    m_deadTimer = 0.0f;
+
+    SetVel(Vector2d::Zero());
+    
+}
 void SpiritEnemyEntity::Draw()
 {
     EnemyEntity::Draw();

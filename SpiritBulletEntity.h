@@ -2,6 +2,9 @@
 
 #include "EnemyBullet.h"
 
+class AnimationComponent;
+
+
 class SpiritBulletEntity : public EnemyBullet
 {
 public:
@@ -19,4 +22,12 @@ public:
     );
 
     bool Init() override;
+    protected:
+    bool UseBlockCollision() const override { return true; }
+    AnimationComponent* m_animation;
+    SpriteComponent* m_sprite;
+
+    void UpdateAnimation();
+private:
+    bool m_faceLeft = false;
 };
