@@ -21,9 +21,6 @@ bool SaveManager::Save(const SaveData& data)
     // キー設定を保存
     saveData["keyBindings"] = data.keyBindings;
 
-    // 操作方式を保存
-    saveData["inputModes"] = data.inputModes;
-
     std::ofstream file("save/save.json");
 
     if (!file.is_open())
@@ -105,34 +102,17 @@ bool SaveManager::Load(SaveData& data)
                 }
             }
 
+            // Recover defaults missing from saves created by the old binding loader.
+            const Action action = static_cast<Action>(i);
+            if (keys.empty())
+            {
+                if (action == Action::OCTO) keys = { Key::Q };
+                else if (action == Action::TIGER) keys = { Key::E };
+                else if (action == Action::SHADOW_HEAL) keys = { Key::Z };
+            }
+
             data.keyBindings[i] = std::move(keys);
             data.hasKeyBinding[i] = true;
-        }
-    }
-
-    // 操作方式を読み込む
-    if (saveData.contains("inputModes") &&
-        saveData["inputModes"].is_array())
-    {
-        const auto& savedModes = saveData["inputModes"];
-
-        const std::size_t count =
-            (savedModes.size() < data.inputModes.size())
-            ? savedModes.size()
-            : data.inputModes.size();
-
-        for (std::size_t i = 0; i < count; ++i)
-        {
-            if (!savedModes[i].is_number_integer())
-                continue;
-
-            const int mode = savedModes[i].get<int>();
-
-            // 0 = 長押し、1 = トグル
-            if (mode == 0 || mode == 1)
-            {
-                data.inputModes[i] = mode;
-            }
         }
     }
 

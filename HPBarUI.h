@@ -31,11 +31,10 @@ private:
 
     float m_maxWidth;
     float m_height;
-    // 影ゲージの波アニメーション用タイマー
-    float m_shadowWaveTime = 0.0f;
 
     // HP・影ゲージ共通の背景画像
     int m_frameHandle = -1;
+    int m_shadowSurface = -1;
 
     std::string m_barImagePath;
     std::string m_frameImagePath;

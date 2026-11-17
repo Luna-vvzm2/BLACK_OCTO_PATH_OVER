@@ -36,6 +36,8 @@ private:
 
     static const std::vector<BindingRow>& GetRows();
     void SaveSettings();
+    void CaptureBindings();
+    void RestoreBindings();
     static void LoadSave(Game* game);
 
     Game* m_game;
@@ -46,6 +48,7 @@ private:
 
     int m_keyConfigCursor = 0;
     bool m_waitingForKey = false;
+    std::array<std::vector<int>, static_cast<size_t>(Action::ACTION_COUNT)> m_originalBindings;
 };
 
 class PauseMenu

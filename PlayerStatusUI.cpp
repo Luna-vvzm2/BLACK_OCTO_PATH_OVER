@@ -128,19 +128,19 @@ void PlayerStatusUI::Draw()
     // ======================================
 
     // クナイ3本の表示幅
-    // 48pxの画像を34px間隔で3本並べている
-    const int kunaiWidth = 48 + 34 * 2;
+    // 64pxの画像を46px間隔で3本並べている
+    const int kunaiWidth = 64 + 46 * 2;
 
     // クナイの右端から12px離す
     const int healX =
         static_cast<int>(m_x) + kunaiWidth + 12;
 
     // 回復アイテムのサイズ
-    const int itemSize = 60;
+    const int itemSize = 80;
 
     // クナイと縦方向の中心を揃える
     const int healY =
-        static_cast<int>(m_y) - 6;
+        static_cast<int>(m_y) - 8;
 
     // 回復アイテムの画像を描画
     if (m_healIconHandle >= 0)
@@ -164,7 +164,7 @@ void PlayerStatusUI::Draw()
 
     // 所持数の影
     renderer->DrawTextL(
-        Vector2d(healX + 54.0f, healY + 13.0f),
+        Vector2d(healX + itemSize + 2.0f, healY + 22.0f),
         healCount,
         Color(20, 20, 20),
         font,
@@ -174,7 +174,7 @@ void PlayerStatusUI::Draw()
 
     // 所持数の文字
     renderer->DrawTextL(
-        Vector2d(healX + 52.0f, healY + 11.0f),
+        Vector2d(healX + static_cast<float>(itemSize), healY + 20.0f),
         healCount,
         Color(255, 255, 255),
         font,

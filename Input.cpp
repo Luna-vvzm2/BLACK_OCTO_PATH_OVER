@@ -6,9 +6,37 @@ Input::Input() {
 }
 
 void Input::Init() {
-    m_actionInputModes.fill(InputMode::Hold);
-    m_toggleStates.fill(false);
+    ResetKeyBindings();
+    // ジョイパッドも同様に
+    m_actionPadMap[static_cast<size_t>(Action::UP)] = { Joypad::UP };
+    m_actionPadMap[static_cast<size_t>(Action::DOWN)] = { Joypad::DOWN };
+    m_actionPadMap[static_cast<size_t>(Action::LEFT)] = { Joypad::LEFT };
+    m_actionPadMap[static_cast<size_t>(Action::RIGHT)] = { Joypad::RIGHT };
+    m_actionPadMap[static_cast<size_t>(Action::DASH)] = { Joypad::RB };
+    m_actionPadMap[static_cast<size_t>(Action::WEAK_ATTACK)] = { Joypad::X };
+    m_actionPadMap[static_cast<size_t>(Action::KUNAI)] = { Joypad::B };
+    m_actionPadMap[static_cast<size_t>(Action::HEAL)] = { Joypad::X };
+    m_actionPadMap[static_cast<size_t>(Action::KAMAE)] = { Joypad::LB };
+    m_actionPadMap[static_cast<size_t>(Action::G)] = { Joypad::LT };
+    m_actionPadMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Joypad::RT };
+    m_actionPadMap[static_cast<size_t>(Action::SHADOW_HEAL)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::OCTO)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::TIGER)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::ORCA)] = {};
+    m_actionPadMap[static_cast<size_t>(Action::JUMP)] = { Joypad::A };
+    m_actionPadMap[static_cast<size_t>(Action::ESCAPE)] = { Joypad::START };
+    m_actionPadMap[static_cast<size_t>(Action::ENTER)] = { Joypad::B };
+    m_actionPadMap[static_cast<size_t>(Action::MENU)] = { Joypad::BACK };
+    m_actionPadMap[static_cast<size_t>(Action::PAGE_UP)] = { Joypad::LB };
+    m_actionPadMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Joypad::RB };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_IN)] = { Joypad::RS_UP };
+    m_actionPadMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Joypad::RS_DOWN };
+    m_key.Init();
+    m_pad.Init();
+}
 
+void Input::ResetKeyBindings()
+{
     // アクションとキーを対応付け
     m_actionKeyMap[static_cast<size_t>(Action::UP)] =
     { Key::W, Key::UP };
@@ -40,52 +68,11 @@ void Input::Init() {
     m_actionKeyMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Key::PAGE_DOWN };
     m_actionKeyMap[static_cast<size_t>(Action::ZOOM_IN)] = { Key::Q };
     m_actionKeyMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Key::E };
-
-    // ジョイパッドも同様に
-    m_actionPadMap[static_cast<size_t>(Action::UP)] = { Joypad::UP };
-    m_actionPadMap[static_cast<size_t>(Action::DOWN)] = { Joypad::DOWN };
-    m_actionPadMap[static_cast<size_t>(Action::LEFT)] = { Joypad::LEFT };
-    m_actionPadMap[static_cast<size_t>(Action::RIGHT)] = { Joypad::RIGHT };
-    m_actionPadMap[static_cast<size_t>(Action::DASH)] = { Joypad::RB };
-    m_actionPadMap[static_cast<size_t>(Action::WEAK_ATTACK)] = { Joypad::X };
-    m_actionPadMap[static_cast<size_t>(Action::KUNAI)] = { Joypad::B };
-    m_actionPadMap[static_cast<size_t>(Action::HEAL)] = { Joypad::X };
-    m_actionPadMap[static_cast<size_t>(Action::KAMAE)] = { Joypad::LB };
-    m_actionPadMap[static_cast<size_t>(Action::G)] = { Joypad::LT };
-    m_actionPadMap[static_cast<size_t>(Action::JUTSU_KAMAE)] = { Joypad::RT };
-    m_actionPadMap[static_cast<size_t>(Action::SHADOW_HEAL)] = {};
-    m_actionPadMap[static_cast<size_t>(Action::OCTO)] = {};
-    m_actionPadMap[static_cast<size_t>(Action::TIGER)] = {};
-    m_actionPadMap[static_cast<size_t>(Action::ORCA)] = {};
-    m_actionPadMap[static_cast<size_t>(Action::JUMP)] = { Joypad::A };
-    m_actionPadMap[static_cast<size_t>(Action::ESCAPE)] = { Joypad::START };
-    m_actionPadMap[static_cast<size_t>(Action::ENTER)] = { Joypad::B };
-    m_actionPadMap[static_cast<size_t>(Action::MENU)] = { Joypad::BACK };
-    m_actionPadMap[static_cast<size_t>(Action::PAGE_UP)] = { Joypad::LB };
-    m_actionPadMap[static_cast<size_t>(Action::PAGE_DOWN)] = { Joypad::RB };
-    m_actionPadMap[static_cast<size_t>(Action::ZOOM_IN)] = { Joypad::RS_UP };
-    m_actionPadMap[static_cast<size_t>(Action::ZOOM_OUT)] = { Joypad::RS_DOWN };
-    m_key.Init();
-    m_pad.Init();
 }
-
-
 
 void Input::Update() {
     m_key.Update();
     m_pad.Update();
-
-    // トグル方式の操作は、押すたびにON/OFFを切り替える
-    for (size_t i = 0;
-        i < static_cast<size_t>(Action::ACTION_COUNT);
-        ++i)
-    {
-        if (m_actionInputModes[i] == InputMode::Toggle &&
-            IsTrigger(static_cast<Action>(i)))
-        {
-            m_toggleStates[i] = !m_toggleStates[i];
-        }
-    }
 }
 
 bool Input::IsDown(Action action) const {
@@ -94,10 +81,6 @@ bool Input::IsDown(Action action) const {
     // キーボード側チェック
     if (index >= static_cast<size_t>(Action::ACTION_COUNT))
         return false;
-
-    // トグル方式では、押した状態を保持する
-    if (m_actionInputModes[index] == InputMode::Toggle)
-        return m_toggleStates[index];
 
     // 長押し方式では、従来どおり実際の入力を確認する
     for (auto key : m_actionKeyMap[index])
@@ -229,6 +212,10 @@ bool Input::SetKeyBinding(Action action, int keyIndex)
     for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
     {
         if (i == index) continue;
+        const Action other = static_cast<Action>(i);
+        if (other == Action::UP || other == Action::KAMAE || other == Action::G ||
+            other == Action::JUTSU_KAMAE || i >= static_cast<size_t>(Action::ESCAPE))
+            continue;
 
         auto& keys = m_actionKeyMap[i];
         keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
@@ -240,29 +227,6 @@ bool Input::SetKeyBinding(Action action, int keyIndex)
     targetKeys.push_back(targetKey);
 
     return true;
-}
-
-InputMode Input::GetInputMode(Action action) const
-{
-    const size_t index = static_cast<size_t>(action);
-
-    if (index >= static_cast<size_t>(Action::ACTION_COUNT))
-        return InputMode::Hold;
-
-    return m_actionInputModes[index];
-}
-
-void Input::SetInputMode(Action action, InputMode mode)
-{
-    const size_t index = static_cast<size_t>(action);
-
-    if (index >= static_cast<size_t>(Action::ACTION_COUNT))
-        return;
-
-    m_actionInputModes[index] = mode;
-
-    // 方式を変更したときに、ON状態が残らないようにする
-    m_toggleStates[index] = false;
 }
 
 std::vector<int> Input::GetKeyBindings(Action action) const
@@ -318,17 +282,7 @@ bool Input::SetKeyBindings(
         }
     }
 
-    for (auto targetKey : newKeys)
-    {
-        for (size_t i = 0; i < static_cast<size_t>(Action::ACTION_COUNT); ++i)
-        {
-            if (i == index) continue;
-
-            auto& keys = m_actionKeyMap[i];
-            keys.erase(std::remove(keys.begin(), keys.end(), targetKey), keys.end());
-        }
-    }
-
+    // Loading one action must not erase other actions sharing its key.
     m_actionKeyMap[index] = std::move(newKeys);
 
     return true;

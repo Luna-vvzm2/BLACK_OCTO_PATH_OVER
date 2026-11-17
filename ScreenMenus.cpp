@@ -81,7 +81,12 @@ void SettingsMenu::Update()
         const auto& rows = GetRows();
         Input& input = m_game->GetInput();
 
-        // 1. キー入力待ち（割り当て中）
+        const int bindingCount = static_cast<int>(rows.size());
+        const int saveRow = bindingCount;
+        const int restoreRow = bindingCount + 1;
+        const int defaultsRow = bindingCount + 2;
+        const int rowCount = bindingCount + 3;
+
         if (m_waitingForKey)
         {
             if (input.IsMenuTrigger(Action::ESCAPE))
@@ -89,66 +94,45 @@ void SettingsMenu::Update()
                 m_waitingForKey = false;
                 return;
             }
-            int keyIndex = input.GetKey().GetFirstTriggeredKey();
-            if (keyIndex >= 0)
-            {
-                if (input.SetKeyBinding(rows[m_keyConfigCursor].action, keyIndex))
-                {
-                    m_waitingForKey = false;
-                    // セーブ処理
-                    SaveSettings();
-                }
-            }
+            const int keyIndex = input.GetKey().GetFirstTriggeredKey();
+            if (keyIndex >= 0 && input.SetKeyBinding(rows[m_keyConfigCursor].action, keyIndex))
+                m_waitingForKey = false;
             return;
         }
-
-        // ESCキー：設定のルートメニューに戻る
         if (input.IsMenuTrigger(Action::ESCAPE))
         {
+            RestoreBindings();
             m_game->GetSoundManager().Play("select_default");
             m_page = Page::Root;
             m_cursor = 1;
             return;
         }
-
-        // Rキー：初期設定に戻す
-        if (input.GetKey().IsTrigger(Key::R))
+        if (input.IsMenuTrigger(Action::UP))
         {
-            input.Init();
-            SaveSettings();
-            m_keyConfigCursor = 0;
-            m_waitingForKey = false;
-            return;
-        }
-
-        // 上下キー：操作項目の選択（Actionではなく物理キーの矢印やW/Sで直接判定）
-        const int rowCount = static_cast<int>(rows.size());
-        if (input.IsMenuTrigger(Action::UP)) {
             m_keyConfigCursor = (m_keyConfigCursor + rowCount - 1) % rowCount;
             m_game->GetSoundManager().Play("game_select_mode");
         }
-        if (input.IsMenuTrigger(Action::DOWN)) {
+        if (input.IsMenuTrigger(Action::DOWN))
+        {
             m_keyConfigCursor = (m_keyConfigCursor + 1) % rowCount;
             m_game->GetSoundManager().Play("game_select_mode");
         }
-
-        // 左右キー：入力方式の切り替え（物理キーの左右やA/Dで直接判定）
-        if (input.IsMenuTrigger(Action::RIGHT) || input.IsMenuTrigger(Action::LEFT))
-        {
-            Action action = rows[m_keyConfigCursor].action;
-            InputMode current = input.GetInputMode(action);
-            InputMode next = (current == InputMode::Hold) ? InputMode::Toggle : InputMode::Hold;
-            input.SetInputMode(action, next);
-            SaveSettings();
-        }
-
-        // Enterキー：キー割り当て変更の開始（物理キーの Enter で判定）
         if (input.IsMenuTrigger(Action::ENTER))
         {
             m_game->GetSoundManager().Play("select_default");
-            m_waitingForKey = true;
+            if (m_keyConfigCursor == saveRow)
+            {
+                SaveSettings();
+                m_page = Page::Root;
+                m_cursor = 1;
+            }
+            else if (m_keyConfigCursor == restoreRow)
+                RestoreBindings();
+            else if (m_keyConfigCursor == defaultsRow)
+                input.ResetKeyBindings();
+            else
+                m_waitingForKey = true;
         }
-
         return;
     }
 
@@ -190,7 +174,7 @@ void SettingsMenu::Update()
     if (m_page == Page::Root)
     {
         if (m_cursor == 0) { m_page = Page::Volume; m_cursor = 0; }
-        else if (m_cursor == 1) { m_page = Page::Controls; m_cursor = 0; }
+        else if (m_cursor == 1) { CaptureBindings(); m_page = Page::Controls; m_keyConfigCursor = 0; }
         else m_open = false;
     }
     else if (m_page == Page::Volume && m_cursor == 4)
@@ -252,7 +236,7 @@ void SettingsMenu::Draw() const
         {
             // 画面の縦幅に合わせて各行を配置
             float x = width * 0.15f;
-            float y = height * (0.20f + i * 0.042f); // 項目数が多いので間隔を少し詰める
+            float y = height * (0.20f + i * 0.040f); // 項目数が多いので間隔を少し詰める
             bool selected = (i == m_keyConfigCursor);
 
             // 項目名
@@ -261,7 +245,7 @@ void SettingsMenu::Draw() const
             // 割り当てキー名 or 入力待ち表示
             std::string keyName;
             if (selected && m_waitingForKey) {
-                keyName = "キーを押してください...";
+                keyName = "キー入力待ち...";
             }
             else {
                 int keyIndex = input.GetKeyBinding(rows[i].action);
@@ -269,15 +253,19 @@ void SettingsMenu::Draw() const
             }
             renderer->DrawTextL(Vector2d(x + 350.0f, y), keyName, selected ? Color(200, 35, 35) : Color(8, 8, 8), font, 24, false);
 
-            // 入力方式（長押し／トグル）
-            const char* modeName = (input.GetInputMode(rows[i].action) == InputMode::Hold) ? "長押し" : "トグル";
-            renderer->DrawTextL(Vector2d(x + 650.0f, y), modeName, Color(70, 70, 70), font, 24, false);
         }
 
-        // 下部ヘルプ
-        renderer->DrawTextL(Vector2d(width * 0.15f, height * 0.90f),
-            "上下:選択  左右:入力方式  Enter:変更  R:初期化  Esc:戻る",
-            Color(35, 35, 35), font, 20, false);
+        const int bindingCount = static_cast<int>(rows.size());
+        const char* buttons[] = { "保存して戻る", "変更前に戻す", "初期設定に戻す" };
+        for (int i = 0; i < 3; ++i)
+            MenuVisual::DrawOption(m_game, buttons[i], width * 0.15f,
+                height * (0.72f + i * 0.055f), 25, m_keyConfigCursor == bindingCount + i);
+        renderer->DrawTextL(Vector2d(width * 0.15f, height * 0.91f),
+            "上下:選択  Enter:変更・決定",
+            Color(35, 35, 35), font, 18, false);
+        renderer->DrawTextL(Vector2d(width * 0.15f, height * 0.95f),
+            "Esc:変更を取り消して戻る",
+            Color(35, 35, 35), font, 18, false);
     }
     return;
 }
@@ -286,7 +274,6 @@ const std::vector<SettingsMenu::BindingRow>& SettingsMenu::GetRows()
 {
     static const std::vector<BindingRow> rows =
     {
-        { Action::UP,          "上移動" },
         { Action::DOWN,        "しゃがみ／下移動" },
         { Action::LEFT,        "左移動" },
         { Action::RIGHT,       "右移動" },
@@ -294,7 +281,7 @@ const std::vector<SettingsMenu::BindingRow>& SettingsMenu::GetRows()
         { Action::WEAK_ATTACK, "刀攻撃" },
         { Action::KUNAI,       "苦無投げ" },
         { Action::HEAL,        "回復アイテム" },
-        { Action::G,           "特殊操作 G" },
+        { Action::SHADOW_HEAL, "影ゲージ回復の構え" },
         { Action::OCTO,        "忍術：蛸" },
         { Action::TIGER,       "忍術：虎" },
         { Action::ORCA,        "忍術：鯱" },
@@ -306,6 +293,20 @@ const std::vector<SettingsMenu::BindingRow>& SettingsMenu::GetRows()
 bool SettingsMenu::IsCapturingKey() const
 {
     return m_open && m_page == Page::Controls && m_waitingForKey;
+}
+
+void SettingsMenu::CaptureBindings()
+{
+    const Input& input = m_game->GetInput();
+    for (size_t i = 0; i < m_originalBindings.size(); ++i)
+        m_originalBindings[i] = input.GetKeyBindings(static_cast<Action>(i));
+}
+
+void SettingsMenu::RestoreBindings()
+{
+    Input& input = m_game->GetInput();
+    for (size_t i = 0; i < m_originalBindings.size(); ++i)
+        input.SetKeyBindings(static_cast<Action>(i), m_originalBindings[i]);
 }
 
 void SettingsMenu::SaveSettings()
@@ -322,7 +323,6 @@ void SettingsMenu::SaveSettings()
         Action action = static_cast<Action>(i);
 
         saveData.keyBindings[i] = input.GetKeyBindings(action);
-        saveData.inputModes[i] = static_cast<int>(input.GetInputMode(action));
     }
 
     // ファイルへ保存
@@ -337,6 +337,7 @@ void SettingsMenu::LoadSave(Game* game)
     if (SaveManager::Load(saveData))
     {
         Input& input = game->GetInput();
+        input.ResetKeyBindings();
 
         for (std::size_t i = 0; i < SaveData::ActionCount; ++i)
         {
@@ -348,11 +349,6 @@ void SettingsMenu::LoadSave(Game* game)
                 input.SetKeyBindings(action, saveData.keyBindings[i]);
             }
 
-            // 入力方式（Hold / Toggle）を反映
-            if (saveData.inputModes[i] == 0 || saveData.inputModes[i] == 1)
-            {
-                input.SetInputMode(action, static_cast<InputMode>(saveData.inputModes[i]));
-            }
         }
     }
 }
