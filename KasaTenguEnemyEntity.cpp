@@ -85,6 +85,15 @@ KasaTenguEnemyEntity::KasaTenguEnemyEntity(Scene* scene, const Vector2d& pos)
 {
 }
 
+bool KasaTenguEnemyEntity::PreloadTextures()
+{
+    if (FileRead_size(KASATENGU_TEXTURE_IDLE) < 0) return true;
+    if (SpriteComponent::LoadCachedTexture(KASATENGU_TEXTURE_IDLE) == -1)
+        return false;
+    SpriteComponent sprite(nullptr);
+    return sprite.LoadTextureDiv(KASATENGU_TEXTURE_IDLE, 3, 1, true);
+}
+
 bool KasaTenguEnemyEntity::Init()
 {
     if (!EnemyEntity::Init())
@@ -230,7 +239,7 @@ void KasaTenguEnemyEntity::PlayMotion(
 
     if (m_currentTexturePath != texturePath)
     {
-        if (!m_sprite->LoadTextureDiv(texturePath, frameCount, 1))
+        if (!m_sprite->LoadTextureDiv(texturePath, frameCount, 1, true))
         {
             return;
         }
@@ -440,5 +449,5 @@ bool KasaTenguEnemyEntity::IsPlayerInSearchRange() const
 
 std::string KasaTenguEnemyEntity::GetTexturePath() const
 {
-    return KASATENGU_TEXTURE_IDLE;
+    return FileRead_size(KASATENGU_TEXTURE_IDLE) < 0 ? "" : KASATENGU_TEXTURE_IDLE;
 }

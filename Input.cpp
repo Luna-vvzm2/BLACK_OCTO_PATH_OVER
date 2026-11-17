@@ -321,6 +321,12 @@ bool Input::IsMenuDown(Action action) const
     case Action::MENU:
         return m_key.IsDown(Key::M) || m_pad.IsDown(Joypad::BACK);
 
+    case Action::PAGE_UP:
+        return m_key.IsDown(Key::PAGE_UP) || m_pad.IsDown(Joypad::LB);
+
+    case Action::PAGE_DOWN:
+        return m_key.IsDown(Key::PAGE_DOWN) || m_pad.IsDown(Joypad::RB);
+
     default:
         return false;
     }
@@ -358,6 +364,12 @@ bool Input::IsMenuTrigger(Action action) const
 
     case Action::MENU:
         return m_key.IsTrigger(Key::M) || m_pad.IsTrigger(Joypad::BACK);
+
+    case Action::PAGE_UP:
+        return m_key.IsTrigger(Key::PAGE_UP) || m_pad.IsTrigger(Joypad::LB);
+
+    case Action::PAGE_DOWN:
+        return m_key.IsTrigger(Key::PAGE_DOWN) || m_pad.IsTrigger(Joypad::RB);
 
     default:
         return false;

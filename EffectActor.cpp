@@ -81,6 +81,7 @@ Vector2d EffectActor::GetSize() const {
 
 static bool LoadEffectTexture(const std::string& path, int xNum, int yNum, std::vector<int>& outHandles)
 {
+    if (xNum <= 0 || yNum <= 0) return false;
     int total = xNum * yNum;
 
     int tempHandle = LoadGraph(path.c_str());
@@ -90,19 +91,36 @@ static bool LoadEffectTexture(const std::string& path, int xNum, int yNum, std::
         return false;
     }
 
-    int texW;
-    int texH;
+    int texW = 0;
+    int texH = 0;
 
     GetGraphSize(tempHandle, &texW, &texH);
 
-    DeleteGraph(tempHandle);
 
     int frameW = texW / xNum;
     int frameH = texH / yNum;
 
-    outHandles.resize(total);
-
-    return LoadDivGraph(path.c_str(), total, xNum, yNum, frameW, frameH, outHandles.data()) != -1;
+    std::vector<int> frames(total, -1);
+    bool loaded = frameW > 0 && frameH > 0;
+    for (int i = 0; loaded && i < total; ++i)
+    {
+        frames[i] = DerivationGraph(
+            (i % xNum) * frameW, (i / xNum) * frameH,
+            frameW, frameH, tempHandle);
+        loaded = frames[i] != -1;
+    }
+    DeleteGraph(tempHandle);
+    if (!loaded)
+    {
+        for (int handle : frames)
+        {
+            if (handle != -1) DeleteGraph(handle);
+        }
+        outHandles.clear();
+        return false;
+    }
+    outHandles = std::move(frames);
+    return true;
 }
 
 bool EffectActor::LoadEffects()

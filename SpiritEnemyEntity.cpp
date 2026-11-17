@@ -13,6 +13,10 @@
 
 #include <cmath>
 
+namespace {
+    const char* SPIRIT_TEXTURE = "assets/images/Enemy/spirit.png";
+}
+
 SpiritEnemyEntity::SpiritEnemyEntity(
 	Scene*scene,
 	const Vector2d&pos
@@ -32,6 +36,12 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     , m_targetPosition(Vector2d::Zero())
     , m_hasTargetPosition(false)
 {
+}
+
+bool SpiritEnemyEntity::PreloadTextures()
+{
+    if (FileRead_size(SPIRIT_TEXTURE) < 0) return true;
+    return SpriteComponent::LoadCachedTexture(SPIRIT_TEXTURE) != -1;
 }
 
 bool SpiritEnemyEntity::Init() 
@@ -398,5 +408,5 @@ void SpiritEnemyEntity::Draw()
 
 std::string SpiritEnemyEntity::GetTexturePath() const
 {
-    return "assets/images/Enemy/spirit.png";
+    return FileRead_size(SPIRIT_TEXTURE) < 0 ? "" : SPIRIT_TEXTURE;
 }

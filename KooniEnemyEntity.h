@@ -10,6 +10,7 @@ class SoundComponent;
 class KooniEnemyEntity : public EnemyEntity
 {
 public:
+    static bool PreloadTextures();
     enum class Status
     {
         Idle,

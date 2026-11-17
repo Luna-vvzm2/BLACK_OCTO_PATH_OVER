@@ -53,12 +53,12 @@ void Menu::Update(float deltaTime)
 {
 	const Input& input = m_owner->GetGame()->GetInput();
 
-	if (input.IsTrigger(Action::PAGE_UP))
+	if (input.IsMenuTrigger(Action::PAGE_UP))
 	{
 		ChangeTab(-1);
 	}
 
-	if (input.IsTrigger(Action::PAGE_DOWN))
+	if (input.IsMenuTrigger(Action::PAGE_DOWN))
 	{
 		ChangeTab(+1);
 	}
