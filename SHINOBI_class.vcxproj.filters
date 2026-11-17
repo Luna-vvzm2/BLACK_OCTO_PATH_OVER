@@ -437,6 +437,9 @@
     <ClInclude Include="PlayScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="SpriteBlendMode.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="SpriteComponent.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

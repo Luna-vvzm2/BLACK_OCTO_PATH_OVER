@@ -1,6 +1,7 @@
 #pragma once
 #include <DxLib.h>
 #include "Vector2d.h"
+#include "SpriteBlendMode.h"
 #include "Color.h"
 #include "Camera.h"
 #include <string>
@@ -38,7 +39,8 @@ public:
 
     void DrawSprite(const Vector2d& pos, float scale, float angle, int handle, bool trans = true, bool useCamera = true);
     void DrawSpriteEx(const Vector2d& pos, float scaleX, float scaleY, float angle, int handle, bool trans = true,
-        const Vector2d& center = Vector2d::Zero(), int alpha = 255, bool flipH = false, bool flipV = false, bool useCamera = true);
+        const Vector2d& center = Vector2d::Zero(), int alpha = 255, bool flipH = false, bool flipV = false, bool useCamera = true,
+        SpriteBlendMode blendMode = SpriteBlendMode::Normal);
 
     // Camera ê›íË
     void SetCamera(const Camera* camera) { m_camera = camera; }

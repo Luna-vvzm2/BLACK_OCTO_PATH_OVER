@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "SpriteBlendMode.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -41,6 +42,8 @@ public:
     int GetHandle() const { return m_handle; }
     void SetAlpha(int alpha) { m_alpha = alpha; }
     int GetAlpha() const { return m_alpha; }
+    void SetBlendMode(SpriteBlendMode mode) { m_blendMode = mode; }
+    SpriteBlendMode GetBlendMode() const { return m_blendMode; }
     bool GetFlipH() const;
     void SetFlipV(bool flip)
     {
@@ -74,5 +77,6 @@ private:
     std::vector<int> m_frames;   // 分割されたフレームのハンドル
     int m_currentFrame = 0;      // 現在のフレーム番号
     int m_alpha = 255;
+    SpriteBlendMode m_blendMode = SpriteBlendMode::Normal;
     bool m_useCamera;
 };
