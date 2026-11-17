@@ -14,14 +14,18 @@ public:
 	bool Init() override;
 	void Update(float deltaTime) override;
 	void Draw() override;
+	void TakeDamage(
+		int damage,
+		const Vector2d& attackerPos,
+		bool attackDir = false
+	) override;
+	
 
-	std::string GetTexturePath() const override;
 
 
 
 protected:
 	void UpdateAI() override;
-
 private:
 	enum State
 	{
@@ -30,11 +34,17 @@ private:
 		CombatMove,
 		Attack,
 		Recovery,
+		Hit,
 		Dead
 	};
 	State m_state = Idle;
 
-	AnimationComponent* m_animation = nullptr;
+	// アニメーション
+	AnimationComponent* m_animation;
+	SpriteComponent* m_sprite;
+
+	// アニメーション切り替え
+	void UpdateAnimation();
 	SoundComponent* m_attackSound = nullptr;
 
 	float m_floatTimer = 0.0f;

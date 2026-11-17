@@ -62,6 +62,70 @@ bool SpiritEnemyEntity::Init()
     m_targetPosition = Vector2d::Zero();
     m_hasTargetPosition = false;
 
+    // スプライトシート
+    m_sprite = AddComponent<SpriteComponent>();
+
+    if (!m_sprite->LoadTextureDiv(
+        "assets/images/Enemy/onryo/onryo_sheet.png",
+        3,
+        3))
+    {
+        return false;
+    }
+
+    TransformComponent* transform = GetComponent<TransformComponent>();
+
+    if (transform != nullptr)
+    {
+        transform->SetScale(Vector2d(0.1f, 0.1f));
+    }
+    // アニメーションコンポーネント
+    m_animation = AddComponent<AnimationComponent>();
+
+    m_animation->SetSprite(m_sprite);
+
+    // 待機アニメーション
+    AnimationClip idleClip;
+    idleClip.frames = { 5, 6, 7 };
+    idleClip.speed = 0.15f;
+    idleClip.loop = true;
+
+    m_animation->AddClip("Idle", idleClip);
+
+    // 移動アニメーション
+    AnimationClip moveClip;
+    moveClip.frames = { 5, 6, 7 };
+    moveClip.speed = 0.1f;
+    moveClip.loop = true;
+
+    m_animation->AddClip("Move", moveClip);
+
+    // 攻撃アニメーション
+    AnimationClip attackClip;
+    attackClip.frames = { 0, 1, 2 };
+    attackClip.speed = 0.12f;
+    attackClip.loop = false;
+
+    m_animation->AddClip("Attack", attackClip);
+
+    AnimationClip hitClip;
+    hitClip.frames = { 3,4 };
+    hitClip.speed = 0.1f;
+    hitClip.loop = false;
+
+    m_animation->AddClip("Hit", hitClip);
+
+    // 撃破アニメーション
+    AnimationClip deadClip;
+    deadClip.frames = { 3,4 };
+    deadClip.speed = 0.15f;
+    deadClip.loop = false;
+
+    m_animation->AddClip("Dead", deadClip);
+
+    // 初期アニメーション
+    m_animation->Play("Idle");
+
     return true;
 }
 
@@ -99,10 +163,21 @@ void SpiritEnemyEntity::Update(float deltaTime)
             m_state = Move;
         }
     }
+    else if (m_state == Hit)
+    {
+        if (m_animation != nullptr &&
+            m_animation->IsFinished())
+        {
+            m_state = CombatMove;
+
+            m_attackTimer = 0.0f;
+            m_hasTargetPosition = false;
+        }
+    }
 
     // AIを更新
     UpdateAI();
-
+    UpdateAnimation();
 
     // 警戒ゲージを更新
     if (UseAlertGauge())
@@ -119,6 +194,11 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
     SetPos(pos);
 
+    if (m_animation != nullptr)
+    {
+        m_animation->Update(deltaTime);
+    }
+   
 }
 
 void SpiritEnemyEntity::UpdateAI()
@@ -227,6 +307,7 @@ void SpiritEnemyEntity::UpdateAI()
                     0.0f,
                     std::sin(m_floatTimer) * 10.0f
                 ));
+                m_faceRight = (playerPos.x > myPos.x);
 
                 m_state = Attack;
                 m_attackTimer = 0.0f;
@@ -273,9 +354,9 @@ void SpiritEnemyEntity::UpdateAI()
 
     case Attack:
     {
+
         // 攻撃中はその場で浮遊
         float floatSpeed = std::sin(m_floatTimer) * 10.0f;
-
         SetVel(Vector2d(0.0f, floatSpeed));
 
         // 攻撃開始から一定時間で弾を発射
@@ -297,8 +378,6 @@ void SpiritEnemyEntity::UpdateAI()
                 direction.y /= length;
             }
 
-            // 怨霊の向きを更新
-            m_faceRight = (direction.x > 0.0f);
 
             // 弾の出現位置
             Vector2d bulletPos = GetPos();
@@ -353,6 +432,51 @@ void SpiritEnemyEntity::UpdateAI()
     }
 }
 
+void SpiritEnemyEntity::UpdateAnimation()
+{
+    if (m_animation == nullptr)
+    {
+        return;
+    }
+
+    switch (m_state)
+    {
+    case Idle:
+    case Move:
+        m_animation->Play("Idle");
+        break;
+
+    case CombatMove:
+        m_animation->Play("Move");
+        break;
+
+    case Attack:
+        m_animation->Play("Attack");
+        break;
+
+    case Recovery:
+        m_animation->Play("Idle");
+        break;
+
+    case Hit:
+        m_animation->Play("Hit");
+        break;
+
+    case Dead:
+        m_animation->Play("Dead");
+        break;
+
+    default:
+        break;
+    }
+
+    // 左右反転
+    if (m_sprite != nullptr)
+    {
+        m_sprite->SetFlipX(!m_faceRight);
+    }
+}
+
 bool SpiritEnemyEntity::IsPlayerInSearchRange() const
 {
     PlayScene* playScene =
@@ -385,6 +509,32 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
         distanceY <= 250.0f;
 }
 
+void SpiritEnemyEntity::TakeDamage(
+    int damage,
+    const Vector2d& attackerPos,
+    bool attackDir
+)
+{
+    if (m_state == Dead || m_state == Hit)
+    {
+        return;
+    }
+
+    EnemyEntity::TakeDamage(
+        damage,
+        attackerPos,
+        attackDir
+    );
+
+    if (GetState() == Actor::State::Dead)
+    {
+        m_state = Dead;
+        return;
+    }
+
+    m_state = Hit;
+    m_attackTimer = 0.0f;
+}
 
 void SpiritEnemyEntity::Draw()
 {
@@ -396,7 +546,3 @@ void SpiritEnemyEntity::Draw()
     }
 }
 
-std::string SpiritEnemyEntity::GetTexturePath() const
-{
-    return "assets/images/Enemy/spirit.png";
-}

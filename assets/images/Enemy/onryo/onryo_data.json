@@ -1,0 +1,85 @@
+﻿{
+  "frames": [
+    {
+      "filename": "attack.png",
+      "frame": {
+        "x": 50,
+        "y": 50,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "attack2.png",
+      "frame": {
+        "x": 1095,
+        "y": 50,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "attack3.png",
+      "frame": {
+        "x": 2140,
+        "y": 50,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "damage1.png",
+      "frame": {
+        "x": 50,
+        "y": 1095,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "damage2.png",
+      "frame": {
+        "x": 1095,
+        "y": 1095,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "idle1.png",
+      "frame": {
+        "x": 2140,
+        "y": 1095,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "idle2.png",
+      "frame": {
+        "x": 50,
+        "y": 2140,
+        "w": 945,
+        "h": 945
+      }
+    },
+    {
+      "filename": "idle3.png",
+      "frame": {
+        "x": 1095,
+        "y": 2140,
+        "w": 945,
+        "h": 945
+      }
+    }
+  ],
+  "meta": {
+    "image": "onryo_sheet.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3135,
+      "h": 3135
+    },
+    "scale": "1"
+  }
+}
