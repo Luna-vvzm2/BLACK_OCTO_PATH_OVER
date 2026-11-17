@@ -35,7 +35,8 @@ constexpr float KOONI_ATTACK_KNOCKBACK = 250.0f;
 constexpr float KOONI_IDLE_FRAME_TIME = 9.0f / 60.0f;
 constexpr float KOONI_MOVE_FRAME_TIME = 6.0f / 60.0f;
 constexpr float KOONI_ATTACK_FRAME_TIME = 10.0f / 60.0f;
-constexpr float KOONI_DEAD_FADE_TIME = 1.0f;
+constexpr float KOONI_HURT_FRAME_TIME = 8.0f / 60.0f;
+constexpr float KOONI_DEFEAT_FRAME_TIME = 14.0f / 60.0f;
 constexpr float KOONI_SPRITE_DRAW_HEIGHT = 176.8f;
 constexpr float KOONI_SPRITE_DRAW_OFFSET_X = 79.3f;
 constexpr float KOONI_SPRITE_DRAW_OFFSET_Y = -9.0f;
@@ -72,7 +73,7 @@ bool KooniEnemyEntity::Init()
 
     m_anim->SetSprite(m_sprite);
     m_attackSound = AddComponent<SoundComponent>();
-    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4))
+    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 5))
     {
         return false;
     }
@@ -103,8 +104,16 @@ bool KooniEnemyEntity::Init()
     attack.loop = false;
     m_anim->AddClip("attack", attack);
 
+    AnimationClip hurt;
+    hurt.frames = { 16, 17 };
+    hurt.frameDurations = { KOONI_HURT_FRAME_TIME, KOONI_HURT_FRAME_TIME };
+    hurt.loop = false;
+    m_anim->AddClip("hurt", hurt);
+
     AnimationClip defeated;
-    defeated.frames = { 0 };
+    defeated.frames = { 16, 17, 18, 19 };
+    defeated.frameDurations = { KOONI_DEFEAT_FRAME_TIME, KOONI_DEFEAT_FRAME_TIME,
+        KOONI_DEFEAT_FRAME_TIME, KOONI_DEFEAT_FRAME_TIME };
     defeated.loop = false;
     m_anim->AddClip("defeated", defeated);
 
@@ -151,6 +160,9 @@ void KooniEnemyEntity::Update(float deltaTime)
         break;
     case Status::Attack:
         UpdateAttack(deltaTime, player);
+        break;
+    case Status::Hurt:
+        UpdateHurt();
         break;
     case Status::Defeated:
         break;
@@ -241,6 +253,9 @@ void KooniEnemyEntity::ChangeStatus(Status nextStatus)
         {
             m_attackSound->Play("enemy_Kooni_attack");
         }
+        break;
+    case Status::Hurt:
+        PlayMotion("hurt");
         break;
     case Status::Defeated:
         PlayMotion("defeated");
@@ -371,17 +386,19 @@ void KooniEnemyEntity::UpdateAttack(float deltaTime, PlayerEntity* player)
     }
 }
 
+void KooniEnemyEntity::UpdateHurt()
+{
+    if (m_stateTimer >= KOONI_HURT_FRAME_TIME * 2.0f)
+    {
+        ChangeStatus(Status::Idle);
+    }
+}
+
 void KooniEnemyEntity::UpdateDead()
 {
-    if (m_sprite != nullptr)
+    if (m_stateTimer >= KOONI_DEFEAT_FRAME_TIME * 4.0f)
     {
-        const float remaining = 1.0f - m_stateTimer / KOONI_DEAD_FADE_TIME;
-        m_sprite->SetAlpha(remaining > 0.0f ? static_cast<int>(255.0f * remaining) : 0);
-    }
-
-    if (m_stateTimer >= KOONI_DEAD_FADE_TIME)
-    {
-        OnDead();
+        EnemyEntity::OnDead();
     }
 }
 
@@ -421,21 +438,28 @@ void KooniEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool at
         return;
     }
 
-    // EnemyEntity‘¤‚Ì‹¤’Êƒ_ƒ[ƒWˆ—‚ðŒÄ‚Ño‚·
+    const int hpBefore = m_hp->GetHP();
     EnemyEntity::TakeDamage(damage, knockback, attackDir);
-
-    // HP‚ª0ˆÈ‰º‚È‚ç¬‹S‚ð“|‚³‚ê‚½ó‘Ô‚É‚·‚é
-    if (m_hp->GetHP() <= 0)
+    if (m_status != Status::Defeated && m_hp->GetHP() > 0 && m_hp->GetHP() < hpBefore)
     {
-        if (m_velocity != nullptr)
-        {
-            Vector2d velocity = m_velocity->GetVelocity();
-            velocity.x = 0.0f;
-            m_velocity->SetVelocity(velocity);
-        }
-
-        ChangeStatus(Status::Defeated);
+        ChangeStatus(Status::Hurt);
     }
+}
+
+void KooniEnemyEntity::OnDead()
+{
+    if (GetState() == Actor::State::Dead || m_status == Status::Defeated)
+    {
+        return;
+    }
+
+    if (m_velocity != nullptr)
+    {
+        Vector2d velocity = m_velocity->GetVelocity();
+        velocity.x = 0.0f;
+        m_velocity->SetVelocity(velocity);
+    }
+    ChangeStatus(Status::Defeated);
 }
 
 //’Ç‰Á

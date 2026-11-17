@@ -43,6 +43,8 @@ private:
     Page m_page = Page::Root;
     bool m_open = false;
     int m_cursor = 0;
+    int m_dragVolumeRow = -1;
+    bool m_mouseWasDown = false;
 
     int m_keyConfigCursor = 0;
     bool m_waitingForKey = false;

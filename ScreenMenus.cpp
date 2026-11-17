@@ -9,6 +9,7 @@
 
 #include <DxLib.h>
 #include <algorithm>
+#include <cstdlib>
 #include <string>
 
 namespace
@@ -34,6 +35,45 @@ namespace
         SetDrawBlendMode(DX_BLENDMODE_ALPHA, 205 * alpha / 255);
         DrawBox(0, 0, game->GetWidth() * 3 / 5, game->GetHeight(), paper, TRUE);
         SetDrawBlendMode(oldBlend, oldAlpha);
+    }
+    struct VolumeSliderGeometry
+    {
+        int barLeft;
+        int barWidth;
+        int centerY;
+        int trackLeft;
+        int trackRight;
+        int knobX;
+    };
+
+    VolumeSliderGeometry GetVolumeSliderGeometry(const Game* game, int volume, float rowY)
+    {
+        const int barLeft = static_cast<int>(game->GetWidth() * 0.43f);
+        const int barWidth = static_cast<int>(game->GetWidth() * 0.38f);
+        const int trackLeft = barLeft + static_cast<int>(barWidth * 58.0f / 980.0f + 0.5f);
+        const int trackRight = barLeft + static_cast<int>(barWidth * 899.0f / 980.0f + 0.5f);
+        const int knobX = trackLeft + static_cast<int>(
+            (trackRight - trackLeft) * std::clamp(volume, 0, 100) / 100.0f + 0.5f);
+        return { barLeft, barWidth, static_cast<int>(rowY) + 22,
+            trackLeft, trackRight, knobX };
+    }
+
+    void DrawVolumeSlider(const Game* game, int volume, float rowY)
+    {
+        static const int barHandle = LoadGraph("assets/images/uies/SoundTyousei/volume.png");
+        static const int knobHandle = LoadGraph("assets/images/uies/SoundTyousei/volume_scrollhandle.png");
+        const VolumeSliderGeometry slider = GetVolumeSliderGeometry(game, volume, rowY);
+
+        if (barHandle >= 0)
+        {
+            DrawExtendGraph(slider.barLeft, slider.centerY - 17,
+                slider.barLeft + slider.barWidth, slider.centerY + 17, barHandle, TRUE);
+        }
+        if (knobHandle >= 0)
+        {
+            DrawExtendGraph(slider.knobX - 11, slider.centerY - 13,
+                slider.knobX + 11, slider.centerY + 13, knobHandle, TRUE);
+        }
     }
 }
 
@@ -67,6 +107,8 @@ void SettingsMenu::Open()
     m_cursor = 0;
     m_keyConfigCursor = 0;
     m_waitingForKey = false;
+    m_dragVolumeRow = -1;
+    m_mouseWasDown = (GetMouseInput() & MOUSE_INPUT_LEFT) != 0;
 
     LoadSave(m_game);
 }
@@ -75,6 +117,10 @@ void SettingsMenu::Update()
 {
     if (!m_open) return;
     Input& input = m_game->GetInput();
+    const bool mouseDown = (GetMouseInput() & MOUSE_INPUT_LEFT) != 0;
+    const bool mousePressed = mouseDown && !m_mouseWasDown;
+    m_mouseWasDown = mouseDown;
+    if (!mouseDown || m_page != Page::Volume) m_dragVolumeRow = -1;
 
     if (m_page == Page::Controls)
     {
@@ -176,13 +222,52 @@ void SettingsMenu::Update()
         if (step != 0)
         {
             const int before = m_cursor == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(m_cursor);
-            if (m_cursor == 3) SoundComponent::AdjustVoiceVolume(step);
-            else m_game->AdjustVolume(m_cursor, step);
+            const int next = std::clamp(step > 0 ? (before / 5 + 1) * 5 : ((before - 1) / 5) * 5, 0, 100);
+            if (m_cursor == 3) SoundComponent::AdjustVoiceVolume(next - before);
+            else m_game->AdjustVolume(m_cursor, next - before);
             const int after = m_cursor == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(m_cursor);
             if (after != before) m_game->GetSoundManager().Play("select_default");
         }
     }
 
+    if (m_page == Page::Volume)
+    {
+        int mouseX = 0;
+        int mouseY = 0;
+        GetMousePoint(&mouseX, &mouseY);
+        if (mousePressed)
+        {
+            for (int row = 0; row < 4; ++row)
+            {
+                const int volume = row == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(row);
+                const float rowY = m_game->GetHeight() * (0.25f + row * 0.125f);
+                const VolumeSliderGeometry slider = GetVolumeSliderGeometry(m_game, volume, rowY);
+                if (std::abs(mouseX - slider.knobX) <= 16 &&
+                    std::abs(mouseY - slider.centerY) <= 18)
+                {
+                    m_dragVolumeRow = row;
+                    m_cursor = row;
+                    break;
+                }
+            }
+        }
+        if (mouseDown && m_dragVolumeRow >= 0)
+        {
+            const int row = m_dragVolumeRow;
+            const int before = row == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(row);
+            const float rowY = m_game->GetHeight() * (0.25f + row * 0.125f);
+            const VolumeSliderGeometry slider = GetVolumeSliderGeometry(m_game, before, rowY);
+            const float position = std::clamp(
+                static_cast<float>(mouseX - slider.trackLeft) / (slider.trackRight - slider.trackLeft),
+                0.0f, 1.0f);
+            const int next = static_cast<int>(position * 20.0f + 0.5f) * 5;
+            if (next != before)
+            {
+                if (row == 3) SoundComponent::AdjustVoiceVolume(next - before);
+                else m_game->AdjustVolume(row, next - before);
+            }
+        }
+    }
     if (!input.IsTrigger(Action::ENTER)) return;
     if (m_page == Page::Volume && m_cursor < 4) return;
     m_game->GetSoundManager().Play("select_default");
@@ -228,13 +313,16 @@ void SettingsMenu::Draw() const
         for (int i = 0; i < 4; ++i)
         {
             const int volume = i == 3 ? SoundComponent::GetVoiceVolume() : m_game->GetVolume(i);
-            MenuVisual::DrawOption(m_game,
-                std::string(labels[i]) + "  " + std::to_string(volume) + "%",
-                x, height * (0.25f + i * 0.125f), 39, i == m_cursor);
+            const float rowY = height * (0.25f + i * 0.125f);
+            MenuVisual::DrawOption(m_game, labels[i], x, rowY, 39, i == m_cursor);
+            DrawVolumeSlider(m_game, volume, rowY);
+            renderer->DrawTextL(Vector2d(width * 0.86f, rowY + 4.0f),
+                std::to_string(volume) + "%",
+                i == m_cursor ? Color(200, 35, 35) : Color(8, 8, 8), font, 31, false);
         }
         MenuVisual::DrawOption(m_game, "戻る", x, height * 0.75f, 39, m_cursor == 4);
         renderer->DrawTextL(Vector2d(x, height * 0.89f),
-            "左右キー／スティックで5%ずつ変更", Color(35, 35, 35), font, 23, false);
+            "つまみをドラッグ／左右キーで5%ずつ変更", Color(35, 35, 35), font, 23, false);
     }
     else if (m_page == Page::Controls)
     {

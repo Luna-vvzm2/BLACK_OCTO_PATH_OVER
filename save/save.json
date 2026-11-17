@@ -90,12 +90,12 @@
     "newsOwned": [
         true,
         false,
-        false,
+        true,
         false,
         false,
         false
     ],
-    "playTime": 1914.744873046875,
+    "playTime": 2313.158935546875,
     "stageClear": [
         true,
         false,
