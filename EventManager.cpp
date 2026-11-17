@@ -512,7 +512,9 @@ void TalkEvent::Draw()
 		//テキストボックス描画
 		if (m_textBoxTextureId != -1)
 		{
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
 			DrawExtendGraph(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_textBoxTextureId, TRUE);
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 		}
 
 		int textX = static_cast<int>(m_boxPos.x) + 30;
