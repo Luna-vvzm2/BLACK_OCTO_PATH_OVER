@@ -275,7 +275,7 @@ bool PlayScene::Init() {
 			if (newMoney > oldMoney && m_moneyUI) {
 				m_moneyUI->ShowFor(3.0f); // 3•b•\Ž¦
 			}
-			};
+		};
 	}
 
 	BackGroundUI* back = new BackGroundUI(this, "assets/images/uies/bg1.png");
@@ -316,6 +316,9 @@ bool PlayScene::StageInit(int stageNo) {
 			case 5:
 				pos = Vector2d(x * tileSize - tileSize * 0.5f, y * tileSize);
 				AddActor(new HouseBlock(this, pos, Vector2d(tileSize * 4.0f, tileSize)));
+				break;
+			case 7:
+				AddActor(new ClearBlock(this, pos, Vector2d(tileSize, tileSize)));
 				break;
 			case 8:
 				AddActor(new YaguraSBlock(this, pos, Vector2d(tileSize, tileSize)));
@@ -493,7 +496,7 @@ bool PlayScene::StageInit(int stageNo) {
 					AddActor(new StageBackActor(this, pos, m_stageIndex - 1, 1));
 					break;
 				case 2:
-					AddActor(new StageBackActor(this, pos, m_stageIndex - 1, 4));
+					AddActor(new StageBackActor(this, pos, m_stageIndex - 1, 3));
 					break;
 				}
 			}
