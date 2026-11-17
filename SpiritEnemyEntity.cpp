@@ -17,7 +17,9 @@ SpiritEnemyEntity::SpiritEnemyEntity(
 	Scene*scene,
 	const Vector2d&pos
 )
-    : EnemyEntity(scene, pos, Vector2d(80.0f, 80.0f))
+    : EnemyEntity(scene,
+        Vector2d(pos.x, pos.y - 80.0f),
+        Vector2d(80.0f, 80.0f))
     , m_state(Idle)
     , m_animation(nullptr)
     , m_attackSound(nullptr)
@@ -31,6 +33,7 @@ SpiritEnemyEntity::SpiritEnemyEntity(
     , m_isDying(false)
     , m_targetPosition(Vector2d::Zero())
     , m_hasTargetPosition(false)
+    , m_groundY(pos.y+35.0f)
 {
 }
 
@@ -61,9 +64,12 @@ bool SpiritEnemyEntity::Init()
     m_isDying = false;
     m_targetPosition = Vector2d::Zero();
     m_hasTargetPosition = false;
+    m_searchRangeGroundY = m_groundY;
+    m_searchRangeGroundYInitialized = true;
 
     return true;
 }
+
 
 
 void SpiritEnemyEntity::Update(float deltaTime)

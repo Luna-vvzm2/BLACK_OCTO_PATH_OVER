@@ -38,6 +38,7 @@ public:
 	virtual void Update(float deltaTime) override;
     virtual void UpdateAI(){}
     virtual void OnDead();
+    virtual bool UseAlertGauge() const;
 	void UpdateMove(float deltaTime);
 	void UpdateGravity(float deltaTime);
 	void UpdateAttack(float deltaTime);
@@ -72,7 +73,7 @@ protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
 
-    virtual bool UseAlertGauge() const;
+    
 
     HPComponent* m_hp;
     int m_hpMax;

@@ -564,42 +564,26 @@ void EnemyEntity::Draw()
 
     // 敵の位置とサイズを取得
     Vector2d pos = GetPos();
-    Vector2d size = GetSize();
 
     if (m_alertGauge != nullptr && m_alertGauge->GetGauge() < 0.0f)
     {
-        // 索敵範囲の大きさ
         const float rangeWidth = SEARCH_RANGE_X * 2.0f;
         const float rangeHeight = 25.0f;
 
-        // 敵の足元
-        float groundY;
-
-        if (m_searchRangeGroundYInitialized)
-        {
-            groundY = m_searchRangeGroundY;
-        }
-        else
-        {
-            groundY = pos.y + size.y * 0.5f;
-        }
-
-
+        // 地面のY座標を取得
+        float groundY = m_searchRangeGroundY;
 
         // 帯の中心位置
-        // 上端が敵の足元と一致する
         Vector2d rangeCenter(
             pos.x,
             groundY + rangeHeight * 0.5f
         );
 
-        // 現在のブレンドモードを保存
         int oldBlendMode;
         int oldBlendParam;
 
         GetDrawBlendMode(&oldBlendMode, &oldBlendParam);
 
-        // 半透明で描画
         SetDrawBlendMode(DX_BLENDMODE_ALPHA, 60);
 
         renderer->DrawRectCenter(
@@ -611,10 +595,8 @@ void EnemyEntity::Draw()
             true
         );
 
-        // 元のブレンドモードに戻す
         SetDrawBlendMode(oldBlendMode, oldBlendParam);
-
     }
-    // 通常のComponent描画
+
     Actor::Draw();
 }

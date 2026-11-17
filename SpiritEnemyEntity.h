@@ -44,11 +44,12 @@ private:
 	float m_detectRange = 700.0f;
 	float m_keepDistance = 500.0f;
 	float m_moveSpeed = 500.0f;
-
+	float m_groundY;
 	bool m_faceRight = true;
 	bool m_isDying = false;
 
 	Vector2d m_targetPosition = Vector2d::Zero();
 	bool m_hasTargetPosition = false;
 	bool IsPlayerInSearchRange() const override;
+	
 };
