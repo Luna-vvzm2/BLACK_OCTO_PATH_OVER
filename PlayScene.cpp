@@ -427,16 +427,16 @@ bool PlayScene::StageInit(int stageNo) {
 				m_playerSpawnPoints.push_back(pos);
 				break;
 
-			case 3:
-				m_playerSpawnPoints.push_back(pos);
-				AddActor(new Checkpoint(this, pos));
-				break;
-
 			case 2:
 			{
 				pos += Vector2d(0.0f, -tileSize * 2.0f);
 				AddActor(new StageExitActor(this, pos, m_stageIndex + 1));
 			} break;
+
+			case 3:
+				m_playerSpawnPoints.push_back(pos);
+				AddActor(new Checkpoint(this, pos));
+				break;
 
 			case 4:
 			{
@@ -462,17 +462,17 @@ bool PlayScene::StageInit(int stageNo) {
 			} break;
 
 			case 9:
-				AddActor(new Trap(this, pos, Vector2d(192, 192)));
+				
 				break;
 
 			case 10:    // ‰¼ID
 				pos += Vector2d(0.0f, 30.0f);
-				AddActor(new DamageTrap(this, pos, Vector2d(tileSize,50.0f)));
+				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize,50.0f)));
 				break;
 
 			case 11:   // ‰¼ID
 				pos += Vector2d(0.0f, 30.0f);
-				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, 50.0f)));
+				AddActor(new DamageTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 12: //‰¼ID
@@ -482,7 +482,7 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 13: //‰¼ID
 				pos += Vector2d(0.0f, 30.0f);
-				AddActor(new EnemySpawnTrap(this, pos, Vector2d(tileSize, 50.0f)));
+				AddActor(new StatusDownTrap(this, pos, Vector2d(tileSize, 50.0f)));
 				break;
 
 			case 14:
