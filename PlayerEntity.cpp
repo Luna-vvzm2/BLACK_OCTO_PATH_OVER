@@ -83,16 +83,16 @@ const char* GetFootstepSoundId(const BlockActor* block)
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 0 },
-    { Vector2d(100,0), 300, 200, 70, 0 },
-    { Vector2d(100,0), 300, 200, 70, 0 },
+    { Vector2d(100,150), 300, 200, 70, 0 },
+    { Vector2d(100,150), 300, 200, 70, 0 },
+    { Vector2d(100,150), 300, 200, 70, 0 },
     { Vector2d(100,50), 300, 200, 70, 0 },
-    { Vector2d(0,0), 450, 100, 70, 0 }
+    { Vector2d(0,150), 450, 100, 70, 0 }
 };
 
-float playerAttackTimer[] = { 1.0f, 0.8f, 1.2f, 0.2f, 0.4f };
+float playerAttackTimer[] = { 0.9f, 0.7f, 1.1f, 0.4f, 0.4f };
 float playerAttackLockTimer[] = { 0.13f, 0.2f, 0.25f, 0.2f, 0.2f };
-Vector2d playerEffectPos[] = { {100.0f, 50.0f}, {30.0f, 50.0f}, {0.0f, 50.0f}, {70.0f, 30.0f}, {90.0f, 50.0f} };
+Vector2d playerEffectPos[] = { {50.0f, 20.0f}, {30.0f, 0.0f}, {30.0f, 0.0f}, {30.0f, 30.0f}, {30.0f, 0.0f} };
 EffectType playerEffectType[] = { EffectType::WeakAttack1, EffectType::WeakAttack2, EffectType::WeakAttack3, EffectType::WeakAirAttack1, EffectType::SquatAttack };
 
 PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& size)
@@ -3011,7 +3011,7 @@ void PlayerEntity::StartAttack(int attackNum) {
         m_attackTimer = playerAttackTimer[attackNum];
         m_attackLockTimer = playerAttackLockTimer[attackNum];
         CheckAttackHit(AttackHitboxes[attackNum]);
-        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[attackNum], !m_dir);
+        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[attackNum], !m_dir, SpriteBlendMode::Add);
         effect->SetFollowTarget(this, { m_dir ? playerEffectPos[attackNum].x : -playerEffectPos[attackNum].x, -playerEffectPos[attackNum].y });
 
         SpawnEffect(effect);
