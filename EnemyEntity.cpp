@@ -429,15 +429,13 @@ void EnemyEntity::UpdateState()
 bool EnemyEntity::IsPlayerInSearchRange() const
 {
     PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
-
-    if (playScene == nullptr)
-    {
-        return false;
-    }
+    if (playScene == nullptr) return false;
 
     PlayerEntity* player = playScene->GetPlayer();
+    if (player == nullptr || player->IsDead()) return false;
 
-    if (player == nullptr || player->IsDead())
+    // ‰B‚ê‚Ä‚¢‚éƒvƒŒƒCƒ„[‚Íõ“G‘ÎÛ‚É‚µ‚È‚¢
+    if (player->GetIsHide())
     {
         return false;
     }
@@ -469,7 +467,31 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
     {
         return;
     }
+    // ‘û‚Å‰B‚ê‚Ä‚¢‚é‚©Šm”F
+    PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
 
+    if (playScene != nullptr)
+    {
+        PlayerEntity* player = playScene->GetPlayer();
+
+        if (player != nullptr && !player->IsDead())
+        {
+            if (player->GetIsHide())
+            {
+                //‰B‚ê‚Ä‚¢‚éŠÔ‚ÍŒx‰úƒQ[ƒW‚ğŒ¸‚ç‚·
+                m_alertGaugeTimer += deltaTime;
+
+                if (m_alertGaugeTimer >= 1.0f)
+                {
+                    m_alertGaugeTimer = 0.0f;
+                    m_alertGauge->AddGauge(-1.0f);
+                }
+
+                // ’Êí‚Ìõ“G‚É‚æ‚éƒQ[ƒW‘‰Á‚ğs‚í‚È‚¢
+                return;
+            }
+        }
+    }
     m_alertGaugeTimer += deltaTime;
 
     if (m_alertGaugeTimer < 1.0f)

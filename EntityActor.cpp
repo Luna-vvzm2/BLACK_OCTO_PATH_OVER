@@ -209,7 +209,12 @@ void EntityActor::MoveAndCollide(float deltaTime) {
     // 隠れ状態をプレイヤーに通知(重なっていなければ false)
     if (GetType() == ActorType::Player)
     {
-        static_cast<PlayerEntity*>(this)->SetIsHide(overlapHide);
+        PlayerEntity* player = static_cast<PlayerEntity*>(this);
+
+        const bool isHide =
+            overlapHide && player->GetIsOcto();
+
+        player->SetIsHide(isHide);
     }
 
     // === X方向移動 ===
