@@ -16,6 +16,7 @@ public:
         Idle,
         Move,
         Attack,
+        Hurt,
         Defeated
     };
 
@@ -30,6 +31,7 @@ public:
     bool Init() override;
     void Update(float deltaTime) override;
     void TakeDamage(int damage, const Vector2d& knockback, bool attackDir = false) override;
+    void OnDead() override;
 
     int GetMaxHP() const override { return 150; }
     Status GetStatus() const { return m_status; }
@@ -44,6 +46,7 @@ private:
     void UpdateIdle(PlayerEntity* player);
     void UpdateMove(PlayerEntity* player);
     void UpdateAttack(float deltaTime, PlayerEntity* player);
+    void UpdateHurt();
     void UpdateDead();
     void TryHitPlayer(PlayerEntity* player);
 
