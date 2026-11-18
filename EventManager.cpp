@@ -887,23 +887,24 @@ void BattleEvent::Update(float deltaTime)
 					// ƒJƒƒ‰ˆ—
 					auto* playScene = dynamic_cast<PlayScene*>(m_scene);
 
-					if (playScene)
-					{
-						Camera& camera    = playScene->GetCamera();
-						float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
-						float diff        = areaCenterX - pos.x;
-						float camPosX     = areaCenterX;
+					Camera& camera = playScene->GetCamera();
+					float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
+					float halfRange = 640.0f;
+					float camPosX = areaCenterX;
 
-						if (diff >= 640.0f)
-						{
-							camPosX = areaCenterX + pos.x - 1000.0f;
-						}
-						else if (diff <= -640.0f)
-						{
-							camPosX = areaCenterX + pos.x - 2280.0f;
-						}
-						camera.SetCenter({ camPosX, camera.GetCenter().y });
+					if (pos.x < areaCenterX - halfRange)
+					{
+						camPosX = pos.x + halfRange;
 					}
+					else if (pos.x > areaCenterX + halfRange)
+					{
+						camPosX = pos.x - halfRange;
+					}
+					else
+					{
+						camPosX = areaCenterX;
+					}
+					camera.SetCenter({ camPosX, camera.GetCenter().y });
 				}
 
 				if (!m_isPlayerInsideArea)
