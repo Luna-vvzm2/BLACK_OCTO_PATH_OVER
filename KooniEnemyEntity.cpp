@@ -79,7 +79,7 @@ bool KooniEnemyEntity::Init()
 
     m_anim->SetSprite(m_sprite);
     m_attackSound = AddComponent<SoundComponent>();
-    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4, true))
+    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 5, true))
     {
         return false;
     }
