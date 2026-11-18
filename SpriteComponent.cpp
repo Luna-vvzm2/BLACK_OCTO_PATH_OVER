@@ -127,9 +127,17 @@ void SpriteComponent::Draw() {
 // --------------------
 // 分割画像読み込み
 // --------------------
-bool SpriteComponent::LoadTextureDiv(const std::string& path, int xNum, int yNum)
+bool SpriteComponent::LoadTextureDiv(const std::string& path, int xNum, int yNum, bool allowMissing)
 {
     // まず画像全体を読み込み、サイズを取得
+    if (xNum <= 0 || yNum <= 0) return false;
+    // Unfinished enemy art is optional. Clear old motion frames as well.
+    if (allowMissing && FileRead_size(path.c_str()) < 0) {
+        m_frames.clear();
+        m_handle = -1;
+        m_currentFrame = 0;
+        return true;
+    }
     int total = xNum * yNum;
 
     // =========================
@@ -172,14 +180,13 @@ bool SpriteComponent::LoadTextureDiv(const std::string& path, int xNum, int yNum
 
     int texW = 0, texH = 0;
     GetGraphSize(tempHandle, &texW, &texH);
-    DeleteGraph(tempHandle);
 
     // 各フレームの幅・高さ
     int frameW = texW / xNum;
     int frameH = texH / yNum;
 
     // 分割画像のハンドル
-    std::vector<int> frames(total);
+    std::vector<int> frames(total, -1);
 
     SetDrawBlendMode(
         DX_BLENDMODE_ALPHA,
@@ -187,21 +194,24 @@ bool SpriteComponent::LoadTextureDiv(const std::string& path, int xNum, int yNum
     );
 
     // 正しい幅・高さで分割読み込み
-    int ret = LoadDivGraph(
-        path.c_str(),
-        total,
-        xNum,
-        yNum,
-        frameW,
-        frameH,
-        frames.data()
-    );
+    bool loaded = frameW > 0 && frameH > 0;
+    for (int i = 0; loaded && i < total; ++i)
+    {
+        frames[i] = DerivationGraph(
+            (i % xNum) * frameW, (i / xNum) * frameH,
+            frameW, frameH, tempHandle);
+        loaded = frames[i] != -1;
+    }
+    DeleteGraph(tempHandle);
     SetDrawBlendMode(
         DX_BLENDMODE_NOBLEND,
         255
     );
 
-    if (ret == -1) {
+    if (!loaded) {
+        for (int handle : frames) {
+            if (handle != -1) DeleteGraph(handle);
+        }
         std::cerr << "[ERROR] 分割画像読み込み失敗: " << path << std::endl;
         return false;
     }
@@ -268,27 +278,25 @@ void SpriteComponent::SetTexture(int handle)
 // --------------------
 // 単一画像読み込み
 // --------------------
+int SpriteComponent::LoadCachedTexture(const std::string& path) {
+    const auto found = s_textureCache.find(path);
+    if (found != s_textureCache.end()) return found->second;
+    const int handle = LoadGraph(path.c_str());
+    if (handle != -1) s_textureCache.emplace(path, handle);
+    return handle;
+}
+
 bool SpriteComponent::LoadTexture(const std::string& path) {
-    auto it = s_textureCache.find(path);
-
-    if (it != s_textureCache.end()) {
-        m_handle = it->second;
+    m_handle = LoadCachedTexture(path);
+    if (m_handle == -1) {
+        std::cerr << "[ERROR] Texture load failed: " << path << std::endl;
+        m_width = 32;
+        m_height = 32;
+        return true;
     }
-    else {
-        m_handle = LoadGraph(path.c_str());
-        if (m_handle == -1) {
-            std::cerr << "[ERROR] 画像読み込み失敗:  " << path << std::endl;
-            m_width = 32;
-            m_height = 32;
-
-            return true;
-        }
-        s_textureCache[path] = m_handle;
-    }
-
     int w, h;
     GetGraphSize(m_handle, &w, &h);
-    SetSize((float)w, (float)h);
+    SetSize(static_cast<float>(w), static_cast<float>(h));
     return true;
 }
 

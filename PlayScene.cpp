@@ -67,8 +67,6 @@
 #include <cmath>
 
 #include <unordered_set>
-#include <type_traits>
-
 
 PlayScene::PlayScene(Game* game)
 	: Scene(game),
@@ -560,12 +558,12 @@ bool PlayScene::StageInit(int stageNo) {
 
 	if (m_bgHandle == -1 && bgPath != nullptr)
 	{
-		m_bgHandle = LoadGraph(bgPath);
+		m_bgHandle = SpriteComponent::LoadCachedTexture(bgPath);
 	}
 
 	if (m_fgHandle == -1 && fgPath != nullptr)
 	{
-		m_fgHandle = LoadGraph(fgPath);
+		m_fgHandle = SpriteComponent::LoadCachedTexture(fgPath);
 	}
 
 	return true;
@@ -1649,15 +1647,14 @@ void PlayScene::UpdateFade(float deltaTime)
 		if (m_fadeTimer >= FADE_OUT_DURATION)
 		{
 			// 現在のステージ背景を解放
+			// Background handles belong to the shared cache, retained until Game::End.
 			if (m_bgHandle != -1)
 			{
-				DeleteGraph(m_bgHandle);
 				m_bgHandle = -1;
 			}
 
 			if (m_fgHandle != -1)
 			{
-				DeleteGraph(m_fgHandle);
 				m_fgHandle = -1;
 			}
 
@@ -1777,12 +1774,6 @@ void PlayScene::StartStageLoading(int stageIndex)
 			case 201:
 			case 202:
 			case 203:
-			case 204:
-			case 205:
-			case 206:
-			case 207:
-			case 208:
-			case 210:
 				enemyTypes.insert(objID);
 				break;
 
@@ -1812,55 +1803,6 @@ void PlayScene::StartStageLoading(int stageIndex)
 		<< std::endl;
 }
 
-namespace
-{
-	template <typename EnemyType>
-	bool PreloadEnemy(Scene* scene)
-	{
-		if (scene == nullptr)
-		{
-			return false;
-		}
-
-		Vector2d preloadPos(-10000.0f, -10000.0f);
-
-		EnemyType* enemy = nullptr;
-
-		if constexpr (
-			std::is_constructible_v<
-			EnemyType,
-			Scene*,
-			Vector2d,
-			Vector2d
-			>)
-		{
-			enemy = new EnemyType(
-				scene,
-				preloadPos,
-				Vector2d(192.0f, 192.0f)
-			);
-		}
-		else
-		{
-			enemy = new EnemyType(
-				scene,
-				preloadPos
-			);
-		}
-
-		if (enemy == nullptr)
-		{
-			return false;
-		}
-
-		bool result = enemy->Init();
-
-		delete enemy;
-
-		return result;
-	}
-}
-
 bool PlayScene::UpdateStageLoading()
 {
 	if (m_loadingStep >= m_loadingTotal)
@@ -1876,7 +1818,7 @@ bool PlayScene::UpdateStageLoading()
 	// 画像1枚
 	if (task.type == TextureLoadTask::Type::Graph)
 	{
-		int handle = LoadGraph(task.path.c_str());
+		int handle = SpriteComponent::LoadCachedTexture(task.path);
 
 		if (handle == -1)
 		{
@@ -1907,23 +1849,19 @@ bool PlayScene::UpdateStageLoading()
 		{
 		case 201:
 			success =
-				PreloadEnemy<KooniEnemyEntity>(this);
+				KooniEnemyEntity::PreloadTextures();
 			break;
 
 		case 202:
 			success =
-				PreloadEnemy<SpiritEnemyEntity>(this);
+				SpiritEnemyEntity::PreloadTextures();
 			break;
 
 		case 203:
 			success =
-				PreloadEnemy<KasaTenguEnemyEntity>(this);
+				KasaTenguEnemyEntity::PreloadTextures();
 			break;
 
-		case 204:
-			success =
-				PreloadEnemy<Boss_01>(this);
-			break;
 
 		default:
 			break;

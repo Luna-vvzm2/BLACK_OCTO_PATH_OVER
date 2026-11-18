@@ -23,12 +23,14 @@ public:
     void Draw() override;
 
     // 分割画像の読み込み
-    bool LoadTextureDiv(const std::string& path, int xNum, int yNum);
+    bool LoadTextureDiv(const std::string& path, int xNum, int yNum, bool allowMissing = false);
     void SetFrame(int index);   // 指定フレームに切り替え
     void SetEffectFrames(const std::vector<int>& frames);
     void SetTexture(int handle); // 指定ハンドルに切り替え
 
     bool LoadTexture(const std::string& path);
+    // Borrowed handle. Released together with the sprite texture cache.
+    static int LoadCachedTexture(const std::string& path);
     void SetSize(float w, float h);
     static void ReleaseTextures();
 

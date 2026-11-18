@@ -9,6 +9,7 @@ class SoundComponent;
 class SpiritEnemyEntity : public EnemyEntity
 {
 public:
+    static bool PreloadTextures();
 	SpiritEnemyEntity(Scene* scene, const Vector2d& pos);
 
 	bool Init() override;

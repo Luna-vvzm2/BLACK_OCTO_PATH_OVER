@@ -56,6 +56,12 @@ KooniEnemyEntity::KooniEnemyEntity(Scene* scene, const Vector2d& pos)
 {
 }
 
+bool KooniEnemyEntity::PreloadTextures()
+{
+    SpriteComponent sprite(nullptr);
+    return sprite.LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4, true);
+}
+
 bool KooniEnemyEntity::Init()
 {
     if (!EnemyEntity::Init())
@@ -72,7 +78,7 @@ bool KooniEnemyEntity::Init()
 
     m_anim->SetSprite(m_sprite);
     m_attackSound = AddComponent<SoundComponent>();
-    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4))
+    if (!m_sprite->LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4, true))
     {
         return false;
     }
