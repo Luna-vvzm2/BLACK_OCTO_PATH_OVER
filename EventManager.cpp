@@ -813,7 +813,6 @@ void BattleEvent::Update(float deltaTime)
 				continue;
 			}
 
-
 			if (!tokens[0].empty() && tokens[0] != "None")
 			{
 				m_enemyType = std::stoi(tokens[0]);
@@ -873,7 +872,7 @@ void BattleEvent::Update(float deltaTime)
 		{
 			if (actor->GetType() == ActorType::Player)
 			{
-				if (actor->GetState() == Actor::State::Dead)//まだ不完全 プレイヤーが死んでもDeadになっていない?
+				if (actor->GetState() == Actor::State::Dead)
 				{
 					m_isPlayerInsideArea = false;
 					continue;
@@ -883,6 +882,29 @@ void BattleEvent::Update(float deltaTime)
 				if (!transform) continue;
 
 				Vector2d pos = transform->GetPosition();
+
+				{
+					// カメラ処理
+					auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+					if (playScene)
+					{
+						Camera& camera    = playScene->GetCamera();
+						float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
+						float diff        = areaCenterX - pos.x;
+						float camPosX     = areaCenterX;
+
+						if (diff >= 640.0f)
+						{
+							camPosX = areaCenterX + pos.x - 1000.0f;
+						}
+						else if (diff <= -640.0f)
+						{
+							camPosX = areaCenterX + pos.x - 2280.0f;
+						}
+						camera.SetCenter({ camPosX, camera.GetCenter().y });
+					}
+				}
 
 				if (!m_isPlayerInsideArea)
 				{

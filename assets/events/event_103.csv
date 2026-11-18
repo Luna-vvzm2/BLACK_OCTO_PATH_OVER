@@ -8,7 +8,7 @@ TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\mu
 TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,待ってくれ！　俺は本当に妖魔の仲間なんかじゃ――
 TALK,？？？,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,聞く気はない！　覚悟！
 type,areaMin,areaMax,,,,
-BATTLE,,,,,,
+BATTLE,-100,1900,,,,
 enemyType,posX,posY,,,,
 6,720,0,,,,
 type,name,time,pos,Lpath,Rpath,text
