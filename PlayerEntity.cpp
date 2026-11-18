@@ -106,7 +106,7 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_kunai(3)
     , m_healItem(0)
 
-    , m_kunaiTimer(20.0f)
+    , m_kunaiTimer(15.0f)
 
     , m_state(PlayerState::IDLE)
 
@@ -118,8 +118,8 @@ PlayerEntity::PlayerEntity(Scene* scene, const Vector2d& pos, const Vector2d& si
     , m_jumpSpeed(-620.0f)
     , m_moveSpeed(290.0f)
     , m_moveBaseSpeed(290.0f)
-    , m_dashSpeed(600.0f)
-    , m_dashAirSpeed(800.0f)
+    , m_dashSpeed(400.0f)
+    , m_dashAirSpeed(300.0f)
     , m_dashTimer(0.0f)
     , m_HienCount(0)
     , m_isSenten(false)
@@ -1794,7 +1794,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
             return;
         }
     }
-
+    //
     if (input && input->IsTrigger(Action::KUNAI) && (m_sensor.front == nullptr)) {
         if (m_kunai > 0) {
             m_attack = true;
@@ -1850,7 +1850,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     if (m_state == PlayerState::ROLL) {
         if (!(m_anim->IsFinished())) {
             if (m_sensor.frontGround == nullptr) {
-                vel.x = 0.0f;
+                ChangeState(PlayerState::HIEN);
             }
             else {
                 vel.x = dir * m_dashSpeed;
@@ -1864,7 +1864,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
     if (m_state == PlayerState::HIEN) {
         if (!(m_anim->IsFinished())) {
-            vel.x = dir * m_dashSpeed;
+            vel.x = dir * m_dashAirSpeed;
             vel.y = -m_gravity->GetGravity() * deltaTime;
             m_velocity->Set(vel);
             return;
@@ -1886,7 +1886,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     }
     dir = m_dir ? 1.0f : -1.0f;
 
-    if (input && input->IsTrigger(Action::DASH)) {
+    if (input && input->IsTrigger(Action::DASH) && GetShadowGauge() >= 20) {
         if (m_isGround) {
             if (m_sensor.frontBottom != nullptr && m_sensor.frontUpper == nullptr) {
                 ChangeState(PlayerState::SENTEN);
@@ -2381,17 +2381,13 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::ROLL:
     {
+        SubShadowGauge(20);
         Vector2d move(0.0f, 0.0f);
         float dir = m_dir ? 1.0f : -1.0f;
         m_canMove = false;
         m_dashTimer = 0.35f;
 
-        if (m_sensor.frontGround == nullptr) {
-            move.x = 0.0f;
-        }
-        else {
-            move.x = dir * m_dashSpeed;
-        }
+        move.x = dir * m_dashSpeed;
 
         m_velocity->SetX(move.x);
 
@@ -2401,6 +2397,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::HIEN:
     {
+        SubShadowGauge(20);
         Vector2d move(0.0f, 0.0f);
         float dir = m_dir ? 1.0f : -1.0f;
         m_canMove = false;
@@ -2422,6 +2419,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
     case PlayerState::SENTEN:
     {
+        SubShadowGauge(20);
         Vector2d move(0.0f, 0.0f);
         float dir = m_dir ? 1.0f : -1.0f;
         m_canMove = false;
@@ -2947,7 +2945,7 @@ void PlayerEntity::UpdateKunai(float deltaTime) {
     m_kunaiTimer -= deltaTime;
     if (m_kunaiTimer <= 0.0f) {
         m_kunai++;
-        m_kunaiTimer += 20.0f;
+        m_kunaiTimer += 15.0f;
     }
 }
 
