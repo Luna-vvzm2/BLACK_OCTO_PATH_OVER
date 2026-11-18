@@ -71,7 +71,7 @@ void KunaiActor::Update(float deltaTime)
 
             if (m_collision->CheckCollision(enemy->GetCollision()))
             {
-                enemy->TakeDamage(100, { m_dir ? 300.0f : -300.0f, 0 });
+                enemy->TakeDamage(30, { m_dir ? 300.0f : -300.0f, 0 });
                 enemy->TakeMetsu(0);
 
                 auto* playScene = dynamic_cast<PlayScene*>(m_scene);

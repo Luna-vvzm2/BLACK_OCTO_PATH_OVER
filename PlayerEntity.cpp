@@ -83,11 +83,11 @@ const char* GetFootstepSoundId(const BlockActor* block)
 //AttackHitbox squatAttack{ Vector2d(0,0), 450, 100, 70, 15 };
 
 AttackHitbox AttackHitboxes[] = {
-    { Vector2d(100,0), 300, 200, 70, 0 },
-    { Vector2d(100,0), 300, 200, 70, 0 },
-    { Vector2d(100,0), 300, 200, 70, 0 },
-    { Vector2d(100,50), 300, 200, 70, 0 },
-    { Vector2d(0,0), 450, 100, 70, 0 }
+    { Vector2d(100,0), 300, 200, 30, 0 },
+    { Vector2d(100,0), 300, 200, 35, 0 },
+    { Vector2d(100,0), 300, 200, 40, 0 },
+    { Vector2d(100,50), 300, 200, 30, 0 },
+    { Vector2d(0,0), 450, 100, 30, 0 }
 };
 
 float playerAttackTimer[] = { 0.9f, 0.7f, 1.1f, 0.4f, 0.4f };
