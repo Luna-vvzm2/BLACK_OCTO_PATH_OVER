@@ -2769,11 +2769,6 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_isJutsu[TIGERNum] = true;
         m_jutsuInterval[TIGERNum] = m_jutsuMaxInterval[TIGERNum];
 
-        auto effect = new EffectActor(m_scene, GetPos(), playerEffectType[0], !m_dir);
-        effect->SetFollowTarget(this, { m_dir ? playerEffectPos[0].x : -playerEffectPos[0].x, -playerEffectPos[0].y });
-
-        SpawnEffect(effect);
-
         m_scene->GetGame()->GetSoundManager().Play("player_tiger1");
         m_anim->Play("squatAttack");  // Œã‚Ù‚ÇTiger‚ÉC³
         break;
