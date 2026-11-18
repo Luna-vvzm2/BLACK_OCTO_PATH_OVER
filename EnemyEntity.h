@@ -38,6 +38,7 @@ public:
 	virtual void Update(float deltaTime) override;
     virtual void UpdateAI(){}
     virtual void OnDead();
+    virtual bool UseAlertGauge() const;
 	void UpdateMove(float deltaTime);
 	void UpdateGravity(float deltaTime);
 	void UpdateAttack(float deltaTime);
@@ -64,11 +65,21 @@ public:
     void ApplySmoke();
     void EndSmoke();
     bool IsInSmoke() const { return m_isInSmoke; }
+
+    //ƒoƒt‚ğ•t—^
+    void ApplyAttackPowerBuff(float multiplier, float duration);
+
+    //Œ»İ‚ÌUŒ‚”{—¦‚ğæ“¾‚·‚é
+    float GetAttackPowerMultiplier() const
+    {
+        return m_attackPowerMultiplier;
+    }
+
 protected:
     virtual void OnDamaged(int damage, const Vector2d& knockback) {}
     virtual void OnDeadFromDamage(int damage, const Vector2d& knockback);
 
-    virtual bool UseAlertGauge() const;
+    
 
     HPComponent* m_hp;
     int m_hpMax;
@@ -113,6 +124,7 @@ protected:
     void UpdateAlertGauge(float deltaTime);
 
     virtual bool IsPlayerInSearchRange() const;
+    virtual void Draw() override;
 
     AlertGaugeComponent* m_alertGauge;
     float m_alertGaugeTimer;
@@ -121,6 +133,13 @@ protected:
 
     EnemyRank m_enemyRank = EnemyRank::Small;
     float m_defenselessLockTimer = 0.0f;
+    //ç•D˜T‚Ì•ûŒü‚É‚æ‚éƒoƒt
+    float m_attackPowerMultiplier = 1.0f;
+    float m_attackBuffTimer = 0.0f;
+
+    float m_searchRangeGroundY;
+
+    bool m_searchRangeGroundYInitialized;
 
     // ‰Œ–‹
     bool m_isInSmoke = false;

@@ -5,6 +5,7 @@
 #include "Game.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include "EnemyEntity.h"
 #include <cmath>
 
 AlertGaugeComponent::AlertGaugeComponent(Actor* owner)
@@ -58,6 +59,15 @@ bool AlertGaugeComponent::IsCombat() const
 void AlertGaugeComponent::Draw()
 {
     if (m_owner == nullptr)
+    {
+        return;
+    }
+    
+    // 敵の警戒ゲージ使用設定を確認
+    EnemyEntity* enemy =
+        dynamic_cast<EnemyEntity*>(m_owner);
+
+    if (enemy != nullptr && !enemy->UseAlertGauge())
     {
         return;
     }

@@ -19,6 +19,10 @@ private:
     float m_damageTimer = 0.0f;
     int m_damagePerSecond = 10;
     bool m_isFading = false;
+    bool UseAlertGauge() const override
+    {
+        return false;
+    }
     float m_alpha = 255.0f;
     // フェード開始までの待ち時間
     float m_fadeDelay = 0.2f;
