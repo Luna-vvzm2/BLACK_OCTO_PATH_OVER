@@ -271,6 +271,8 @@ void TalkEvent::Init()
 					texManager->LoadTexture(tokens[3]);
 				}
 			}
+			std::string textBoxPath = "assets\\images\\uies\\textbox_Conversation.png";
+			m_textBoxTextureId = texManager->LoadTexture(textBoxPath);
 		}
 
 		m_currentLine = 0;
@@ -508,15 +510,15 @@ void TalkEvent::Draw()
 		SetDrawBright(255, 255, 255);
 
 		//テキストボックス描画
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		if (m_textBoxTextureId != -1)
+		{
+			SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
+			DrawExtendGraph(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_textBoxTextureId, TRUE);
+			SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		}
 
-		//テキストボックスの枠線描画
-		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_nameColor.ToDxColor(), FALSE);
 		int textX = static_cast<int>(m_boxPos.x) + 30;
 		int textY = static_cast<int>(m_boxPos.y) + 30;
-
 		//ChangeFont("HGP 明朝 E");
 		SetFontSize(m_fontSize);
 		DrawString(textX, textY, m_talkText.c_str(), m_textColor.ToDxColor());
@@ -574,6 +576,9 @@ void TutorialEvent::Init()
 				}
 			}
 		}
+
+		std::string backGroundPath = ("assets\\images\\uies\\textbox_tutorial.png");
+		m_backGroundTextureId = texManager->LoadTexture(backGroundPath);
 
 		m_currentPage = 0;
 		m_isEnd = false;
@@ -683,9 +688,10 @@ void TutorialEvent::Draw()
 	if (m_isStart)
 	{
 		//ボックス描画
-		SetDrawBlendMode(DX_BLENDMODE_ALPHA, m_boxColor.a);
-		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxColor.ToDxColor(), TRUE);
-		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+		if (m_backGroundTextureId != -1)
+		{
+			DrawExtendGraph(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_backGroundTextureId, TRUE);
+		}
 
 		//ボックスの枠線描画
 		DrawBox(static_cast<int>(m_boxPos.x), static_cast<int>(m_boxPos.y), static_cast<int>(m_boxPos.x + m_boxSize.x), static_cast<int>(m_boxPos.y + m_boxSize.y), m_boxBorderColor.ToDxColor(), FALSE, 5);
@@ -807,7 +813,6 @@ void BattleEvent::Update(float deltaTime)
 				continue;
 			}
 
-
 			if (!tokens[0].empty() && tokens[0] != "None")
 			{
 				m_enemyType = std::stoi(tokens[0]);
@@ -867,7 +872,7 @@ void BattleEvent::Update(float deltaTime)
 		{
 			if (actor->GetType() == ActorType::Player)
 			{
-				if (actor->GetState() == Actor::State::Dead)//まだ不完全 プレイヤーが死んでもDeadになっていない?
+				if (actor->GetState() == Actor::State::Dead)
 				{
 					m_isPlayerInsideArea = false;
 					continue;
@@ -877,6 +882,29 @@ void BattleEvent::Update(float deltaTime)
 				if (!transform) continue;
 
 				Vector2d pos = transform->GetPosition();
+
+				{
+					// カメラ処理
+					auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+					if (playScene)
+					{
+						Camera& camera    = playScene->GetCamera();
+						float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
+						float diff        = areaCenterX - pos.x;
+						float camPosX     = areaCenterX;
+
+						if (diff >= 640.0f)
+						{
+							camPosX = areaCenterX + pos.x - 1000.0f;
+						}
+						else if (diff <= -640.0f)
+						{
+							camPosX = areaCenterX + pos.x - 2280.0f;
+						}
+						camera.SetCenter({ camPosX, camera.GetCenter().y });
+					}
+				}
 
 				if (!m_isPlayerInsideArea)
 				{

@@ -122,6 +122,7 @@ private:
 	ActorPosition m_talkerPosition{ ActorPosition::None };
 	int m_actorRTextureId{ -1 }; //右立ち絵のid
 	int m_actorLTextureId{ -1 }; //左立ち絵のid
+	int m_textBoxTextureId{ -1 }; // テキストボックスのid
 
 	//立ち絵の簡易アニメーション
 	bool m_talkStart{ false };
@@ -217,10 +218,11 @@ private:
 	std::string m_bodyText{ "" }; //説明文
 	std::string m_headerText{ "" }; //見出し文
 	int m_explanationImageId{ -1 }; //表示画像
+	int m_backGroundTextureId{ -1 }; // 背景画像
 
 	Vector2d m_imageSize{ 480.0f, 270.0f }; //16:9
 
-	Vector2d m_boxSize{ 720.0f, 500.0f };
+	Vector2d m_boxSize{ 1000.0f, 524.0f };
 	Vector2d m_boxPos{ (1280.0f - m_boxSize.x) * 0.5f, (720.0f - m_boxSize.y) * 0.5f };
 
 	int m_bodyFontSize{ 20 };
