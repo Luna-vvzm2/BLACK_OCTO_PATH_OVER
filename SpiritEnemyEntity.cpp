@@ -250,6 +250,30 @@ void SpiritEnemyEntity::Update(float deltaTime)
     {
         m_animation->Update(deltaTime);
     }
+
+    // プレイヤーの方向を取得
+    PlayScene* playScene = dynamic_cast<PlayScene*>(m_scene);
+
+    if (playScene != nullptr)
+    {
+        PlayerEntity* player = playScene->GetPlayer();
+
+        if (player != nullptr && !player->IsDead())
+        {
+            float distanceX = player->GetPos().x - GetPos().x;
+
+            if (distanceX > 0.0f)
+            {
+                m_faceRight = true;
+            }
+            else if (distanceX < 0.0f)
+            {
+                m_faceRight = false;
+            }
+        }
+    }
+
+    
    
 }
 
@@ -274,6 +298,14 @@ void SpiritEnemyEntity::UpdateAI()
     Vector2d playerPos = player->GetPos();
 
     float distanceX = playerPos.x - myPos.x;
+    if (distanceX > 0.0f)
+    {
+        m_faceRight = true;
+    }
+    else if (distanceX < 0.0f)
+    {
+        m_faceRight = false;
+    }
     float absDistanceX = std::abs(distanceX);
 
     switch (m_state)
@@ -316,6 +348,7 @@ void SpiritEnemyEntity::UpdateAI()
 
     case CombatMove:
     {
+        
         // 壁に阻まれている場合
         if (m_isBlockedByWall)
         {
@@ -545,7 +578,7 @@ void SpiritEnemyEntity::UpdateAnimation()
     // 左右反転
     if (m_sprite != nullptr)
     {
-        m_sprite->SetFlipX(!m_faceRight);
+        m_sprite->SetFlipX(m_faceRight);
     }
 }
 
