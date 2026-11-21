@@ -134,7 +134,11 @@ int Boss_01::GetDefeatHP() const
 void Boss_01::Update(float deltaTime)
 {
     if (!m_initialized || GetState() != Actor::State::Active ||
-        !std::isfinite(deltaTime) || deltaTime <= 0.0f) return;
+        !std::isfinite(deltaTime) || deltaTime <= 0.0f)
+    {
+        SetChaseFlag(false);
+        return;
+    }
 
     if (m_hp->GetHP() <= GetDefeatHP()) EnterDefeated();
     UpdateHazards(deltaTime);
@@ -148,6 +152,10 @@ void Boss_01::Update(float deltaTime)
         UpdateAI(deltaTime);
         UpdateAttack(deltaTime);
     }
+
+    SetChaseFlag(m_canMove && FindPlayer() != nullptr &&
+        m_behavior != Behavior::Idle && m_behavior != Behavior::Recovery &&
+        m_behavior != Behavior::Defeated);
 
     // 速度コンポーネントによる直接移動とMoveAndCollideの二重移動を避ける。
     // 重力は既存GravityComponentを一度だけ更新する。
@@ -349,6 +357,7 @@ void Boss_01::OnDead()
 void Boss_01::EnterDefeated()
 {
     if (IsBattleFinished()) return;
+    SetChaseFlag(false);
     m_shuriken.clear();
     m_traps.clear();
     m_canMove = false;
