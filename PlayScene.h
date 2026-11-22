@@ -160,6 +160,9 @@ private:
 	std::unique_ptr<EventManager> m_eventManager;
 	float m_playTimer{ 0.0f }; //クリアタイムのためのカウンタ変数
 
+	// 追加のスポナー
+	std::unique_ptr<class AddEnemySpawner> m_addEnemySpawner = nullptr;
+
 	// セーブデータ
 	SaveData m_saveData;
 

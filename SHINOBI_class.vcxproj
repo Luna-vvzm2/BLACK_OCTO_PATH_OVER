@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="AddEnemySpawner.cpp" />
     <ClCompile Include="AlertGaugeComponent.cpp" />
     <ClCompile Include="AnimationComponent.cpp" />
     <ClCompile Include="BackGroundUI.cpp" />
@@ -277,6 +278,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="AddEnemySpawner.h" />
     <ClInclude Include="AlertGaugeComponent.h" />
     <ClInclude Include="AnimationComponent.h" />
     <ClInclude Include="BackGroundUI.h" />

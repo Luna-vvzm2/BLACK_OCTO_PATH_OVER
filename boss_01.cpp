@@ -59,6 +59,7 @@ namespace
 Boss_01::Boss_01(Scene* scene, const Vector2d& pos)
     : Boss_01(scene, pos, Parameters{})
 {
+    m_enemyRank = EnemyRank::Boss;
 }
 
 void Boss_01::SpawnForTest(Scene* scene, const Vector2d& pos)

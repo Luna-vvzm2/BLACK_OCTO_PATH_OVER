@@ -30,6 +30,7 @@ public:
 
     //“G‚Ìí—Ş‚ğİ’è
     void SetEnemyRank(EnemyRank rank);
+    EnemyRank GetEnemyRank() const { return m_enemyRank; }
 
 	explicit EnemyEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 90, 196 });
 	~EnemyEntity() override = default;
