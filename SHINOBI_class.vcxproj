@@ -171,6 +171,7 @@
     <ClCompile Include="ClearBlock.cpp" />
     <ClCompile Include="ClearPlatformBlock.cpp" />
     <ClCompile Include="ClearScene.cpp" />
+    <ClCompile Include="ResultScenes.cpp" />
     <ClCompile Include="ClearUI.cpp" />
     <ClCompile Include="CollisionComponent.cpp" />
     <ClCompile Include="Component.cpp" />
@@ -288,6 +289,7 @@
     <ClInclude Include="Checkpoint.h" />
     <ClInclude Include="ClearBlock.h" />
     <ClInclude Include="ClearPlatformBlock.h" />
+    <ClInclude Include="ResultScenes.h" />
     <ClInclude Include="ClearScene.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
