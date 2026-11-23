@@ -216,6 +216,7 @@
     <ClCompile Include="PlatformOboroMBlock.cpp" />
     <ClCompile Include="PlatformOboroSBlock.cpp" />
     <ClCompile Include="PlayerStatusUI.cpp" />
+    <ClCompile Include="RoofTileBlock.cpp" />
     <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="ScreenMenus.cpp" />
     <ClCompile Include="ShurikenUI.cpp" />
@@ -233,6 +234,7 @@
     <ClCompile Include="StoneSBlock.cpp" />
     <ClCompile Include="StructureABlock.cpp" />
     <ClCompile Include="StructureBBlocke.cpp" />
+    <ClCompile Include="ToraByoubuBlock.cpp" />
     <ClCompile Include="Trap.cpp" />
     <ClCompile Include="TrapEffect.cpp" />
     <ClCompile Include="TreasureBox.cpp" />
@@ -339,6 +341,7 @@
     <ClInclude Include="PlatformOboroMBlock.h" />
     <ClInclude Include="PlatformOboroSBLock.h" />
     <ClInclude Include="PlayerStatusUI.h" />
+    <ClInclude Include="RoofTileBlock.h" />
     <ClInclude Include="SaveData.h" />
     <ClInclude Include="SaveManager.h" />
     <ClInclude Include="ScreenMenus.h" />
@@ -357,6 +360,7 @@
     <ClInclude Include="StoneSBlock.h" />
     <ClInclude Include="StructureABlock.h" />
     <ClInclude Include="StructureBBlock.h" />
+    <ClInclude Include="ToraByoubuBlock.h" />
     <ClInclude Include="Trap.h" />
     <ClInclude Include="TrapEffect.h" />
     <ClInclude Include="TreasureBox.h" />

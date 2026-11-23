@@ -27,7 +27,7 @@ public:
     bool IsPlayerOverlapped() const { return m_playerOverlapped; }
 
 private:
-    std::string GetTexturePath() const override;
+    virtual std::string GetTexturePath() const = 0;
 
     bool m_playerOverlapped;   // プレイヤーが重なっているか(EntityActor側から設定される)
     float m_alpha;             // 現在の不透明度(0.0~1.0)

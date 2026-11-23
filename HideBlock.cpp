@@ -4,8 +4,6 @@
 
 namespace
 {
-    const char* HIDE_BLOCK_TEXTURE = "assets/images/blocks/yagura3.png";
-
     constexpr float HIDE_BLOCK_OVERLAP_ALPHA = 0.7f;   // プレイヤーが重なっている間の不透明度
     constexpr float HIDE_BLOCK_FADE_SPEED = 5.0f;      // 1秒あたりの不透明度の変化量(大きいほど素早く変わる)
 }
@@ -44,9 +42,4 @@ void HideBlock::Update(float deltaTime)
     {
         m_sprite->SetAlpha(static_cast<int>(255.0f * m_alpha));
     }
-}
-
-std::string HideBlock::GetTexturePath() const
-{
-    return HIDE_BLOCK_TEXTURE;
 }

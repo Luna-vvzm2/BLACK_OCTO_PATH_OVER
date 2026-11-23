@@ -56,6 +56,8 @@
 
 #include "SpiritEnemyEntity.h"
 #include "HideBlock.h"
+#include "ToraByoubuBlock.h"
+#include "RoofTileBlock.h"
 
 
 //イベントのため変更
@@ -392,10 +394,6 @@ bool PlayScene::StageInit(int stageNo) {
 				pos = Vector2d(x * tileSize, y * tileSize + tileSize * 0.625f);
 				AddActor(new ClearPlatformBlock(this, pos, Vector2d(tileSize * 3.0f, tileSize * 0.25f)));
 				break;
-			case 45:
-				pos = Vector2d(x * tileSize + tileSize * 0.5f, y * tileSize - tileSize * 1.0f);
-				AddActor(new HideBlock(this, pos, Vector2d(tileSize * 2.0f, tileSize * 3.0f)));
-				break;
 			}
 		}
 	}
@@ -433,7 +431,7 @@ bool PlayScene::StageInit(int stageNo) {
 
 			case 4:
 			{
-				pos += Vector2d(-tileSize * 0.5f, 20.0f);
+				pos += Vector2d(-tileSize * 0.5f, 22.0f);
 				AddActor(new TreasureBoxEntity(this, pos));
 				break;
 			}
@@ -454,8 +452,29 @@ bool PlayScene::StageInit(int stageNo) {
 				}
 			} break;
 
+			case 5:
+				pos += Vector2d(0.0f, -200.0f);
+				AddActor(new ToraByoubuBlock(this, pos, Vector2d(tileSize * 7.2f, 450.0f)));
+				break;
+
+			case 6:    
+				pos += Vector2d(0.0f, 5.0f);
+				AddActor(new RoofTileBlock_01(this, pos, Vector2d(tileSize * 2.0f, 50.0f)));
+				break;
+
+			case 7:   
+				pos += Vector2d(0.0f, 5.0f);
+				AddActor(new RoofTileBlock_02(this, pos, Vector2d(tileSize * 2.0f, 50.0f)));
+				break;
+
+			case 8:
+				pos += Vector2d(0.0f, -200.0f);
+				AddActor(new HouseBlock_Hide_01(this, pos, Vector2d(tileSize * 7.7f, 330.0f)));
+				break;
+
 			case 9:
-				
+				pos += Vector2d(0.0f, -300.0f);
+				AddActor(new HouseBlock_Hide_02(this, pos, Vector2d(tileSize * 4.0f, 530.0f)));
 				break;
 
 			case 10:    // 仮ID

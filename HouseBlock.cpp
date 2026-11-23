@@ -14,3 +14,22 @@ bool HouseBlock::Init()
 
     return true;
 }
+
+namespace
+{
+	const char* TEXTURE_01 =
+		"assets/images/blocks/home.png";
+
+	const char* TEXTURE_02 =
+		"assets/images/blocks/home2.png";
+}
+
+std::string HouseBlock_Hide_01::GetTexturePath() const
+{
+	return TEXTURE_01;
+}
+
+std::string HouseBlock_Hide_02::GetTexturePath() const
+{
+	return TEXTURE_02;
+}
