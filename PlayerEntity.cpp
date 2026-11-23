@@ -2698,15 +2698,22 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::OCTO_START:
+    {
         m_jutsuTimer = 2.0f;
         SubShadowGauge(m_jutsuCost[OCTONum]);
         m_octoTimer = 0.0f;
         m_jutsuInterval[OCTONum] = m_jutsuInterval[OCTONum];
 
-        m_anim->Play("OctoStart");
-        m_scene->GetGame()->GetSoundManager().Play("player_octo");
-        break;
+        Vector2d pos = GetPos();
+        auto effect = new EffectActor(m_scene, pos, EffectType::Octo, !m_dir);
+        effect->SetFollowTarget(this, { 0.0f, -250.0f });
+        
+        SpawnEffect(effect);
 
+        m_anim->Play("Kamae");
+        m_scene->GetGame()->GetSoundManager().Play("player_octo");
+    }
+    break;
     case PlayerState::OCTO_AUTO:
     {
         m_isAutoOcto = true;
@@ -2722,6 +2729,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         Vector2d scale = m_transform->GetScale();
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
+
+        auto effect = new EffectActor(m_scene, GetPos(), EffectType::Octo, !m_dir);
+        effect->SetFollowTarget(this, { 0.0f, -250.0f });
+
+        SpawnEffect(effect);
 
         m_scene->GetGame()->GetSoundManager().Play("player_octo");
         m_anim->Play("wallHold");   // Œã‚Ù‚ÇOctoAuto‚ÉC³

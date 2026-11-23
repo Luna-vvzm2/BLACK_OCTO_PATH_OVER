@@ -444,6 +444,10 @@ bool EnemyEntity::IsPlayerInSearchRange() const
         return false;
     }
 
+    if (player->GetIsJutsu(0) && m_chaseFlag == false) {
+        return false;
+    }
+
     Vector2d enemyPos = GetPos();
     Vector2d playerPos = player->GetPos();
 
@@ -476,26 +480,23 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
 
     if (playScene != nullptr)
     {
-        PlayerEntity* player = playScene->GetPlayer();
-
-        if (player != nullptr && !player->IsDead())
+        
+        if (IsPlayerInSearchRange())
         {
-            if (player->GetIsHide())
+            //‰B‚ê‚Ä‚¢‚éŠÔ‚ÍŒx‰úƒQ[ƒW‚ğŒ¸‚ç‚·
+            m_alertGaugeTimer += deltaTime;
+
+            if (m_alertGaugeTimer >= 1.0f)
             {
-                //‰B‚ê‚Ä‚¢‚éŠÔ‚ÍŒx‰úƒQ[ƒW‚ğŒ¸‚ç‚·
-                m_alertGaugeTimer += deltaTime;
-
-                if (m_alertGaugeTimer >= 1.0f)
-                {
-                    m_alertGaugeTimer = 0.0f;
-                    m_alertGauge->AddGauge(-1.0f);
-                }
-
-                // ’Êí‚Ìõ“G‚É‚æ‚éƒQ[ƒW‘‰Á‚ğs‚í‚È‚¢
-                return;
+                m_alertGaugeTimer = 0.0f;
+                m_alertGauge->AddGauge(-1.0f);
             }
+
+            // ’Êí‚Ìõ“G‚É‚æ‚éƒQ[ƒW‘‰Á‚ğs‚í‚È‚¢
+            return;
         }
     }
+
     m_alertGaugeTimer += deltaTime;
 
     if (m_alertGaugeTimer < 1.0f)

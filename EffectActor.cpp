@@ -163,6 +163,16 @@ bool EffectActor::LoadEffects()
 
     s_effects[EffectType::SquatAttack] = weak2;
 
+    LoadEffectTexture("assets/images/effects/octo.png", 4, 1, attackHandles);
+
+    EffectData octo;
+    octo.handles = attackHandles;
+    octo.clip.frames = { 0, 1, 2, 3};
+    octo.clip.speed = 0.5f;
+    octo.clip.loop = false;
+    octo.size = { 100, 100 };
+    s_effects[EffectType::Octo] = octo;
+
     LoadEffectTexture("assets/images/effects/TORA_sheet.png", 3, 24, attackHandles);
 
     EffectData tiger1;

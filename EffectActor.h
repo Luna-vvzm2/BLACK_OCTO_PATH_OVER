@@ -32,6 +32,7 @@ enum class EffectType
 	ExecutionEnemy,
 	Jump,
 	JumpSecond,
+	Octo,
 	Tiger1,
 	Tiger2,
 };
