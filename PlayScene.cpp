@@ -1279,10 +1279,10 @@ void PlayScene::Draw()
 	// ‡I ‘OŒi
 	// =====================================================
 
-	/*switch (m_stageIndex)
+	switch (m_stageIndex)
 	{
 	case 0:
-		for (int i = 0; i < 19; i++)
+		for (int i = 0; i < 25; i++)
 		{
 			renderer->DrawSpriteEx(
 				Vector2d(
@@ -1308,7 +1308,7 @@ void PlayScene::Draw()
 		break;
 
 	case 1:
-		renderer->DrawSpriteEx(
+		/*renderer->DrawSpriteEx(
 			Vector2d(
 				0 - (cam.x * 0.5f),
 				m_mapData.stages[m_stageIndex].height *
@@ -1324,7 +1324,7 @@ void PlayScene::Draw()
 			false,
 			false,
 			true
-		);
+		);*/
 		break;
 
 	case 2:
@@ -1352,7 +1352,7 @@ void PlayScene::Draw()
 			);
 		}
 		break;
-	}*/
+	}
 
 
 	// =====================================================
