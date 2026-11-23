@@ -21,9 +21,10 @@ TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\ev
 TALK,洲条,None,R,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\sujou\normal.png,ああ、あいつは私の教え子だからな――
 TALK,黒棲,None,L,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\normal.png,金城の師範！？　嘘でしょう、そんなことが……！！<br>まさかお会いできる日が来るなんて！
 TALK,黒棲,None,L,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\normal.png,で、でしたら、良ければご一緒させて頂いてもよろしいでしょうか？！<br>俺、彼のことが本当に心配で……早く無事を確認したいんです！
-TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\think.png,お、おう……とにかく感謝する、黒棲。<br>ちょうど、もう一度偵察に行こうと思っていたところがあるんだ。
-TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\think.png,あいつが居る可能性の高い場所なんだが、<br>確証がない上に見張りも多くてな。
-TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\think.png,お前さんが来るなら、<br>もう乗り込んでしまおうと思うんだが、どうする？
-TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\sujou\think.png,構いません。時は一刻を争います、早く出発しましょう。<br>場所はどこなんです？
+TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\normal.png,お、おう……とにかく感謝する、黒棲。<br>ちょうど、もう一度偵察に行こうと思っていたところがあるんだ。
+TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\normal.png,あいつが居る可能性の高い場所なんだが、<br>確証がない上に見張りも多くてな。
+TALK,洲条,None,R,assets\images\events\stand\kurozumi\surprise.png,assets\images\events\stand\sujou\normal.png,お前さんが来るなら、<br>もう乗り込んでしまおうと思うんだが、どうする？
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\sujou\normal.png,構いません。時は一刻を争います、早く出発しましょう。<br>場所はどこなんです？
 TALK,洲条,None,R,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\sujou\warn.png,ここから南下した港町にある廃工場だ。<br>近隣からはこう呼ばれている――
 TALK,洲条,None,R,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\sujou\warn.png,――「ブリキ山の廃工場」、と。
+CLEAR,,,,,,
