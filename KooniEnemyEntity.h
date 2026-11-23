@@ -33,7 +33,7 @@ public:
     void TakeDamage(int damage, const Vector2d& knockback, bool attackDir = false) override;
     void OnDead() override;
 
-    int GetMaxHP() const override { return 150; }
+    int GetMaxHP() const override { return 1500; }
     Status GetStatus() const { return m_status; }
     Awareness GetAwareness() const { return m_awareness; }
 
