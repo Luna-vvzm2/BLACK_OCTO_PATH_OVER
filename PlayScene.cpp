@@ -200,15 +200,20 @@ bool PlayScene::Init() {
 	m_menu.Initialize();
 	
 	// CSV からマップ読み込み
-	if (!m_mapData.LoadStage("assets/maps/stage1")) {
+	// ステージ1
+	if (!m_mapData.LoadStage("assets/maps/stage1", 1)) {
 		std::cerr << "Load error map1" << std::endl;
 		return false;
 	}
-	if (!m_mapData.LoadStage("assets/maps/stage2")) {
+
+	// ステージ2
+	if (!m_mapData.LoadStage("assets/maps/stage2", 2)) {
 		std::cerr << "Load error map2" << std::endl;
 		return false;
 	}
-	if (!m_mapData.LoadStage("assets/maps/stage3")) {
+
+	// ステージ3
+	if (!m_mapData.LoadStage("assets/maps/stage3", 3)) {
 		std::cerr << "Load error map3" << std::endl;
 		return false;
 	}
