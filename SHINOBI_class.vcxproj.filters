@@ -354,6 +354,9 @@
     <ClCompile Include="RoofTileBlock.cpp">
       <Filter>ソース ファイル\Actor\Block</Filter>
     </ClCompile>
+    <ClCompile Include="WoodBlock.cpp">
+      <Filter>ソース ファイル\Actor\Block</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -690,6 +693,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ToraByoubuBlock.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="WoodBlock.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

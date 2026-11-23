@@ -58,6 +58,7 @@
 #include "HideBlock.h"
 #include "ToraByoubuBlock.h"
 #include "RoofTileBlock.h"
+#include "WoodBlock.h"
 
 
 //イベントのため変更
@@ -305,9 +306,21 @@ bool PlayScene::StageInit(int stageNo) {
 			case 2:
 			 	AddActor(new ClearBlock(this, pos, Vector2d(tileSize, tileSize)));
 				break;
+			case 3:
+				pos = Vector2d(x * tileSize - tileSize * 0.5f, y * tileSize);
+				AddActor(new WoodSBlock_01(this, pos, Vector2d(tileSize * 4.0f, tileSize)));
+				break;
+			case 4:
+				pos = Vector2d(x * tileSize - tileSize * 0.5f, y * tileSize);
+				AddActor(new WoodSBlock_02(this, pos, Vector2d(tileSize * 2.0f, tileSize * 4.0f)));
+				break;
 			case 5:
 				pos = Vector2d(x * tileSize - tileSize * 0.5f, y * tileSize);
-				AddActor(new HouseBlock(this, pos, Vector2d(tileSize * 4.0f, tileSize)));
+				AddActor(new WoodSBlock_03(this, pos, Vector2d(tileSize * 2.0f, tileSize * 2.0f)));
+				break;
+			case 6:
+				pos = Vector2d(x * tileSize - tileSize * 0.5f, y * tileSize);
+				AddActor(new WoodSBlock_04(this, pos, Vector2d(tileSize * 6.0f, tileSize)));
 				break;
 			case 7:
 				AddActor(new ClearBlock(this, pos, Vector2d(tileSize, tileSize)));
