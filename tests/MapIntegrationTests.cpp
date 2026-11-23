@@ -9,6 +9,15 @@
 int main()
 {
     const auto root = std::filesystem::current_path();
+    assert(!std::filesystem::exists(root / "assets/events/event_106.csv"));
+    {
+        std::ifstream event(root / "assets/events/event_103.csv");
+        std::string line;
+        int clearCommands = 0;
+        while (std::getline(event, line))
+            if (line.rfind("CLEAR,", 0) == 0) ++clearCommands;
+        assert(clearCommands == 1);
+    }
     MapData maps;
     const int expectedWidths[] = { 250, 210, 27 };
     for (int stage = 1; stage <= 3; ++stage)
@@ -21,6 +30,7 @@ int main()
             assert(layer.tiles.size() == static_cast<size_t>(data.width * data.height));
         for (int id : data.layers[1].tiles)
         {
+            assert(id != 106);
             if (id < 100 || id >= 200) continue;
             const auto event = root / ("assets/events/event_" + std::to_string(id) + ".csv");
             assert(std::filesystem::exists(event));
