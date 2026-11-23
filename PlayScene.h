@@ -36,7 +36,7 @@ public:
 	//	コンストラクタ
 	PlayScene(class Game* game);
 	//	デストラクタ
-	~PlayScene() override = default;
+	~PlayScene() override;
 
 	bool Init() override;
 	bool StageInit(int stageNo);
@@ -104,6 +104,8 @@ public:
 	void OnSmokeExpired(SmokeActor* smoke);
 
 private:
+    void PlayStageBgm();
+
 	
 	PlayerEntity* m_player;
 	MapData m_mapData;

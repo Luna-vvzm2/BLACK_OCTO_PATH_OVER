@@ -93,6 +93,25 @@ PlayScene::PlayScene(Game* game)
 }
 
 
+PlayScene::~PlayScene()
+{
+    if (m_game)
+    {
+        m_game->GetSoundManager().Stop("Stage_Common_BGM");
+        m_game->GetSoundManager().Stop("Stage3_BGM");
+    }
+}
+
+void PlayScene::PlayStageBgm()
+{
+    SoundManager& sound = m_game->GetSoundManager();
+    sound.SetScope(m_stageIndex + 2);
+    const bool isStage3 = m_stageIndex == 2;
+    sound.Stop(isStage3 ? "Stage_Common_BGM" : "Stage3_BGM");
+    // Keep the common track continuous between stages 1 and 2.
+    sound.Play(isStage3 ? "Stage3_BGM" : "Stage_Common_BGM", false);
+}
+
 void PlayScene::RequestHitEffect(
 	float hitStopTime,
 	float shakeTime,
@@ -222,20 +241,7 @@ bool PlayScene::Init() {
 
 	StageInit(m_stageIndex);
 
-	// ステージに対応するサウンドスコープを設定
-	m_game->GetSoundManager().SetScope(m_stageIndex + 2);
-
-	// ステージごとのBGMを再生
-	if (m_stageIndex == 2)
-	{
-		// ステージ3専用BGM
-		m_game->GetSoundManager().Play("Stage3_BGM");
-	}
-	else
-	{
-		// ステージ1・2共通BGM
-		m_game->GetSoundManager().Play("Stage_Common_BGM");
-	}
+	PlayStageBgm();
 
 	m_respawnPos = m_playerSpawnPoints[0];
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
@@ -655,19 +661,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 	ClearStageActors();
 	StageInit(index);
 
-	// ステージ3との切り替え時だけBGMを変更
-	if (previousStage != 2 && index == 2)
-	{
-		// ステージ1・2 → ステージ3
-		m_game->GetSoundManager().Stop("Stage_Common_BGM");
-		m_game->GetSoundManager().Play("Stage3_BGM");
-	}
-	else if (previousStage == 2 && index != 2)
-	{
-		// ステージ3 → ステージ1・2
-		m_game->GetSoundManager().Stop("Stage3_BGM");
-		m_game->GetSoundManager().Play("Stage_Common_BGM");
-	}
+	PlayStageBgm();
 
 	auto it = std::find(m_actors.begin(), m_actors.end(), m_player);
 	if (it != m_actors.end())
@@ -1601,6 +1595,7 @@ void PlayScene::ShowGameOverMenu()
 
 void PlayScene::OnResume()
 {
+	PlayStageBgm();
 	if (m_returnToPauseMenu)
 	{
 		m_returnToPauseMenu = false;
