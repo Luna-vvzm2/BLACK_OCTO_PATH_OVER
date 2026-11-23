@@ -278,7 +278,7 @@ bool PlayerEntity::Init() {
 
     AnimationClip weakAttack1;
     weakAttack1.frames = { 42, 42, 42, 42, 43, 43, 44, 44, 44, 44, 44, 44, 44, 44, 44, 45, 45, 45, 45, 45 };
-    weakAttack1.speed = 0.1f;
+    weakAttack1.speed = 0.05f;
     weakAttack1.loop = false;
     m_anim->AddClip("weakAttack1", weakAttack1);
 
@@ -331,7 +331,7 @@ bool PlayerEntity::Init() {
     m_anim->AddClip("KunaiAir", KunaiAir);
 
     m_collision->SetRect(85, 152);
-    m_sprite->SetDrawOffset(0.0f, -34.0f);
+    m_sprite->SetDrawOffset(0.0f, 0.0f);
 
     // HPが0になったときのコールバックを設定
     //if (m_hp) {
@@ -1030,7 +1030,7 @@ void PlayerEntity::EnterSquat()
 
     m_transform->SetPosition(pos);
     m_collision->SetRect(90, 95);
-    m_sprite->SetDrawOffset(0.0f, -62.0f);   // 上に48px
+    m_sprite->SetDrawOffset(0.0f, -32.0f);   // 上に48px
     m_squat = true;
 }
 
@@ -1045,7 +1045,7 @@ void PlayerEntity::ExitSquat()
 
     m_transform->SetPosition(pos);
     m_collision->SetRect(85, 152);
-    m_sprite->SetDrawOffset(0.0f, -34.0f);
+    m_sprite->SetDrawOffset(0.0f, 0.0f);
     m_squat = false;
 }
 
@@ -1164,7 +1164,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
             }
         }
         ChangeState(PlayerState::DEAD);
-        m_sprite->SetDrawOffset(0.0f, -34.0f);
+        m_sprite->SetDrawOffset(0.0f, 0.0f);
         m_canMove = false;
         return;
     }
@@ -1182,7 +1182,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         if (m_isGround) {
             if (!(m_state == PlayerState::HIT_AIR)) {
                 ChangeState(PlayerState::HIT_GROUND);
-                m_sprite->SetDrawOffset(0.0f, -34.0f);
+                m_sprite->SetDrawOffset(0.0f, 0.0f);
                 m_canMove = false;
                 return;
             }
@@ -1190,7 +1190,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         }
         else {
             ChangeState(PlayerState::HIT_AIR);
-            m_sprite->SetDrawOffset(0.0f, -34.0f);
+            m_sprite->SetDrawOffset(0.0f, 0.0f);
             m_canMove = false;
             return;
         }
@@ -1496,7 +1496,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
         if (!m_anim->IsFinished()) {
             Vector2d vel = m_velocity->Get();
             vel.x = 0.0f;
-            vel.y = -350.0f;
+            vel.y = -1050.0f;
             m_velocity->Set(vel);
 
             Vector2d offset = GetDrawOffset();
@@ -1518,7 +1518,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
 
             return;
         }
-        m_sprite->SetDrawOffset(0.0f, -34.0f);
+        m_sprite->SetDrawOffset(0.0f, 0.0f);
         if (m_isAutoOcto) {
             ChangeState(PlayerState::OCTO_END);
             return;
@@ -2006,7 +2006,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
     }   break;
 
     case PlayerState::RUN_START:
-        m_anim->Play("run");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::STOP_SHORT:
@@ -2015,7 +2015,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.x *= 0.8f;
         m_velocity->Set(vel);
 
-        m_anim->Play("run");
+        m_anim->Play("fall");
     }   break;
 
     case PlayerState::STOP_LONG:
@@ -2023,11 +2023,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         Vector2d vel = m_velocity->Get();
         vel.x *= 0.8f;
         m_velocity->Set(vel);
-        m_anim->Play("run");
+        m_anim->Play("fall");
     }break;
 
     case PlayerState::CHANGE_DIR:
-        m_anim->Play("run");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::CHANGE_DIR_RUN:
@@ -2036,7 +2036,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("run");
+        m_anim->Play("fall");
     }break;
 
     case PlayerState::SQUAT_START:
@@ -2121,7 +2121,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         m_velocity->SetX(move.x);
 
-        m_anim->Play("run");
+        m_anim->Play("fall");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
@@ -2143,7 +2143,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.y += move.y;
         m_velocity->Set(vel);
 
-        m_anim->Play("run");
+        m_anim->Play("fall");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
@@ -2164,11 +2164,12 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.y += move.y;
         m_velocity->Set(vel);
 
-        m_anim->Play("run");
+        m_anim->Play("fall");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::ROLL_LANDING:
+        m_anim->Play("fall");
         break;
 
     case PlayerState::WALL_HOLD:
@@ -2182,7 +2183,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("idle");
+        m_anim->Play("fall");
     }   break;
 
     case PlayerState::WALL_JUMP:
@@ -2212,7 +2213,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("idle");
+        m_anim->Play("run");
     }   break;
 
     case PlayerState::WALL_CLIMB_UP:
@@ -2346,19 +2347,19 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::HIT_TRAP:
-        m_anim->Play("idle");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::HIT_GROUND:
-        m_anim->Play("idle");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::HIT_AIR:
-        m_anim->Play("idle");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::HIT_AIR_LANDING:
-        m_anim->Play("idle");
+        m_anim->Play("fall");
         break;
 
     case PlayerState::KAMAE:
@@ -2416,7 +2417,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_transform->SetScale(scale);
 
         m_scene->GetGame()->GetSoundManager().Play("player_octo");
-        m_anim->Play("Kunai");   // 後ほどOctoAutoに修正
+        m_anim->Play("fall");   // 後ほどOctoAutoに修正
     }   break;
 
 
