@@ -1024,10 +1024,10 @@ void PlayScene::Draw()
 			Vector2d(
 				-350.0f + (cam.x * 0.5f),
 				m_mapData.stages[m_stageIndex].height *
-				m_mapData.tileSize - 1130.0f
+				m_mapData.tileSize - 1100.0f
 			),
-			1.6f,
-			1.6f,
+			1.71f,
+			1.71f,
 			0.0f,
 			m_bgHandle,
 			true,
@@ -1274,7 +1274,7 @@ void PlayScene::Draw()
 	// ‡I ‘OŒi
 	// =====================================================
 
-	switch (m_stageIndex)
+	/*switch (m_stageIndex)
 	{
 	case 0:
 		for (int i = 0; i < 19; i++)
@@ -1347,7 +1347,7 @@ void PlayScene::Draw()
 			);
 		}
 		break;
-	}
+	}*/
 
 
 	// =====================================================
