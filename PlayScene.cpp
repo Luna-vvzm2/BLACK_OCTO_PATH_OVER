@@ -222,6 +222,21 @@ bool PlayScene::Init() {
 
 	StageInit(m_stageIndex);
 
+	// ステージに対応するサウンドスコープを設定
+	m_game->GetSoundManager().SetScope(m_stageIndex + 2);
+
+	// ステージごとのBGMを再生
+	if (m_stageIndex == 2)
+	{
+		// ステージ3専用BGM
+		m_game->GetSoundManager().Play("Stage3_BGM");
+	}
+	else
+	{
+		// ステージ1・2共通BGM
+		m_game->GetSoundManager().Play("Stage_Common_BGM");
+	}
+
 	m_respawnPos = m_playerSpawnPoints[0];
 	m_player = new PlayerEntity(this, m_playerSpawnPoints[0], Vector2d({ 152, 64 }));
 	AddActor(m_player);
@@ -590,36 +605,55 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 	}
 
 	m_stageIndex = index;
+
+	// ステージに対応するサウンドスコープを設定
 	m_game->GetSoundManager().SetScope(index + 2);
 
-	ClearStageActors();
-	StageInit(index);
+	// BGMの切り替え
+	// ステージ1・2間では再生し直さない
+	bool previousIsStage3 = (previousStage == 2);
+	bool nextIsStage3 = (index == 2);
 
-	auto it = std::find(m_actors.begin(), m_actors.end(), m_player);
-	if (it != m_actors.end())
+	if (previousIsStage3 != nextIsStage3)
 	{
-		m_actors.erase(it);
-		m_actors.push_back(m_player);
+		if (nextIsStage3)
+		{
+			m_game->GetSoundManager().Play("Stage3_BGM");
+		}
+		else
+		{
+			m_game->GetSoundManager().Play("Stage_Common_BGM");
+		}
+
+		auto it = std::find(m_actors.begin(), m_actors.end(), m_player);
+		if (it != m_actors.end())
+		{
+			m_actors.erase(it);
+			m_actors.push_back(m_player);
+		}
+
+		if (m_player &&
+			spawnIndex >= 0 &&
+			spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
+		{
+			m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
+			m_respawnPos = m_playerSpawnPoints[spawnIndex];
+
+			Vector2d playerPos = m_player->GetPos();
+
+			Vector2d camPos = playerPos;
+			camPos.y -= 150.0f;
+
+			m_camera.SetCenter(camPos);
+		}
+
+		// ステージ進行を自動保存
+		AutoSave();
 	}
-
-	if (m_player &&
-		spawnIndex >= 0 &&
-		spawnIndex < static_cast<int>(m_playerSpawnPoints.size()))
-	{
-		m_player->SetPosition(m_playerSpawnPoints[spawnIndex]);
-		m_respawnPos = m_playerSpawnPoints[spawnIndex];
-
-		Vector2d playerPos = m_player->GetPos();
-
-		Vector2d camPos = playerPos;
-		camPos.y -= 150.0f;
-
-		m_camera.SetCenter(camPos);
-	}
-	// ステージ進行を自動保存
-	AutoSave();
 }
+	
 
+	
 void PlayScene::ClearStageActors()
 {
 	for (Actor* actor : m_actors)
