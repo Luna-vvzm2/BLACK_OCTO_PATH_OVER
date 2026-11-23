@@ -466,7 +466,7 @@ bool PlayScene::StageInit(int stageNo) {
 			} break;
 
 			case 5:
-				pos += Vector2d(0.0f, -200.0f);
+				pos += Vector2d(0.0f, -180.0f);
 				AddActor(new ToraByoubuBlock(this, pos, Vector2d(tileSize * 7.2f, 450.0f)));
 				break;
 

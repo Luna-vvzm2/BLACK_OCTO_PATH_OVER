@@ -10,7 +10,7 @@ bool WoodSBlock_01::Init()
 {
 	if (!BlockActor::Init()) return false;
 
-	m_sprite->SetDrawOffset(0.0f, 0.0f);
+	m_sprite->SetDrawOffset(0.0f, -50.0f);
 
 	return true;
 }
@@ -24,7 +24,7 @@ bool WoodSBlock_02::Init()
 {
 	if (!BlockActor::Init()) return false;
 
-	m_sprite->SetDrawOffset(0.0f, 0.0f);
+	m_sprite->SetDrawOffset(0.0f, -50.0f);
 
 	return true;
 }
@@ -38,7 +38,7 @@ bool WoodSBlock_03::Init()
 {
 	if (!BlockActor::Init()) return false;
 
-	m_sprite->SetDrawOffset(0.0f, 0.0f);
+	m_sprite->SetDrawOffset(0.0f, -50.0f);
 
 	return true;
 }
@@ -52,7 +52,7 @@ bool WoodSBlock_04::Init()
 {
 	if (!BlockActor::Init()) return false;
 
-	m_sprite->SetDrawOffset(0.0f, 0.0f);
+	m_sprite->SetDrawOffset(0.0f, -50.0f);
 
 	return true;
 }
