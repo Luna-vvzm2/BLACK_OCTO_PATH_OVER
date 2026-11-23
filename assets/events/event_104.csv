@@ -1,0 +1,5 @@
+type,name,time,pos,Lpath,Rpath,text
+TALK,黒棲,None,R,,assets\images\character\musashi.png,段々、柳ノ丸が見えてきたな。
+TALK,黒棲,None,R,,assets\images\character\musashi.png,所々風穴が見える程、<br>荒廃してしまっているが
+TALK,黒棲,None,R,,assets\images\character\musashi.png,周辺にも金城についての手掛かりがあるかもしれない。
+TALK,黒棲,None,R,,assets\images\character\musashi.png,注意深く見て行こう

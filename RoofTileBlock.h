@@ -23,5 +23,3 @@ public:
 private:
 	std::string GetTexturePath() const override;
 };
-
-

@@ -305,4 +305,3 @@ bool MapData::LoadStage(const std::string& stageFolder, int stageNo)
 
     return true;
 }
-

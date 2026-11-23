@@ -198,7 +198,7 @@ bool PlayScene::Init() {
 
 	//m_lockedSkillIcon = LoadGraph("assets/images/skills/locked.png");
 	m_menu.Initialize();
-	
+
 	// CSV からマップ読み込み
 	// ステージ1
 	if (!m_mapData.LoadStage("assets/maps/stage1", 1)) {
@@ -255,7 +255,7 @@ bool PlayScene::Init() {
 	);
 	AddUIActor(hpBar);
 	m_hpBarUI = hpBar;
-	
+
 	ShurikenUI* shuriken = new ShurikenUI(this, 18, 135);
 	AddUIActor(shuriken);
 	m_shurikenUI = shuriken;
@@ -498,12 +498,12 @@ bool PlayScene::StageInit(int stageNo) {
 				AddActor(new ToraByoubuBlock(this, pos, Vector2d(tileSize * 7.2f, 450.0f)));
 				break;
 
-			case 6:    
+			case 6:
 				pos += Vector2d(0.0f, 27.0f);
 				AddActor(new RoofTileBlock_01(this, pos, Vector2d(tileSize * 2.0f, 50.0f)));
 				break;
 
-			case 7:   
+			case 7:
 				pos += Vector2d(0.0f, 27.0f);
 				AddActor(new RoofTileBlock_02(this, pos, Vector2d(tileSize * 2.0f, 50.0f)));
 				break;
@@ -780,7 +780,7 @@ void PlayScene::Update(float deltaTime)
 		}
 		if (result == PauseMenu::Result::StageSelect)
 		{
-			//Game* game = GetGame(); 
+			//Game* game = GetGame();
 			//m_game->PushScene(std::make_unique<GameOverScene>(game));
 			m_game->PushScene(std::make_unique<StageSelectScene>(m_game, this));
 		}
@@ -853,7 +853,7 @@ void PlayScene::Update(float deltaTime)
 	if (m_shurikenUI && m_player) {
 		m_shurikenUI->SetCount(m_player->GetKunai());
 	}
-	
+
 #ifdef _DEBUG
 	static bool prevN = false;
 	const bool nowN = CheckHitKey(KEY_INPUT_N) != 0;
@@ -978,7 +978,7 @@ void PlayScene::Update(float deltaTime)
 		}
 	}
 }
-		
+
 void PlayScene::Draw()
 {
 	Renderer* renderer = m_game->GetRenderer();
@@ -1268,7 +1268,7 @@ void PlayScene::Draw()
 				return dynamic_cast<PlayerEntity*>(target) != nullptr;
 			}
 
-			if (actor && actor->GetType() == ActorType::Smoke) 
+			if (actor && actor->GetType() == ActorType::Smoke)
 			{
 				return true;
 			}
@@ -1619,7 +1619,7 @@ void PlayScene::OnResume()
 //	m_effect = new HitEffect(this, pos, {32, 32});
 //	AddActor(m_effect);
 //	std::cout << "Spawned HitEffect at: " << pos.x << ", " << pos.y << std::endl;
-//	
+//
 //}
 
 void PlayScene::SpawnSmoke(

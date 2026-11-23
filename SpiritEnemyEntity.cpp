@@ -55,7 +55,7 @@ bool SpiritEnemyEntity::PreloadTextures()
     return SpriteComponent::LoadCachedTexture(SPIRIT_TEXTURE) != -1;
 }
 
-bool SpiritEnemyEntity::Init() 
+bool SpiritEnemyEntity::Init()
 {
     if (!EnemyEntity::Init())
     {
@@ -294,8 +294,8 @@ void SpiritEnemyEntity::Update(float deltaTime)
         }
     }
 
-    
-   
+
+
 }
 
 void SpiritEnemyEntity::UpdateAI()
@@ -323,7 +323,7 @@ void SpiritEnemyEntity::UpdateAI()
 
         // 攻撃状態と回復状態のタイマーをリセット
         m_attackTimer = 0.0f;
-        
+
         // 目標地点を破棄
         m_hasTargetPosition = false;
 
@@ -373,7 +373,7 @@ void SpiritEnemyEntity::UpdateAI()
             std::sin(m_floatTimer) * 10.0f
         ));
 
-        
+
         if (m_alertGauge != nullptr &&
             m_alertGauge->GetGauge() > 0.0f)
         {
@@ -386,7 +386,7 @@ void SpiritEnemyEntity::UpdateAI()
 
     case CombatMove:
     {
-        
+
         // 壁に阻まれている場合
         if (m_isBlockedByWall)
         {
@@ -695,7 +695,7 @@ void SpiritEnemyEntity::OnDead()
     m_deadTimer = 0.0f;
 
     SetVel(Vector2d::Zero());
-    
+
 }
 void SpiritEnemyEntity::Draw()
 {

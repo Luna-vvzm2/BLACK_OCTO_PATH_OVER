@@ -173,7 +173,7 @@ void Boss_02::UpdateAI(float dt)
     SetVel(velocity);
 }
 
-void Boss_02::TakeDamage(int damage, const Vector2d& knockback)
+void Boss_02::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
     if (!m_initialized || GetState() != Actor::State::Active || IsBattleFinished() ||
         damage <= 0 || m_hp->IsInvincible()) return;
@@ -184,7 +184,7 @@ void Boss_02::TakeDamage(int damage, const Vector2d& knockback)
         m_sprite->SetFlipX(m_dir != m_sourceFacesRight);
     }
     EnemyEntity::TakeDamage(damage,
-        std::isfinite(knockback.x) && std::isfinite(knockback.y) ? knockback : Vector2d::Zero());
+        std::isfinite(knockback.x) && std::isfinite(knockback.y) ? knockback : Vector2d::Zero(), attackDir);
     if (!IsBattleFinished())
     {
         m_knockbackRemaining = m_parameters.knockbackSeconds;

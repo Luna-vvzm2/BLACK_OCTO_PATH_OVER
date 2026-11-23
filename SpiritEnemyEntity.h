@@ -20,7 +20,7 @@ public:
 		const Vector2d& attackerPos,
 		bool attackDir = false
 	) override;
-	
+
 	void OnDead() override;
 
 protected:
@@ -62,7 +62,7 @@ private:
 	Vector2d m_targetPosition = Vector2d::Zero();
 	bool m_hasTargetPosition = false;
 	bool IsPlayerInSearchRange() const override;
-	
+
 	bool m_wallBlocked = false;
 	bool m_isAvoidingWall = false;
 
