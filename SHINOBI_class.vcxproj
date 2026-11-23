@@ -167,6 +167,7 @@
     <ClCompile Include="BlockActor.cpp" />
     <ClCompile Include="BossEntity.cpp" />
     <ClCompile Include="boss_01.cpp" />
+    <ClCompile Include="boss_02.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="checkpoint.cpp" />
     <ClCompile Include="ClearBlock.cpp" />
@@ -290,6 +291,7 @@
     <ClInclude Include="BlockActor.h" />
     <ClInclude Include="BossEntity.h" />
     <ClInclude Include="boss_01.h" />
+    <ClInclude Include="boss_02.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Checkpoint.h" />
     <ClInclude Include="ClearBlock.h" />
