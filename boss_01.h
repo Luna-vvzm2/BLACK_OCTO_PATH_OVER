@@ -135,6 +135,14 @@ private:
     double m_poisonFraction = 0.0;
     class PlayerEntity* m_poisonTarget = nullptr; // 毎更新、Sceneの現プレイヤーと照合
 
+    class SoundComponent* m_walkSound = nullptr;
+    class SoundComponent* m_meleeSound = nullptr;
+    class SoundComponent* m_jumpSound = nullptr;
+    class SoundComponent* m_shurikenSound = nullptr;
+    class SoundComponent* m_trapPlaceSound = nullptr;
+    class SoundComponent* m_trapContactSound = nullptr;
+    float m_stepSoundTimer = 0.0f;
+
     Parameters m_parameters;
     Behavior m_behavior = Behavior::Idle;
     bool m_initialized = false;
