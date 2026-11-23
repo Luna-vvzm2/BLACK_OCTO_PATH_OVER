@@ -14,10 +14,10 @@
 namespace
 {
 constexpr int kImageWidth = 1418;
-constexpr int kCropTop = 260;
-constexpr int kCropHeight = 195;
-constexpr float kBaseWidth = 610.0f;
-constexpr float kBaseHeight = 84.0f;
+constexpr int kCropTop = 0;
+constexpr int kCropHeight = 117;
+constexpr float kBaseWidth = 650.0f;
+constexpr float kBaseHeight = 30.3f;
 }
 
 BossHPBarUI::BossHPBarUI(Scene* scene) : UIActor(scene)
@@ -103,31 +103,35 @@ void BossHPBarUI::Draw()
     const float sy = game->GetHeight() / 720.0f;
     const float width = kBaseWidth * sx;
     const float height = kBaseHeight * sy;
-    const float left = game->GetWidth() - width - 18.0f * sx;
-    const float top = 0.0f;
+    const float left = game->GetWidth() - 1375.0f * width / kImageWidth;
+    const float top = 18.0f * sy;
     const auto tx = [&](float sourceX) { return static_cast<int>(left + sourceX * width / kImageWidth); };
-    const auto ty = [&](float sourceY) { return static_cast<int>(top + (sourceY - kCropTop) * height / kCropHeight); };
+    const auto ty = [&](float sourceY) { return static_cast<int>(top + (kCropTop + kCropHeight - sourceY) * height / kCropHeight); };
 
     if (m_frameHandle >= 0)
     {
-        DrawRectExtendGraph(tx(0), ty(kCropTop), tx(kImageWidth), ty(kCropTop + kCropHeight),
-            0, kCropTop, kImageWidth, kCropHeight, m_frameHandle, TRUE);
+        DrawRectRotaGraph3(
+            static_cast<int>(left + width * 0.5f), static_cast<int>(top + height * 0.5f),
+            0, kCropTop, kImageWidth, kCropHeight,
+            kImageWidth / 2, kCropHeight / 2,
+            width / kImageWidth, height / kCropHeight, 0.0,
+            m_frameHandle, TRUE, FALSE, TRUE);
     }
     else
     {
-        DrawQuadrangle(tx(45), ty(290), tx(1375), ty(290),
-            tx(1375), ty(402), tx(135), ty(402), GetColor(24, 24, 24), TRUE);
+        DrawQuadrangle(tx(45), ty(10), tx(1375), ty(10),
+            tx(1375), ty(115), tx(97), ty(115), GetColor(24, 24, 24), TRUE);
     }
 
     const float ratio = std::clamp(m_displayRatio, 0.0f, 1.0f);
     if (ratio <= 0.0f) return;
 
     // Fill toward the left, opposite the player's HP gauge. Keep the black frame visible.
-    const float leftTop = 74.0f;
-    const float leftBottom = 148.0f;
-    const float right = 1358.0f;
+    const float leftTop = 45.0f;
+    const float leftBottom = 97.0f;
+    const float right = 1370.0f;
     const float fillTop = right - (right - leftTop) * ratio;
     const float fillBottom = right - (right - leftBottom) * ratio;
-    DrawQuadrangle(tx(fillTop), ty(301), tx(right), ty(301),
-        tx(right), ty(391), tx(fillBottom), ty(391), GetColor(205, 35, 38), TRUE);
+    DrawQuadrangle(tx(fillTop), ty(9), tx(right), ty(9),
+        tx(right), ty(108), tx(fillBottom), ty(108), GetColor(205, 35, 38), TRUE);
 }
