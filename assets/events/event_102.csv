@@ -1,11 +1,11 @@
 type,phaze,time,skill,camPos.x,camPos.y,
 GETSKILL,1,0.5,1,,,
 type,name,time,pos,Lpath,Rpath,text
-TALK,黒棲,None,R,,assets\images\character\musashi.png,(これは……随分と大きな屏風だな。<br>これだけは焼けずに残っていたのか……)
-TALK,黒棲,None,R,,assets\images\character\musashi.png,(なんと言うか、圧巻だな。<br>敵が近くに居るというのに、思わず見惚れてしまう)
-TALK,黒棲,None,R,,assets\images\character\musashi.png,(……そういえば昔、父上に連れられて<br>本物の虎を見たこともあったっけ。)
-TALK,黒棲,None,R,,assets\images\character\musashi.png,(大きな躯体から繰り出される重く早い一撃、<br>あの容赦の無さが素晴らしく――)
-TALK,黒棲,None,R,,assets\images\character\musashi.png,(――影で再現できたら、良い戦力になるかもしれないな。<br>確か……こう！)
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,,(これは……随分と大きな屏風だな。<br>これだけは焼けずに残っていたのか……)
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,,(なんと言うか、圧巻だな。<br>敵が近くに居るというのに、思わず見惚れてしまう)
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\think.png,,(……そういえば昔、父上に連れられて<br>本物の虎を見たこともあったっけ。)
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\think.png,,(大きな躯体から繰り出される重く早い一撃、<br>あの容赦の無さが素晴らしく――)
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\warn.png,,(――影で再現できたら、良い戦力になるかもしれないな。<br>確か……こう！)
 type,phaze,time,skill,camPos.x,camPos.y,
 GETSKILL,2,0.5,1,,,
 type,header,body,path,,,
