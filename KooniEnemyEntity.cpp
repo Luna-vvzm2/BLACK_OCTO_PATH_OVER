@@ -215,6 +215,7 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
     }
 
     if (player->GetIsHide()) { return false; }
+    if (player->GetIsJutsu(0) && GetChaseFlag() == false) { return false; }
 
     const Vector2d difference = player->GetPos() - GetPos();
     return std::fabs(difference.x) <= SEARCH_RANGE_X &&
@@ -302,7 +303,7 @@ void KooniEnemyEntity::UpdateIdle(PlayerEntity* player)
         return;
     }
 
-    if (m_alertGauge == nullptr || m_alertGauge->GetGauge() < 0.0f)
+    if (m_alertGauge == nullptr || m_alertGauge->GetGauge() == -100.0f)
     {
         m_awareness = Awareness::Undetected;
         return;

@@ -480,23 +480,26 @@ void EnemyEntity::UpdateAlertGauge(float deltaTime)
 
     if (playScene != nullptr)
     {
-        
-        if (IsPlayerInSearchRange())
+        PlayerEntity* player = playScene->GetPlayer();
+
+        if (player != nullptr && !player->IsDead())
         {
-            //‰B‚ê‚Ä‚¢‚éŠÔ‚ÍŒx‰úƒQ[ƒW‚ğŒ¸‚ç‚·
-            m_alertGaugeTimer += deltaTime;
-
-            if (m_alertGaugeTimer >= 1.0f)
+            if (player->GetIsHide())
             {
-                m_alertGaugeTimer = 0.0f;
-                m_alertGauge->AddGauge(-1.0f);
-            }
+                //‰B‚ê‚Ä‚¢‚éŠÔ‚ÍŒx‰úƒQ[ƒW‚ğŒ¸‚ç‚·
+                m_alertGaugeTimer += deltaTime;
 
-            // ’Êí‚Ìõ“G‚É‚æ‚éƒQ[ƒW‘‰Á‚ğs‚í‚È‚¢
-            return;
+                if (m_alertGaugeTimer >= 1.0f)
+                {
+                    m_alertGaugeTimer = 0.0f;
+                    m_alertGauge->AddGauge(-1.0f);
+                }
+
+                // ’Êí‚Ìõ“G‚É‚æ‚éƒQ[ƒW‘‰Á‚ğs‚í‚È‚¢
+                return;
+            }
         }
     }
-
     m_alertGaugeTimer += deltaTime;
 
     if (m_alertGaugeTimer < 1.0f)

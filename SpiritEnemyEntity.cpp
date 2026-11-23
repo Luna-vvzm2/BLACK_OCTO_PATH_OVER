@@ -643,6 +643,7 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
     }
 
     if (player->GetIsHide()) { return false; }
+    if (player->GetIsJutsu(0) && GetChaseFlag() == false) { return false; }
 
     Vector2d enemyPos = GetPos();
     Vector2d playerPos = player->GetPos();
@@ -652,9 +653,13 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
 
     float distanceY =
         std::abs(playerPos.y - enemyPos.y);
-
-    return distanceX <= m_detectRange &&
-        distanceY <= 250.0f;
+    bool flg;
+    if (distanceX <= m_detectRange && distanceY <= 250.0f)
+    {
+        flg = true;
+    }
+    else { flg = false; }
+    return GetChaseFlag();
 }
 
 void SpiritEnemyEntity::TakeDamage(
