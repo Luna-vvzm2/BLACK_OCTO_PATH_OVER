@@ -3,6 +3,7 @@
 #include "TitleScene.h"
 #include "StageSelectScene.h"
 #include "GameOverScene.h"
+#include "ResultScenes.h"
 #include "TransformComponent.h"
 #include "VelocityComponent.h"
 #include "HPComponent.h"
@@ -1527,7 +1528,7 @@ void PlayScene::ShowGameOverMenu()
 {
 	Game* game = GetGame();
 
-	game->PushScene(std::make_unique<GameOverScene>(game));
+	game->PushScene(std::make_unique<GameOverResultScene>(game));
 }
 
 void PlayScene::OnResume()

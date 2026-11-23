@@ -7,6 +7,7 @@
 #include "Input.h"
 #include "PlayScene.h"
 #include "ClearScene.h"
+#include "ResultScenes.h"
 #include "PlayerEntity.h"
 #include "Game.h"
 #include "Camera.h"
@@ -1397,7 +1398,7 @@ void ClearEvent::Init()
 		{
 			float time = playScene->GetPlayTime();
 
-			game->ChangeScene(std::make_unique<ClearScene>(game, time));
+			game->PushScene(std::make_unique<ClearResultScene>(game, time));
 			m_isEnd = true;
 		}
 	}
