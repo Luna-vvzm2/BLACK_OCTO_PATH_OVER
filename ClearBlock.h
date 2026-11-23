@@ -8,6 +8,6 @@ public:
 
 protected:
 	std::string GetTexturePath() const override {
-		return "";
+		return "assets/images/blocks/ground.png";
 	}
 };

@@ -60,7 +60,7 @@ KooniEnemyEntity::KooniEnemyEntity(Scene* scene, const Vector2d& pos)
 bool KooniEnemyEntity::PreloadTextures()
 {
     SpriteComponent sprite(nullptr);
-    return sprite.LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 4, true);
+    return sprite.LoadTextureDiv(KOONI_TEXTURE_SHEET, 4, 5, true);
 }
 
 bool KooniEnemyEntity::Init()
