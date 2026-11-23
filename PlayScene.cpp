@@ -45,6 +45,7 @@
 #include "NinjutsuSealTrap.h"
 #include "EnemySpawnTrap.h"
 #include "HPBarUI.h"
+#include "BossHPBarUI.h"
 #include "BackGroundUI.h"
 #include "TreasureBox.h"
 #include "NewsBox.h"
@@ -261,6 +262,9 @@ bool PlayScene::Init() {
 	);
 	AddUIActor(hpBar);
 	m_hpBarUI = hpBar;
+
+	m_bossHPBarUI = new BossHPBarUI(this);
+	AddUIActor(m_bossHPBarUI);
 
 	ShurikenUI* shuriken = new ShurikenUI(this, 18, 135);
 	AddUIActor(shuriken);
@@ -692,6 +696,7 @@ void PlayScene::ChangeStage(int index, int spawnIndex)
 
 void PlayScene::ClearStageActors()
 {
+	if (m_bossHPBarUI) m_bossHPBarUI->Reset();
 	for (Actor* actor : m_actors)
 	{
 		switch (actor->GetType())
@@ -1358,6 +1363,8 @@ void PlayScene::Draw()
 	for (Actor* actor : m_UIactors)
 	{
 		if (actor == nullptr || actor->IsDead())
+			continue;
+		if (actor == m_moneyUI && m_bossHPBarUI && m_bossHPBarUI->IsVisible())
 			continue;
 
 		actor->Draw();

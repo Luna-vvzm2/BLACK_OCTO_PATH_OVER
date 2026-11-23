@@ -25,9 +25,6 @@ public:
         float retreatStopDistance = 500.0f;
         float approachStartDistance = 700.0f; // これ以上離れたら接近
         float approachStopDistance = 550.0f;
-        float knockbackSeconds = 0.4f;
-        float knockbackHorizontalScale = 3.0f; // 通常被弾150 → 450px/s
-        float knockbackVerticalScale = 1.0f; // 通常被弾-300px/sのまま
         float jumpSpeed = 600.0f; // 最低初速度。高さに必要な初速度は重力から算出
         float jumpHeight = 500.0f;
         float shurikenSpeed = 1000.0f;
@@ -35,6 +32,7 @@ public:
         int meleeDamage = 20;
         Vector2d shurikenSize = { 45.0f, 15.0f }; // エディタ導入までの仮判定
         Vector2d meleeSize = { 60.0f, 60.0f };
+        float meleeInnerExtension = 20.0f; // 体の内側へ広げ、重なったプレイヤーにも当てる。
         Vector2d trapSize = { 80.0f, 0.5f };
         float trapLifetime = 45.0f; // 敵仕様書を採用（別資料では20秒）
         float poisonDuration = 10.0f;
@@ -101,6 +99,8 @@ private:
     class PlayerEntity* FindPlayer() const;
     bool CanStartAttack() const;
     void BeginAttack(Behavior behavior);
+    Vector2d GetMeleeHitboxCenter() const;
+    Vector2d GetMeleeHitboxSize() const;
     void SpawnShuriken();
     void PlacePoisonTrap();
     void UpdateHazards(float deltaTime);
@@ -123,7 +123,6 @@ private:
     float m_behaviorTime = 0.0f;
     float m_nextAction = 1.0f;
     bool m_approaching = false;
-    float m_knockbackRemaining = 0.0f;
     int m_attacksWithoutTrap = 0;
     Behavior m_lastAttack = Behavior::Idle;
     Vector2d m_previousPlayerCenter = Vector2d::Zero();

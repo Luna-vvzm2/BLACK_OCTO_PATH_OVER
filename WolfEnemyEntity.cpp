@@ -109,6 +109,7 @@ void WolfEnemyEntity::Update(float deltaTime)
 {
 	if (m_status == Status::Defeated)
 	{
+		SetChaseFlag(false);
 		m_stateTimer += deltaTime;
 
 		if (m_velocity != nullptr)
@@ -140,6 +141,9 @@ void WolfEnemyEntity::Update(float deltaTime)
 	case Status::Defeated:
 		break;
 	}
+
+	SetChaseFlag(player != nullptr && !player->GetIsHide() &&
+		(m_status == Status::Move || m_status == Status::Attack));
 
 	if (m_sprite != nullptr)
 	{
@@ -418,6 +422,7 @@ void WolfEnemyEntity::TakeDamage(int damage, const Vector2d& knockback, bool att
 
 	if (m_hp->GetHP() <= 0)
 	{
+		SetChaseFlag(false);
 		if (m_velocity != nullptr)
 		{
 			Vector2d velocity = m_velocity->GetVelocity();

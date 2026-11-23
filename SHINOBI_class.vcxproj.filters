@@ -120,6 +120,9 @@
     <ClCompile Include="HPBerUI.cpp">
       <Filter>ソース ファイル\Actor\UI</Filter>
     </ClCompile>
+    <ClCompile Include="BossHPBarUI.cpp">
+      <Filter>ソース ファイル\Actor\UI</Filter>
+    </ClCompile>
     <ClCompile Include="TitleScene.cpp">
       <Filter>ソース ファイル\Scene</Filter>
     </ClCompile>
@@ -459,6 +462,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="HPBarUI.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="BossHPBarUI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="GroundBlock.h">

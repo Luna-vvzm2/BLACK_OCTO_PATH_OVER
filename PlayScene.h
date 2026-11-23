@@ -22,6 +22,7 @@ class PlayerEntity;
 class EnemyEntity;
 class SmokeActor;
 class HPBarUI;
+class BossHPBarUI;
 class EnemyHPBar;
 class JutsuChargeUI;
 class PlayerStatusUI;
@@ -148,6 +149,7 @@ private:
 	bool m_resultShown = false;
 
 	HPBarUI* m_hpBarUI = nullptr;
+	BossHPBarUI* m_bossHPBarUI = nullptr;
 	ShurikenUI* m_shurikenUI = nullptr;
 	MoneyUI* m_moneyUI = nullptr;
 

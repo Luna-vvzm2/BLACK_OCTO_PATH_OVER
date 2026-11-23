@@ -175,7 +175,7 @@ void KooniEnemyEntity::Update(float deltaTime)
         break;
     }
 
-    SetChaseFlag(player != nullptr &&
+    SetChaseFlag(player != nullptr && !player->GetIsHide() &&
         (m_status == Status::Move || m_status == Status::Attack));
 
     if (m_sprite != nullptr)

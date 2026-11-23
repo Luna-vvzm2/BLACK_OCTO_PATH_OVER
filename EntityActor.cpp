@@ -71,7 +71,6 @@ void EntityActor::MoveAndCollide(float deltaTime) {
     Vector2d pos = m_transform->GetPosition();
     Vector2d vel = m_velocity->Get();
 
-    bool overlapHide = false;   // 隠れる障害物と重なっているか
 
     // === Y方向移動 ===
     pos.y += vel.y * deltaTime;
@@ -90,17 +89,6 @@ void EntityActor::MoveAndCollide(float deltaTime) {
             // 隠れる障害物はプレイヤーのみ重なりを判定する（通り抜ける）
             if (block->GetBlockType() == BlockType::Hide)
             {
-                if (GetType() == ActorType::Player && m_collision != nullptr)
-                {
-                    CollisionComponent* hideCol = block->GetCollision();
-                    const bool overlapped = hideCol != nullptr && m_collision->CheckCollision(hideCol);
-
-                    static_cast<HideBlock*>(block)->SetPlayerOverlapped(overlapped);   // 追加:ブロック側のフェード用に通知
-                    if (overlapped)
-                    {
-                        overlapHide = true;
-                    }
-                }
                 continue;
             }
 
@@ -206,17 +194,6 @@ void EntityActor::MoveAndCollide(float deltaTime) {
         }
     }
 
-    // 隠れ状態をプレイヤーに通知(重なっていなければ false)
-    if (GetType() == ActorType::Player)
-    {
-        PlayerEntity* player = static_cast<PlayerEntity*>(this);
-
-        const bool isHide =
-            overlapHide && player->GetIsOcto();
-
-        player->SetIsHide(isHide);
-    }
-
     // === X方向移動 ===
     pos = m_transform->GetPosition();
     pos.x += vel.x * deltaTime;
@@ -264,6 +241,23 @@ void EntityActor::MoveAndCollide(float deltaTime) {
             m_transform->SetPosition(playerPos);
         }
     }
+    // Use the position after both movement axes for hide overlap.
+    if (GetType() == ActorType::Player && m_collision != nullptr)
+    {
+        bool overlapHide = false;
+        for (auto* actor : m_scene->GetActors())
+        {
+            if (actor == nullptr || actor->GetType() != ActorType::Block) continue;
+            auto* block = static_cast<BlockActor*>(actor);
+            if (block->GetBlockType() != BlockType::Hide) continue;
+            auto* hideCol = block->GetCollision();
+            const bool overlapped = hideCol != nullptr && m_collision->CheckCollision(hideCol);
+            static_cast<HideBlock*>(block)->SetPlayerOverlapped(overlapped);
+            overlapHide = overlapHide || overlapped;
+        }
+        static_cast<PlayerEntity*>(this)->SetIsHide(overlapHide);
+    }
+
     m_velocity->Set(vel);
 }
 
