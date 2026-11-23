@@ -14,3 +14,40 @@ bool HouseBlock::Init()
 
     return true;
 }
+
+namespace
+{
+	const char* TEXTURE_01 =
+		"assets/images/blocks/home.png";
+
+	const char* TEXTURE_02 =
+		"assets/images/blocks/home2.png";
+}
+
+std::string HouseBlock_Hide_01::GetTexturePath() const
+{
+	return TEXTURE_01;
+}
+
+bool HouseBlock_Hide_01::Init()
+{
+    if (!BlockActor::Init()) return false;
+
+    m_sprite->SetDrawOffset(0.0f, -150.0f);
+
+    return true;
+}
+
+std::string HouseBlock_Hide_02::GetTexturePath() const
+{
+	return TEXTURE_02;
+}
+
+bool HouseBlock_Hide_02::Init()
+{
+    if (!BlockActor::Init()) return false;
+
+    m_sprite->SetDrawOffset(0.0f, -150.0f);
+
+    return true;
+}

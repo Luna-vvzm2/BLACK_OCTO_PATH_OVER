@@ -83,7 +83,7 @@ void TreasureBoxEntity::Update(float deltaTime)
 
 std::string TreasureBoxEntity::GetTexturePath() const
 {
-    return "Assets/images/objects/crateSmall.png";
+    return "Assets/images/objects/tresure_box.png";
 }
 
 
