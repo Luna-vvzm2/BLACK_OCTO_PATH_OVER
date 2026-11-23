@@ -65,6 +65,7 @@ bool EnemyEntity::Init() {
     if (!EntityActor::Init())
         return false;
 
+    SetChaseFlag(false);
     m_hp = AddComponent<HPComponent>(GetMaxHP());
     m_gravity = AddComponent<GravityComponent>(2800.0f);
     m_alertGauge = AddComponent<AlertGaugeComponent>();
@@ -84,6 +85,7 @@ void EnemyEntity::Update(float deltaTime)
 
     if (GetState() == Actor::State::Dead)
     {
+        SetChaseFlag(false);
         return;
     }
 
@@ -155,6 +157,7 @@ void EnemyEntity::UpdateGravity(float deltaTime)
 }
 void EnemyEntity::OnDead()
 {
+    SetChaseFlag(false);
     if (GetState() == Actor::State::Dead)
         return;
 

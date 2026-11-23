@@ -131,6 +131,7 @@ void KooniEnemyEntity::Update(float deltaTime)
 {
     if (m_status == Status::Defeated)
     {
+        SetChaseFlag(false);
         m_stateTimer += deltaTime;
 
         if (m_velocity != nullptr)
@@ -173,6 +174,9 @@ void KooniEnemyEntity::Update(float deltaTime)
     case Status::Defeated:
         break;
     }
+
+    SetChaseFlag(player != nullptr &&
+        (m_status == Status::Move || m_status == Status::Attack));
 
     if (m_sprite != nullptr)
     {
@@ -468,6 +472,7 @@ void KooniEnemyEntity::OnDead()
         velocity.x = 0.0f;
         m_velocity->SetVelocity(velocity);
     }
+    SetChaseFlag(false);
     ChangeStatus(Status::Defeated);
 }
 

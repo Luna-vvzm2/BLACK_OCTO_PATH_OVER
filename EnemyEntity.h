@@ -30,6 +30,7 @@ public:
 
     //“G‚Ìí—Ş‚ğİ’è
     void SetEnemyRank(EnemyRank rank);
+    EnemyRank GetEnemyRank() const { return m_enemyRank; }
 
 	explicit EnemyEntity(Scene* scene, const Vector2d& pos = Vector2d::Zero(), const Vector2d& size = { 90, 196 });
 	~EnemyEntity() override = default;
@@ -51,6 +52,8 @@ public:
     bool OnGround() const { return m_isGround; }
     virtual void SetHP(){}
     void SetCanMove(bool canMove) { m_canMove = canMove; }
+    void SetChaseFlag(bool chasing) { m_chaseFlag = chasing; }
+    bool GetChaseFlag() const { return m_chaseFlag; }
 
     HPComponent* GetHP() const { return m_hp; }
     virtual int GetMaxHP() const { return m_hpMax;  }
@@ -143,6 +146,8 @@ protected:
 
     // ‰Œ–‹
     bool m_isInSmoke = false;
+private:
+    bool m_chaseFlag = false;
 };
 
 

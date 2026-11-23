@@ -41,7 +41,7 @@ private:
     void ChangeStatus(Status nextStatus);
     void PlayMotion(const std::string& name, const char* texturePath, int frameCount);
     void UpdateIdle(PlayerEntity* player);
-    void UpdateMove(PlayerEntity* player);
+    void UpdateMove(float deltaTime, PlayerEntity* player);
     void UpdateAttack(float deltaTime, PlayerEntity* player);
     void UpdateDead();
     void TryHitPlayer(PlayerEntity* player, int stage);

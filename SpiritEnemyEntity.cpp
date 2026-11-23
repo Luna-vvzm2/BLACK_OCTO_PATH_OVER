@@ -86,6 +86,7 @@ void SpiritEnemyEntity::Update(float deltaTime)
 {
     if (GetState() == Actor::State::Dead)
     {
+        SetChaseFlag(false);
         return;
     }
 
@@ -118,6 +119,10 @@ void SpiritEnemyEntity::Update(float deltaTime)
 
     // AIを更新
     UpdateAI();
+    PlayScene* chaseScene = dynamic_cast<PlayScene*>(m_scene);
+    PlayerEntity* chasePlayer = chaseScene != nullptr ? chaseScene->GetPlayer() : nullptr;
+    SetChaseFlag(chasePlayer != nullptr && !chasePlayer->IsDead() &&
+        (m_state == CombatMove || m_state == Attack));
 
 
     // 警戒ゲージを更新

@@ -29,6 +29,11 @@ namespace
     constexpr float KASATENGU_ATTACK1_HEIGHT = 60.0f;
     constexpr float KASATENGU_ATTACK2_WIDTH = 60.0f;
     constexpr float KASATENGU_ATTACK2_HEIGHT = 50.0f;
+    constexpr float KASATENGU_ATTACK_MIN_DISTANCE = 100.0f;
+    constexpr float KASATENGU_ATTACK_MAX_DISTANCE = KASATENGU_BODY_WIDTH * 0.5f + KASATENGU_ATTACK2_WIDTH;
+    constexpr float KASATENGU_ATTACK_TARGET_DISTANCE =
+        (KASATENGU_ATTACK_MIN_DISTANCE + KASATENGU_ATTACK_MAX_DISTANCE) * 0.5f;
+    constexpr float KASATENGU_ATTACK_INNER_EXTENSION = 24.0f;
     constexpr int KASATENGU_ATTACK1_DAMAGE = 10;
     constexpr int KASATENGU_ATTACK2_DAMAGE = 15;
     constexpr float KASATENGU_ATTACK1_HIT_TIME = 30.0f / 60.0f;   // ‰¼
@@ -125,6 +130,7 @@ void KasaTenguEnemyEntity::Update(float deltaTime)
 {
     if (m_status == Status::Defeated)
     {
+        SetChaseFlag(false);
         m_stateTimer += deltaTime;
 
         if (m_velocity != nullptr)
@@ -148,7 +154,7 @@ void KasaTenguEnemyEntity::Update(float deltaTime)
         UpdateIdle(player);
         break;
     case Status::Move:
-        UpdateMove(player);
+        UpdateMove(deltaTime, player);
         break;
     case Status::Attack:
         UpdateAttack(deltaTime, player);
@@ -156,6 +162,9 @@ void KasaTenguEnemyEntity::Update(float deltaTime)
     case Status::Defeated:
         break;
     }
+
+    SetChaseFlag(player != nullptr &&
+        (m_status == Status::Move || m_status == Status::Attack));
 
     if (m_sprite != nullptr)
     {
@@ -279,20 +288,22 @@ void KasaTenguEnemyEntity::UpdateIdle(PlayerEntity* player)
     }
 
     const Vector2d difference = player->GetPos() - GetPos();
-    const float attackDistance = KASATENGU_BODY_WIDTH * 0.5f + KASATENGU_ATTACK2_WIDTH;
-    if (std::fabs(difference.x) <= attackDistance &&
-        std::fabs(difference.y) <= KASATENGU_ATTACK1_HEIGHT)
+    const float distance = std::fabs(difference.x);
+    if (distance >= KASATENGU_ATTACK_MIN_DISTANCE &&
+        distance <= KASATENGU_ATTACK_MAX_DISTANCE)
     {
-        m_faceRight = difference.x >= 0.0f;
-        ChangeStatus(Status::Attack);
+        if (std::fabs(difference.y) <= KASATENGU_ATTACK1_HEIGHT)
+        {
+            m_faceRight = difference.x >= 0.0f;
+            ChangeStatus(Status::Attack);
+        }
+        return;
     }
-    else
-    {
-        ChangeStatus(Status::Move);
-    }
+
+    ChangeStatus(Status::Move);
 }
 
-void KasaTenguEnemyEntity::UpdateMove(PlayerEntity* player)
+void KasaTenguEnemyEntity::UpdateMove(float deltaTime, PlayerEntity* player)
 {
     if (!CanSeePlayer(player))
     {
@@ -302,9 +313,13 @@ void KasaTenguEnemyEntity::UpdateMove(PlayerEntity* player)
     }
 
     const Vector2d difference = player->GetPos() - GetPos();
-    const float attackDistance = KASATENGU_BODY_WIDTH * 0.5f + KASATENGU_ATTACK2_WIDTH;
-    if (std::fabs(difference.x) <= attackDistance &&
-        std::fabs(difference.y) <= KASATENGU_ATTACK1_HEIGHT)
+    const float distance = std::fabs(difference.x);
+    const float playerDirection = difference.x > 0.0f ? 1.0f :
+        (difference.x < 0.0f ? -1.0f : (m_faceRight ? 1.0f : -1.0f));
+    m_faceRight = playerDirection > 0.0f;
+
+    if (distance >= KASATENGU_ATTACK_MIN_DISTANCE &&
+        distance <= KASATENGU_ATTACK_MAX_DISTANCE)
     {
         if (m_velocity != nullptr)
         {
@@ -312,16 +327,26 @@ void KasaTenguEnemyEntity::UpdateMove(PlayerEntity* player)
             velocity.x = 0.0f;
             m_velocity->SetVelocity(velocity);
         }
-        m_faceRight = difference.x >= 0.0f;
-        ChangeStatus(Status::Attack);
+        if (std::fabs(difference.y) <= KASATENGU_ATTACK1_HEIGHT)
+        {
+            ChangeStatus(Status::Attack);
+        }
+        else
+        {
+            ChangeStatus(Status::Idle);
+        }
         return;
     }
 
-    m_faceRight = difference.x >= 0.0f;
     if (m_velocity != nullptr)
     {
+        const float moveDirection = distance < KASATENGU_ATTACK_MIN_DISTANCE
+            ? -playerDirection : playerDirection;
+        const float remaining = std::fabs(distance - KASATENGU_ATTACK_TARGET_DISTANCE);
+        const float moveSpeed = deltaTime > 0.0f
+            ? std::fmin(KASATENGU_MOVE_SPEED, remaining / deltaTime) : 0.0f;
         Vector2d velocity = m_velocity->GetVelocity();
-        velocity.x = m_faceRight ? KASATENGU_MOVE_SPEED : -KASATENGU_MOVE_SPEED;
+        velocity.x = moveDirection * moveSpeed;
         m_velocity->SetVelocity(velocity);
     }
 }
@@ -391,12 +416,14 @@ void KasaTenguEnemyEntity::TryHitPlayer(PlayerEntity* player, int stage)
     const Vector2d playerPos = player->GetPos();
     const Vector2d attackCenter(
         GetPos().x + (m_faceRight ? 1.0f : -1.0f) *
-        (KASATENGU_BODY_WIDTH * 0.5f + attackWidth * 0.5f),
+        (KASATENGU_BODY_WIDTH * 0.5f +
+            (attackWidth - KASATENGU_ATTACK_INNER_EXTENSION) * 0.5f),
         GetPos().y
     );
 
     const float combinedHalfWidth =
-        attackWidth * 0.5f + player->GetCollision()->GetWidth() * 0.5f;
+        (attackWidth + KASATENGU_ATTACK_INNER_EXTENSION) * 0.5f +
+        player->GetCollision()->GetWidth() * 0.5f;
     const float combinedHalfHeight =
         attackHeight * 0.5f + player->GetCollision()->GetHeight() * 0.5f;
 

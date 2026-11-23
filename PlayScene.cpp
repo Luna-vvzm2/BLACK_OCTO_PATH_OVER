@@ -12,6 +12,7 @@
 #include "Input.h"
 #include "PlayerEntity.h"
 #include "EnemyEntity.h"
+#include "AddEnemySpawner.h"
 #include "DropItemEntity.h"
 #include "KooniEnemyEntity.h"
 #include "KasaTenguEnemyEntity.h"
@@ -279,6 +280,11 @@ bool PlayScene::Init() {
 
 	// Renderer に Camera をセット
 	m_game->GetRenderer()->SetCamera(&m_camera);
+
+	{
+		// スポナーの生成
+		m_addEnemySpawner = std::make_unique<AddEnemySpawner>(this);
+	}
 
 	return true;
 }
@@ -908,6 +914,29 @@ void PlayScene::Update(float deltaTime)
 	if (m_shurikenUI && m_player)
 	{
 		m_shurikenUI->SetCount(m_player->GetShurikenCount());
+	}
+
+	if (m_addEnemySpawner)
+	{
+		for (Actor* actor : GetActors())
+		{
+			if (actor == nullptr || actor->IsDead())
+				continue;
+
+			auto* enemy = dynamic_cast<EnemyEntity*>(actor);
+
+			if (enemy == nullptr || enemy->IsDead())
+				continue;
+
+			if (enemy->GetEnemyRank() == EnemyEntity::EnemyRank::Boss)
+				continue;
+
+			if (enemy->GetChaseFlag())
+			{
+				m_addEnemySpawner->Update(deltaTime);
+				break;
+			}
+		}
 	}
 }
 		
