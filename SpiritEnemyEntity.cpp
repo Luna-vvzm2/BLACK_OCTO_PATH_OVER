@@ -216,7 +216,7 @@ void SpiritEnemyEntity::Update(float deltaTime)
     UpdateAI();
     PlayScene* chaseScene = dynamic_cast<PlayScene*>(m_scene);
     PlayerEntity* chasePlayer = chaseScene != nullptr ? chaseScene->GetPlayer() : nullptr;
-    SetChaseFlag(chasePlayer != nullptr && !chasePlayer->IsDead() &&
+    SetChaseFlag(chasePlayer != nullptr && !chasePlayer->IsDead() && !chasePlayer->GetIsHide() &&
         (m_state == CombatMove || m_state == Attack));
 
     UpdateAnimation();

@@ -62,7 +62,10 @@ bool Boss_02::Init()
 void Boss_02::Update(float dt)
 {
     if (!m_initialized || GetState() != Actor::State::Active || !std::isfinite(dt) || dt <= 0.0f)
+    {
+        SetChaseFlag(false);
         return;
+    }
     if (m_hp->IsDead()) OnDead();
     // VelocityComponent moves without collision. Integrate movement only below.
     for (auto* component : m_components)
@@ -98,6 +101,11 @@ void Boss_02::Update(float dt)
         velocity.y = 0.0f;
         SetVel(velocity);
     }
+
+    auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+    auto* player = playScene != nullptr ? playScene->GetPlayer() : nullptr;
+    SetChaseFlag(m_canMove && player != nullptr && !player->IsDead() && !player->GetIsHide() &&
+        (m_behavior == Behavior::Move || IsAttacking()));
 }
 
 void Boss_02::UpdateAI(float dt)
@@ -119,7 +127,7 @@ void Boss_02::UpdateAI(float dt)
         }
     auto velocity = GetVel();
     velocity.x = 0.0f;
-    if (!player || !m_canMove)
+    if (!player || player->GetIsHide() || !m_canMove)
     {
         m_approachWaitTime = 0.0f;
         ChangeBehavior(Behavior::Idle);
@@ -204,6 +212,7 @@ void Boss_02::TakeMetsu(int metsu)
 void Boss_02::OnDead()
 {
     if (!m_initialized || IsBattleFinished()) return;
+    SetChaseFlag(false);
     SetVel(Vector2d::Zero());
     m_canMove = false;
     m_attackActive = false;

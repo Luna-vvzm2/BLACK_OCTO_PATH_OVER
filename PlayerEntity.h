@@ -230,9 +230,9 @@ public:
 
     void SpawnKunai();
 
-    bool GetIsOcto() { return m_isOcto; }
+    bool GetIsOcto() const { return m_isJutsu[0]; }
     void SetIsHide(bool flag) { m_isHide = flag; }
-    bool GetIsHide() const { return m_isHide && m_isOcto; }
+    bool GetIsHide() const { return m_isHide && GetIsOcto(); }
     void SetBuffRatio(float buffRatio) { m_buffRatio = buffRatio; } // 移動速度の倍率変更。基本1.0f
 
     void AddShadowGauge(int amount);

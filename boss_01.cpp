@@ -93,8 +93,7 @@ bool Boss_01::Init()
         return false;
 
     const float positiveValues[] = {m_parameters.jumpSpeed, m_parameters.jumpHeight,
-        m_parameters.approachStartDistance, m_parameters.approachStopDistance, m_parameters.knockbackSeconds,
-        m_parameters.knockbackHorizontalScale, m_parameters.knockbackVerticalScale,
+        m_parameters.approachStartDistance, m_parameters.approachStopDistance,
         m_parameters.shurikenSpeed, m_parameters.shurikenSize.x, m_parameters.shurikenSize.y,
         m_parameters.meleeSize.x, m_parameters.meleeSize.y, m_parameters.trapSize.x,
         m_parameters.trapSize.y, m_parameters.trapLifetime, m_parameters.poisonDuration,
@@ -104,7 +103,10 @@ bool Boss_01::Init()
         if (!std::isfinite(value) || value <= 0.0f) return false;
     if (m_parameters.shurikenDamage <= 0 || m_parameters.meleeDamage <= 0 ||
         m_parameters.poisonMoveScale > 1.0f ||
-        m_parameters.approachStartDistance <= m_parameters.approachStopDistance) return false;
+        m_parameters.approachStartDistance <= m_parameters.approachStopDistance ||
+        !std::isfinite(m_parameters.meleeInnerExtension) ||
+        m_parameters.meleeInnerExtension < 0.0f ||
+        m_parameters.meleeInnerExtension > m_parameters.hitboxSize.x * 0.5f) return false;
     m_nextAction = m_parameters.actionInterval;
 
     // BossEntity::Init は重力を追加で登録するため、共通の敵初期化を一度だけ行う。
@@ -152,16 +154,8 @@ void Boss_01::Update(float deltaTime)
 
     if (m_hp->GetHP() <= GetDefeatHP()) EnterDefeated();
     UpdateHazards(deltaTime);
-    if (m_knockbackRemaining > 0.0f)
-    {
-        m_knockbackRemaining = (std::max)(0.0f, m_knockbackRemaining - deltaTime);
-        if (m_knockbackRemaining <= 0.0f) SetVel({0.0f, GetVel().y});
-    }
-    else
-    {
-        UpdateAI(deltaTime);
-        UpdateAttack(deltaTime);
-    }
+    UpdateAI(deltaTime);
+    UpdateAttack(deltaTime);
 
     SetChaseFlag(m_canMove && FindPlayer() != nullptr &&
         m_behavior != Behavior::Idle && m_behavior != Behavior::Recovery &&
@@ -322,9 +316,7 @@ void Boss_01::UpdateAttack(float deltaTime)
             m_behaviorTime - deltaTime <= 7.0f / 60.0f)
         {
             auto* player = FindPlayer();
-            const Vector2d center = GetPos() + Vector2d{
-                m_attackDirection * (m_parameters.hitboxSize.x + m_parameters.meleeSize.x) * 0.5f, 0.0f};
-            if (Overlaps(center, m_parameters.meleeSize, player))
+            if (Overlaps(GetMeleeHitboxCenter(), GetMeleeHitboxSize(), player))
             {
                 player->TakeDamage(m_parameters.meleeDamage, {m_attackDirection * 150.0f, -100.0f});
                 m_meleeHit = true;
@@ -351,27 +343,28 @@ void Boss_01::UpdateAttack(float deltaTime)
     }
 }
 
+Vector2d Boss_01::GetMeleeHitboxCenter() const
+{
+    return GetPos() + Vector2d{
+        m_attackDirection * (m_parameters.hitboxSize.x + m_parameters.meleeSize.x -
+            m_parameters.meleeInnerExtension) * 0.5f, 0.0f};
+}
+
+Vector2d Boss_01::GetMeleeHitboxSize() const
+{
+    return {m_parameters.meleeSize.x + m_parameters.meleeInnerExtension,
+        m_parameters.meleeSize.y};
+}
+
 void Boss_01::TakeDamage(int damage, const Vector2d& knockback, bool attackDir)
 {
+    (void)knockback;
+    (void)attackDir;
     if (!m_initialized || IsBattleFinished() || damage <= 0 || m_hp->IsInvincible()) return;
     // 強い一撃でもHP600で踏みとどまり、通常敵の死亡・消去へ進ませない。
     const int remaining = m_hp->GetHP() - GetDefeatHP();
     if (remaining <= 0) { EnterDefeated(); return; }
     m_hp->Damage((std::min)(damage, remaining));
-    if (!IsBattleFinished() && std::isfinite(knockback.x) && std::isfinite(knockback.y))
-    {
-        // 独自の被弾処理から、EnemyEntityの共通振り向きを呼び出す。
-        FacePlayerOnDamage(knockback);
-        // 洲条の原画向き設定に合わせ、画像と仮描画の向きを一致させる。
-        if (m_sprite) m_sprite->SetFlipX(m_dir != m_sourceFacesRight);
-        ChangeBehavior(Behavior::Recovery);
-        m_knockbackRemaining = m_parameters.knockbackSeconds;
-        // 攻撃側から渡された向きを維持し、後方への移動と浮き上がりを強める。
-        const Vector2d launch{knockback.x * m_parameters.knockbackHorizontalScale,
-            knockback.y * m_parameters.knockbackVerticalScale};
-        SetVel(launch);
-        if (launch.y < 0.0f) m_isGround = false;
-    }
 }
 
 void Boss_01::TakeMetsu(int)
@@ -494,7 +487,7 @@ PlayerEntity* Boss_01::FindPlayer() const
         if (actor && actor->GetType() == ActorType::Player && actor->GetState() == Actor::State::Active)
         {
             auto* player = dynamic_cast<PlayerEntity*>(actor);
-            if (player && player->GetHP() && !player->GetHP()->IsDead()) return player;
+            if (player && player->GetHP() && !player->GetHP()->IsDead() && !player->GetIsHide()) return player;
         }
     }
     return nullptr;
@@ -752,9 +745,9 @@ void Boss_01::Draw()
     {
         // 予備動作・後隙は枠のみ。実際に判定のある4～7fだけ塗りつぶす。
         const bool active = m_behaviorTime >= 4.0f / 60.0f && m_behaviorTime <= 7.0f / 60.0f;
-        renderer->DrawRectCenter(GetPos() + Vector2d{
-            m_attackDirection * (m_parameters.hitboxSize.x + m_parameters.meleeSize.x) * 0.5f, 0.0f},
-            m_parameters.meleeSize.x, m_parameters.meleeSize.y, Color(255, 100, 60), active);
+        const Vector2d meleeSize = GetMeleeHitboxSize();
+        renderer->DrawRectCenter(GetMeleeHitboxCenter(),
+            meleeSize.x, meleeSize.y, Color(255, 100, 60), active);
     }
 }
 
