@@ -40,4 +40,4 @@ stage1_grit_walk,SoundAssets\stage1_grit_walk.wav,0,255,0,0:00:00:00,0:00:00:09,
 stage1_tatami_walk,SoundAssets\stage1_tatami_walk.wav,0,255,0,0:00:00:00,0:00:00:09,FALSE,6,
 trap,SoundAssets\trap.wav,0,255,0,0:00:00:00,0:00:00:09,FALSE,6,
 Stage_Common_BGM,SoundAssets\doutyu.mp3,0,255,0,0:00:00:00,0:00:00:00,TRUE,30,0
-Stage3_BGM,SoundAssets\sujyo.mp3,4,255,0,0:00:00:00,0:00:01:31,TRUE,30,0
+Stage3_BGM,SoundAssets\sujyo.mp3,4,255,0,0:00:00:00,0:00:00:00,TRUE,30,0
