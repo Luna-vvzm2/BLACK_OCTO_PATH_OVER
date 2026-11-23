@@ -752,6 +752,12 @@ void PlayScene::Update(float deltaTime)
 {
 	const Input& input = m_game->GetInput();
 
+	if (m_newsViewer.IsOpen())
+	{
+		m_newsViewer.Update(deltaTime, input);
+		return;
+	}
+
 	// 前フレームのカメラ揺れを取り除く
 	// カメラ追従との位置ずれを防止
 	if (m_appliedShakeOffset.x != 0.0f ||
@@ -860,12 +866,6 @@ void PlayScene::Update(float deltaTime)
 	prevN = nowN;
 #endif
 
-	// 新聞の表示中はゲーム画面を止める(決定キーで閉じる)
-	if (m_newsViewer.IsOpen())
-	{
-		m_newsViewer.Update(deltaTime, m_game->GetInput());
-		return;
-	}
 
 	updateActors(m_backactors, deltaTime);
 	updateActors(m_actors, deltaTime);
@@ -1405,7 +1405,6 @@ void PlayScene::Draw()
 		m_eventManager->Draw();
 	}
 
-	m_newsViewer.Draw();   // 追加
 
 	// =====================================================
 	// ⑬ メニュー
@@ -1534,6 +1533,7 @@ void PlayScene::Draw()
 	);
 
 #endif
+	m_newsViewer.Draw();
 	DrawFadeOverlay();
 }
 

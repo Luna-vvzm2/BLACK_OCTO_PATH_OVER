@@ -58,7 +58,8 @@ enum class EventType
 	Tutorial,
 	GetSkill,
 	CutIn,
-	Clear
+	Clear,
+	News
 };
 
 class EventBase
