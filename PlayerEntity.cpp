@@ -205,400 +205,130 @@ bool PlayerEntity::Init() {
     m_attackCol = AddComponent<CollisionComponent>();
 
     //m_sprite = AddComponent<SpriteComponent>();
-    m_sprite->LoadTextureDiv("assets/images/entities/players/musashi_sheet.png", 20, 14);
+    m_sprite->LoadTextureDiv("assets/images/entities/players/kurozumi.png", 10, 7);
 
     m_anim = AddComponent<AnimationComponent>();
     m_anim->SetSprite(m_sprite);
 
     AnimationClip idle;
-    idle.frames = { 0, 1, 2, 3, 4, 5 };
-    idle.speed = 0.3f;
+    idle.frames = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 6, 6, 7, 7, 8, 9, 9, 9 };
+    idle.speed = 0.1f;
     idle.loop = true;
     m_anim->AddClip("idle", idle);
 
-    AnimationClip runStart;
-    runStart.frames = { 6, 7 };
-    runStart.speed = 0.1f;
-    runStart.loop = false;
-    m_anim->AddClip("runStart", runStart);
-
-    AnimationClip run;
-    run.frames = { 8, 9, 10, 11, 12, 13 };
-    run.speed = 0.1f;
-    run.loop = true;
-    m_anim->AddClip("run", run);
-
-    AnimationClip stopShort;
-    stopShort.frames = { 14, 14, 17, 17, 18, 15 };
-    stopShort.speed = 0.1f;
-    stopShort.loop = false;
-    m_anim->AddClip("stopShort", stopShort);
-
-    AnimationClip stopLong;
-    stopLong.frames = { 16, 17, 17, 18, 15 };
-    stopLong.speed = 0.1f;
-    stopLong.loop = false;
-    m_anim->AddClip("stopLong", stopLong);
-
-    AnimationClip changeDir;
-    changeDir.frames = { 19, 20 };
-    changeDir.speed = 0.1f;
-    changeDir.loop = false;
-    m_anim->AddClip("changeDir", changeDir);
-
-    AnimationClip changeDirRun;
-    changeDirRun.frames = { 21, 22, 23, 24, 25, 26 };
-    changeDirRun.speed = 0.1f;
-    changeDirRun.loop = false;
-    m_anim->AddClip("changeDirRun", changeDirRun);
-
     AnimationClip squatStart;
-    squatStart.frames = { 27 };
-    squatStart.speed = 0.1f;
+    squatStart.frames = { 10, 11 };
+    squatStart.speed = 0.2f;
     squatStart.loop = false;
     m_anim->AddClip("squatStart", squatStart);
 
-    AnimationClip squat;
-    squat.frames = { 28, 28, 28, 29 };
-    squat.speed = 0.1f;
-    squat.loop = false;
-    m_anim->AddClip("squat", squat);
-
     AnimationClip squatIdle;
-    squatIdle.frames = { 29 };
+    squatIdle.frames = { 12 };
     squatIdle.speed = 0.1f;
-    squatIdle.loop = false;
+    squatIdle.loop = true;
     m_anim->AddClip("squatIdle", squatIdle);
 
+    AnimationClip crouchEnd;
+    crouchEnd.frames = { 11, 10 };
+    crouchEnd.speed = 0.2f;
+    crouchEnd.loop = false;
+    m_anim->AddClip("crouchEnd", crouchEnd);
+
     AnimationClip squatWalk;
-    squatWalk.frames = { 30, 30, 30, 31, 31, 32, 32, 32, 32, 32, 33, 33, 33,  34, 35, 35, 35 };
-    squatWalk.speed = 0.1f;
+    squatWalk.frames = { 13, 14, 15, 16, 17, 18 };
+    squatWalk.speed = 0.5f;
     squatWalk.loop = true;
     m_anim->AddClip("squatWalk", squatWalk);
 
-    AnimationClip squatAttack;
-    squatAttack.frames = { 37, 38, 39, 40, 40, 40, 40, 41, 41, 42, 42 };
-    squatAttack.speed = 0.1f;
-    squatAttack.loop = false;
-    m_anim->AddClip("squatAttack", squatAttack);
-
     AnimationClip jumpStart;
-    jumpStart.frames = { 43 };
+    jumpStart.frames = { 19 };
     jumpStart.speed = 0.1f;
     jumpStart.loop = false;
     m_anim->AddClip("jumpStart", jumpStart);
 
     AnimationClip jump;
-    jump.frames = { 44, 45, 46, 47, 48 };
-    jump.speed = 0.2f;
+    jump.frames = { 20, 20, 20, 21 };
+    jump.speed = 0.1f;
     jump.loop = false;
     m_anim->AddClip("jump", jump);
 
-    AnimationClip jumpSecond;
-    jumpSecond.frames = { 49, 50, 51, 52, 53, 54, 55, 56, 57, 52, 53, 54, 55, 56, 58 };
-    jumpSecond.speed = 0.1f;
-    jumpSecond.loop = false;
-    m_anim->AddClip("jumpSecond", jumpSecond);
-
     AnimationClip fall;
-    fall.frames = { 59, 60, 61 };
+    fall.frames = { 22 };
     fall.speed = 0.1f;
     fall.loop = false;
     m_anim->AddClip("fall", fall);
 
     AnimationClip jumpLanding;
-    jumpLanding.frames = { 62, 63, 64, 65, 66 };
-    jumpLanding.speed = 0.1f;
+    jumpLanding.frames = { 10 };
+    jumpLanding.speed = 0.2f;
     jumpLanding.loop = false;
     m_anim->AddClip("jumpLanding", jumpLanding);
 
-    AnimationClip roll;
-    roll.frames = { 67, 68, 69, 70, 71 };
-    roll.speed = 0.2f;
-    roll.loop = false;
-    m_anim->AddClip("roll", roll);
+    AnimationClip run;
+    run.frames = { 23, 23, 23, 24, 24, 25, 25, 25, 26, 26, 27, 27, 28, 28, 28, 29, 29, 30, 30, 30, 31, 31, 32, 32 };
+    run.speed = 0.075f;
+    run.loop = true;
+    m_anim->AddClip("run", run);
 
-    AnimationClip Hien;
-    Hien.frames = { 72, 73, 73, 73, 73, 73, 73, 74, 74 };
-    Hien.speed = 0.1f;
-    Hien.loop = false;
-    m_anim->AddClip("Hien", Hien);
-
-    AnimationClip Senten;
-    Senten.frames = { 75, 76, 77, 78, 79, 80, 81, 82, 83 };
-    Senten.speed = 0.1f;
-    Senten.loop = false;
-    m_anim->AddClip("Senten", Senten);
-
-    AnimationClip rollLanding;
-    rollLanding.frames = { 84, 85, 86 };
-    rollLanding.speed = 0.1f;
-    rollLanding.loop = false;
-    m_anim->AddClip("rollLanding", rollLanding);
-
-    AnimationClip SouKunaiSenten;
-    SouKunaiSenten.frames = { 87, 88, 89, 89, 89, 89, 90, 91, 92, 93, 94, 95 };
-    SouKunaiSenten.speed = 0.1f;
-    SouKunaiSenten.loop = false;
-    m_anim->AddClip("SouKunaiSenten", SouKunaiSenten);
-
-    AnimationClip wallHold;
-    wallHold.frames = { 96 };
-    wallHold.speed = 0.1f;
-    wallHold.loop = false;
-    m_anim->AddClip("wallHold", wallHold);
-
-    AnimationClip wallJump;
-    wallJump.frames = { 97, 98 };
-    wallJump.speed = 0.1f;
-    wallJump.loop = false;
-    m_anim->AddClip("wallJump", wallJump);
-
-    AnimationClip wallClimb; // •Ç‚ð•à‚¢‚Ä“o‚éƒAƒjƒ[ƒVƒ‡ƒ“
-    wallClimb.frames = { 99, 100, 101, 102 };
-    wallClimb.speed = 0.25f;
-    wallClimb.loop = true;
-    m_anim->AddClip("wallClimb", wallClimb);
-
-    AnimationClip wallClimbUp; //@•Ç‚æ‚¶“o‚è
-    wallClimbUp.frames = { 103, 103, 104, 105, 105, 106 };
-    wallClimbUp.speed = 0.1f;
-    wallClimbUp.loop = false;
-    m_anim->AddClip("wallClimbUp", wallClimbUp);
-
-    AnimationClip platformClimb;
-    platformClimb.frames = { 107, 108, 108, 109, 110, 110 };
-    platformClimb.speed = 0.1f;
-    platformClimb.loop = false;
-    m_anim->AddClip("platformClimb", platformClimb);
-
-    AnimationClip climbEnd;
-    climbEnd.frames = { 111, 112, 113, 114, 115, 115 };
-    climbEnd.speed = 0.1f;
-    climbEnd.loop = false;
-    m_anim->AddClip("climbEnd", climbEnd);
-
-    AnimationClip wallAttack;
-    wallAttack.frames = { 116, 116, 117, 118, 118, 119, 120, 120, 121, 121, 122, 122 };
-    wallAttack.speed = 0.1f;
-    wallAttack.loop = false;
-    m_anim->AddClip("wallAttack", wallAttack);
-
-    AnimationClip wallKunai;
-    wallKunai.frames = { 123, 123, 123, 124, 125, 126, 127, 127, 128, 128 };
-    wallKunai.speed = 0.1f;
-    wallKunai.loop = false;
-    m_anim->AddClip("wallKunai", wallKunai);
+    AnimationClip tiger;
+    tiger.frames = { 33, 34, 34, 34, 34, 34, 34, 34, 34, 35, 36, 37, 38, 38, 38, 38, 38, 38, 38, 39, 39, 40, 40, 40, 40, 40, 40, 40, 41, 41 };
+    tiger.speed = 0.1f;
+    tiger.loop = false;
+    m_anim->AddClip("tiger", tiger);
 
     AnimationClip weakAttack1;
-    weakAttack1.frames = { 129, 130, 130, 131, 131, 131, 131, 131, 131, 131 };
+    weakAttack1.frames = { 42, 42, 42, 42, 43, 43, 44, 44, 44, 44, 44, 44, 44, 44, 44, 45, 45, 45, 45, 45 };
     weakAttack1.speed = 0.1f;
     weakAttack1.loop = false;
     m_anim->AddClip("weakAttack1", weakAttack1);
 
     AnimationClip weakAttack2;
-    weakAttack2.frames = { 132, 133, 134, 134, 135, 135, 136, 137 };
-    weakAttack2.speed = 0.1f;
+    weakAttack2.frames = { 46, 46, 46, 46, 47, 47, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48 };
+    weakAttack2.speed = 0.07f;
     weakAttack2.loop = false;
     m_anim->AddClip("weakAttack2", weakAttack2);
 
     AnimationClip weakAttack3;
-    weakAttack3.frames = { 138, 139, 140, 140, 140, 140, 140, 140, 140 };
+    weakAttack3.frames = { 49, 49, 49, 49, 49, 50, 50, 50, 50, 51, 51, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 52, 53, 53, 53, 53, 55, 55, 55 };
     weakAttack3.speed = 0.1f;
     weakAttack3.loop = false;
     m_anim->AddClip("weakAttack3", weakAttack3);
 
     AnimationClip attackEnd;
-    attackEnd.frames = { 141, 142, 142, 143, 143 };
+    attackEnd.frames = { 54 };
     attackEnd.speed = 0.1f;
     attackEnd.loop = false;
     m_anim->AddClip("attackEnd", attackEnd);
 
-    AnimationClip weakAttack4;
-    weakAttack4.frames = { 144, 144, 145, 146, 146, 146, 147, 147, 148, 149, 150, 150, 150, 151, 151, 152, 152, 152, 153, 153, 154, 154, 154, 155, 155, 156 };
-    weakAttack4.speed = 0.1f;
-    weakAttack4.loop = false;
-    m_anim->AddClip("weakAttack4", weakAttack4);
-
-    AnimationClip weakAirAttack1;
-    weakAirAttack1.frames = { 157, 158, 159, 159 };
-    weakAirAttack1.speed = 0.1f;
-    weakAirAttack1.loop = false;
-    m_anim->AddClip("weakAirAttack1", weakAirAttack1);
-
-    AnimationClip weakAirAttack2;
-    weakAirAttack2.frames = { 160, 161, 161 };
-    weakAirAttack2.speed = 0.1f;
-    weakAirAttack2.loop = false;
-    m_anim->AddClip("weakAirAttack2", weakAirAttack2);
-
-    AnimationClip weakAirAttack3;
-    weakAirAttack3.frames = { 162, 163, 164, 164, 165, 166, 166, 166, 167, 167, 167, 168, 168, 169, 169, 169 };
-    weakAirAttack3.speed = 0.1f;
-    weakAirAttack3.loop = false;
-    m_anim->AddClip("weakAirAttack3", weakAirAttack3);
-
-    AnimationClip strongAttack1;
-    strongAttack1.frames = { 170, 171, 172, 172, 173, 173, 174, 175, 175, 176, 176, 177, 178, 178, 179 };
-    strongAttack1.speed = 0.1f;
-    strongAttack1.loop = false;
-    m_anim->AddClip("strongAttack1", strongAttack1);
-
-    AnimationClip strongAttackEnd;
-    strongAttackEnd.frames = { 180, 180 };
-    strongAttackEnd.speed = 0.2f;
-    strongAttackEnd.loop = false;
-    m_anim->AddClip("strongAttackEnd", strongAttackEnd);
-
-    AnimationClip strongAttack2;
-    strongAttack2.frames = { 181, 181, 182, 183, 183, 184, 185, 186, 186, 187, 187, 188, 188, 189, 189, 190, 191, 191, 191, 191 };
-    strongAttack2.speed = 0.1f;
-    strongAttack2.loop = false;
-    m_anim->AddClip("strongAttack2", strongAttack2);
-
-    AnimationClip Hayabusa;
-    Hayabusa.frames = { 192, 192, 193 };
-    Hayabusa.speed = 0.1f;
-    Hayabusa.loop = false;
-    m_anim->AddClip("Hayabusa", Hayabusa);
-
-    AnimationClip HayabusaHit;
-    HayabusaHit.frames = { 194, 194, 194, 195, 195, 196, 196, 197, 197, 198 };
-    HayabusaHit.speed = 0.1f;
-    HayabusaHit.loop = false;
-    m_anim->AddClip("HayabusaHit", HayabusaHit);
-
-    AnimationClip HayabusaGround;
-    HayabusaGround.frames = { 199 };
-    HayabusaGround.speed = 0.1f;
-    HayabusaGround.loop = false;
-    m_anim->AddClip("HayabusaGround", HayabusaGround);
-
     AnimationClip Kunai;
-    Kunai.frames = { 200, 201, 202, 202, 203, 204 };
+    Kunai.frames = { 56, 56, 56, 57, 57, 57, 58, 58 };
     Kunai.speed = 0.1f;
     Kunai.loop = false;
     m_anim->AddClip("Kunai", Kunai);
 
-    AnimationClip KunaiAir;
-    KunaiAir.frames = { 205, 206, 207, 207 };
-    KunaiAir.speed = 0.1f;
-    KunaiAir.loop = false;
-    m_anim->AddClip("KunaiAir", KunaiAir);
+    AnimationClip squatAttack;
+    squatAttack.frames = { 59, 59, 59, 59, 60, 60, 60, 61, 61, 61, 61, 61, 61, 61, 61, 61 };
+    squatAttack.speed = 0.1f;
+    squatAttack.loop = false;
+    m_anim->AddClip("squatAttack", squatAttack);
 
     AnimationClip KunaiSquat;
-    KunaiSquat.frames = { 208, 209, 209, 210, 210, 211, 211, 212, 213, 213 };
+    KunaiSquat.frames = { 62, 62, 62, 63, 63 };
     KunaiSquat.speed = 0.1f;
     KunaiSquat.loop = false;
     m_anim->AddClip("KunaiSquat", KunaiSquat);
 
-    AnimationClip hitTrap;
-    hitTrap.frames = { 214, 215, 216, 217, 218, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219, 219 };
-    hitTrap.speed = 0.1f;
-    hitTrap.loop = false;
-    m_anim->AddClip("trapHit", hitTrap);
+    AnimationClip weakAirAttack1;
+    weakAirAttack1.frames = { 64, 64, 64, 64, 65, 65, 65, 66, 66, 67, 67, 67, 67, 67, 67, 67 };
+    weakAirAttack1.speed = 0.1f;
+    weakAirAttack1.loop = false;
+    m_anim->AddClip("weakAirAttack1", weakAirAttack1);
 
-    AnimationClip hitGround;
-    hitGround.frames = { 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 221, 222, 223, 224, 225 };
-    hitGround.speed = 0.1f;
-    hitGround.loop = false;
-    m_anim->AddClip("hitGround", hitGround);
-
-    AnimationClip hitAir;
-    hitAir.frames = { 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 226, 227, 227, 228, 228, 229, 229, 230, 231 };
-    hitAir.speed = 0.1f;
-    hitAir.loop = false;
-    m_anim->AddClip("hitAir", hitAir);
-
-    AnimationClip hitAirLanding;
-    hitAirLanding.frames = { 232, 233, 234, 235, 236, 237, 237, 238, 238, 239 };
-    hitAirLanding.speed = 0.1f;
-    hitAirLanding.loop = false;
-    m_anim->AddClip("hitAirLanding", hitAirLanding);
-
-    AnimationClip dead;
-    dead.frames = { 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240,  241, 241, 242, 242, 243, 243, 244, 244, 245, 245, 246, 246 };
-    dead.speed = 0.1f;
-    dead.loop = false;
-    m_anim->AddClip("dead", dead);
-
-    AnimationClip Kamae;
-    Kamae.frames = { 247, 248, 248, 249 };
-    Kamae.speed = 0.1f;
-    Kamae.loop = false;
-    m_anim->AddClip("Kamae", Kamae);
-
-    AnimationClip KamaeEnd;
-    KamaeEnd.frames = { 248, 248 };
-    KamaeEnd.speed = 0.1f;
-    KamaeEnd.loop = false;
-    m_anim->AddClip("KamaeEnd", KamaeEnd);
-
-    AnimationClip KamaeAir;
-    KamaeAir.frames = { 250, 251, 251, 252, 253 };
-    KamaeAir.speed = 0.1f;
-    KamaeAir.loop = false;
-    m_anim->AddClip("KamaeAir", KamaeAir);
-
-    AnimationClip KamaeAirEnd;
-    KamaeAirEnd.frames = { 254 };
-    KamaeAirEnd.speed = 0.1f;
-    KamaeAirEnd.loop = false;
-    m_anim->AddClip("KamaeAirEnd", KamaeAirEnd);
-
-    AnimationClip JutsuKamae;
-    JutsuKamae.frames = { 255, 256, 257, 258, 259 };
-    JutsuKamae.speed = 0.1f;
-    JutsuKamae.loop = false;
-    m_anim->AddClip("JutsuKamae", JutsuKamae);
-
-    AnimationClip JutsuKamaeEnd;
-    JutsuKamaeEnd.frames = { 255, 255, 258, 258 };
-    JutsuKamaeEnd.speed = 0.1f;
-    JutsuKamaeEnd.loop = false;
-    m_anim->AddClip("JutsuKamaeEnd", JutsuKamaeEnd);
-
-    AnimationClip executionStart;
-    executionStart.frames = { 260, 261, 261, 262, 262, 263, 263, 264, 264, 264, 265, 266, 266 };
-    executionStart.speed = 0.1f;
-    executionStart.loop = false;
-    m_anim->AddClip("executionStart", executionStart);
-
-    AnimationClip executionHorizon;
-    executionHorizon.frames = { 267, 268, 268 };
-    executionHorizon.speed = 0.1f;
-    executionHorizon.loop = false;
-    m_anim->AddClip("executionHorizon", executionHorizon);
-
-    AnimationClip executionVertical;
-    executionVertical.frames = { 269, 270, 270 };
-    executionVertical.speed = 0.1f;
-    executionVertical.loop = false;
-    m_anim->AddClip("executionVertical", executionVertical);
-
-    AnimationClip executionEnd;
-    executionEnd.frames = { 271, 271, 272, 272, 273, 273, 274, 274 };
-    executionEnd.speed = 0.1f;
-    executionEnd.loop = false;
-    m_anim->AddClip("executionEnd", executionEnd);
-
-    AnimationClip KaryuStart;
-    KaryuStart.frames = { 259 };
-    KaryuStart.speed = 0.1f;
-    KaryuStart.loop = false;
-    m_anim->AddClip("KaryuStart", KaryuStart);
-
-    AnimationClip KaryuMid;
-    KaryuMid.frames = { 275 };
-    KaryuMid.speed = 0.1f;
-    KaryuMid.loop = false;
-    m_anim->AddClip("KaryuMid", KaryuMid);
-
-    AnimationClip KaryuEnd;
-    KaryuEnd.frames = { 276, 276, 276, 277, 277, 277, 278, 278, 278 };
-    KaryuEnd.speed = 0.1f;
-    KaryuEnd.loop = false;
-    m_anim->AddClip("KaryuEnd", KaryuEnd);
+    AnimationClip KunaiAir;
+    KunaiAir.frames = { 68, 68, 68, 69, 69 };
+    KunaiAir.speed = 0.1f;
+    KunaiAir.loop = false;
+    m_anim->AddClip("KunaiAir", KunaiAir);
 
     m_collision->SetRect(85, 152);
     m_sprite->SetDrawOffset(0.0f, -34.0f);
@@ -1534,7 +1264,7 @@ void PlayerEntity::UpdateState(float deltaTime) {
     if (m_state == PlayerState::OCTO_START) {
         m_jutsuTimer -= deltaTime;
         if (m_jutsuTimer > 0.0f) {
-            m_anim->Play("Kamae");
+            m_anim->Play("Kunai");
             return;
         }
         m_isJutsu[OCTONum] = true;
@@ -2276,7 +2006,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
     }   break;
 
     case PlayerState::RUN_START:
-        m_anim->Play("runStart");
+        m_anim->Play("run");
         break;
 
     case PlayerState::STOP_SHORT:
@@ -2285,7 +2015,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.x *= 0.8f;
         m_velocity->Set(vel);
 
-        m_anim->Play("stopShort");
+        m_anim->Play("run");
     }   break;
 
     case PlayerState::STOP_LONG:
@@ -2293,11 +2023,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         Vector2d vel = m_velocity->Get();
         vel.x *= 0.8f;
         m_velocity->Set(vel);
-        m_anim->Play("stopLong");
+        m_anim->Play("run");
     }break;
 
     case PlayerState::CHANGE_DIR:
-        m_anim->Play("changeDir");
+        m_anim->Play("run");
         break;
 
     case PlayerState::CHANGE_DIR_RUN:
@@ -2306,7 +2036,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("changeDirRun");
+        m_anim->Play("run");
     }break;
 
     case PlayerState::SQUAT_START:
@@ -2315,7 +2045,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::SQUAT:
-        m_anim->Play("squat");
+        m_anim->Play("squatIdle");
         break;
 
     case PlayerState::SQUAT_IDLE:
@@ -2391,7 +2121,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         m_velocity->SetX(move.x);
 
-        m_anim->Play("Hien");
+        m_anim->Play("run");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
@@ -2413,7 +2143,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.y += move.y;
         m_velocity->Set(vel);
 
-        m_anim->Play("Hien");
+        m_anim->Play("run");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
@@ -2434,12 +2164,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         vel.y += move.y;
         m_velocity->Set(vel);
 
-        m_anim->Play("Senten");
+        m_anim->Play("run");
         m_scene->GetGame()->GetSoundManager().Play("player_evasion");
     }   break;
 
     case PlayerState::ROLL_LANDING:
-        m_anim->Play("rollLanding");
         break;
 
     case PlayerState::WALL_HOLD:
@@ -2453,7 +2182,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("wallHold");
+        m_anim->Play("idle");
     }   break;
 
     case PlayerState::WALL_JUMP:
@@ -2468,7 +2197,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? 1.0f : -1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("wallJump");
+        m_anim->Play("jump");
         m_scene->GetGame()->GetSoundManager().Play("player_jump");
     }   break;
 
@@ -2483,7 +2212,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("wallClimb");
+        m_anim->Play("idle");
     }   break;
 
     case PlayerState::WALL_CLIMB_UP:
@@ -2497,11 +2226,11 @@ void PlayerEntity::ChangeState(PlayerState newState)
         scale.x = m_dir ? -1.0f : 1.0f;
         m_transform->SetScale(scale);
 
-        m_anim->Play("wallClimbUp");
+        m_anim->Play("squatStart");
     }   break;
 
     case PlayerState::PLATFORM_CLIMB:
-        m_anim->Play("platformClimb");
+        m_anim->Play("squatStart");
         break;
 
     case PlayerState::CLIMB_END:
@@ -2517,7 +2246,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
 
         m_sprite->SetDrawOffset(0.0f, 0.0f);
 
-        m_anim->Play("climbEnd");
+        m_anim->Play("crouchEnd");
     }   break;
 
     case PlayerState::WEAK_ATTACK1:
@@ -2601,7 +2330,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::KUNAI_WALL:
-        m_anim->Play("wallKunai");
+        m_anim->Play("KunaiAir");
         m_scene->GetGame()->GetSoundManager().Play("player_kunai");
         break;
 
@@ -2617,84 +2346,47 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::HIT_TRAP:
-        m_anim->Play("trapHit");
+        m_anim->Play("idle");
         break;
 
     case PlayerState::HIT_GROUND:
-        m_anim->Play("hitGround");
+        m_anim->Play("idle");
         break;
 
     case PlayerState::HIT_AIR:
-        m_anim->Play("hitAir");
+        m_anim->Play("idle");
         break;
 
     case PlayerState::HIT_AIR_LANDING:
-        m_anim->Play("hitAirLanding");
+        m_anim->Play("idle");
         break;
 
     case PlayerState::KAMAE:
         m_shadowGaugeTimer = 0.0f;
         m_isKamae = true;
 
-        m_anim->Play("Kamae");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::KAMAE_END:
-        m_anim->Play("KamaeEnd");
+        m_anim->Play("Kunai");
 
         break;
 
     case PlayerState::AIR_KAMAE:
-        m_anim->Play("KamaeAir");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::AIR_KAMAE_END:
-        m_anim->Play("KamaeAirEnd");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::JUTSU_KAMAE:
-        m_anim->Play("JutsuKamae");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::JUTSU_KAMAE_END:
-        m_anim->Play("JutsuKamaeEnd");
-        break;
-
-    case PlayerState::EXECUTION_START:
-        m_anim->Play("executionStart");
-        if (m_kamaeSound != nullptr && !m_kamaeSound->IsPlaying())
-        {
-            m_kamaeSound->Play();
-        }
-        break;
-
-    case PlayerState::EXECUTION_HORIZON:
-        m_anim->Play("executionHorizon");
-        break;
-
-    case PlayerState::EXECUTION_VERTICAL:
-        m_anim->Play("executionVertical");
-        break;
-
-    case PlayerState::EXECUTION_END:
-        m_anim->Play("executionEnd");
-
-        break;
-
-    case PlayerState::KARYU_START:
-        m_anim->Play("KaryuStart");
-        if (m_karyuSound != nullptr)
-        {
-            m_karyuSound->Play();
-        }
-        break;
-
-    case PlayerState::KARYU_MID:
-        m_anim->Play("KaryuMid");
-        break;
-
-    case PlayerState::KARYU_END:
-        m_anim->Play("KaryuEnd");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::OCTO_START:
@@ -2736,7 +2428,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         SpawnEffect(effect);
 
         m_scene->GetGame()->GetSoundManager().Play("player_octo");
-        m_anim->Play("wallHold");   // Œã‚Ù‚ÇOctoAuto‚ÉC³
+        m_anim->Play("Kunai");   // Œã‚Ù‚ÇOctoAuto‚ÉC³
     }   break;
 
 
@@ -2749,7 +2441,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_jutsuInterval[OCTONum] =
             m_jutsuMaxInterval[OCTONum];
 
-        m_anim->Play("Kamae");
+        m_anim->Play("Kunai");
         break;
 
     case PlayerState::OCTO_AUTO_END:
@@ -2761,7 +2453,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_jutsuInterval[OCTONum] =
             m_jutsuMaxInterval[OCTONum];
 
-        m_anim->Play("OctoAutoEnd");
+        m_anim->Play("Kunai");
         break;
 
 
@@ -2780,7 +2472,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         m_jutsuInterval[TIGERNum] = m_jutsuMaxInterval[TIGERNum];
 
         m_scene->GetGame()->GetSoundManager().Play("player_tiger1");
-        m_anim->Play("squatAttack");  // Œã‚Ù‚ÇTiger‚ÉC³
+        m_anim->Play("tiger");  // Œã‚Ù‚ÇTiger‚ÉC³
         break;
     }
 
@@ -2791,7 +2483,7 @@ void PlayerEntity::ChangeState(PlayerState newState)
         break;
 
     case PlayerState::DEAD:
-        m_anim->Play("dead");
+        m_anim->Play("attackEnd");
         break;
     }
 }

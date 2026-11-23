@@ -1,5 +1,5 @@
 {
-    "currentStage": 2,
+    "currentStage": 1,
     "keyBindings": [
         [
             4,
@@ -73,16 +73,16 @@
             13
         ]
     ],
-    "kunaiCount": 0,
+    "kunaiCount": 3,
     "newsOwned": [
         true,
         false,
         false,
-        true,
+        false,
         false,
         false
     ],
-    "playTime": 5639.9794921875,
+    "playTime": 5264.3193359375,
     "stageClear": [
         true,
         true,
