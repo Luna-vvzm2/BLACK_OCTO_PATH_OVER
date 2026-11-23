@@ -786,6 +786,7 @@ void BattleEvent::Init()
 	m_isPlayerInsideArea = false;
 	m_isSpawned = false;
 	m_isEnd = false;
+	m_isFollowingOtherActor = false;
 }
 
 void BattleEvent::Update(float deltaTime)
@@ -868,65 +869,108 @@ void BattleEvent::Update(float deltaTime)
 
 	if (m_isAreaSet)
 	{
-		//プレイヤーの処理
-		for (auto actor : m_scene->GetActors())
+		auto* playScene = dynamic_cast<PlayScene*>(m_scene);
+		if (playScene)
 		{
-			if (actor->GetType() == ActorType::Player)
+			// カメラ処理
+			Camera& camera = playScene->GetCamera();
+			float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
+			float halfRange = 540.0f;
+
+			float maxOutwardShift = 0.0f;
+			float otherCamPosX = areaCenterX;
+			bool hasOtherActorOut = false;
+
+			for (Actor* enemy : m_actors)
 			{
+				if (!enemy || enemy->GetState() == Actor::State::Dead) continue;
+
+				auto transform = enemy->GetComponent<TransformComponent>();
+				if (!transform) continue;
+
+				float ex = transform->GetPosition().x;
+				if (ex < areaCenterX - halfRange)
+				{
+					float outDist = (areaCenterX - halfRange) - ex;
+					if (!hasOtherActorOut || outDist > maxOutwardShift)
+					{
+						maxOutwardShift = outDist;
+						otherCamPosX = ex + halfRange;
+						hasOtherActorOut = true;
+					}
+				}
+				else if (ex > areaCenterX + halfRange)
+				{
+					float outDist = ex - (areaCenterX + halfRange);
+					if (!hasOtherActorOut || outDist > maxOutwardShift)
+					{
+						maxOutwardShift = outDist;
+						otherCamPosX = ex - halfRange;
+						hasOtherActorOut = true;
+					}
+				}
+			}
+
+			m_isFollowingOtherActor = hasOtherActorOut;
+
+			bool isPlayerOut = false;
+			float playerCamPosX = areaCenterX;
+
+			for (Actor* actor : m_scene->GetActors())
+			{
+				if (!actor || actor->GetType() != ActorType::Player) continue;
+
 				if (actor->GetState() == Actor::State::Dead)
 				{
 					m_isPlayerInsideArea = false;
 					continue;
 				}
-				
+
 				auto transform = actor->GetComponent<TransformComponent>();
 				if (!transform) continue;
 
 				Vector2d pos = transform->GetPosition();
 
+				if (pos.x < areaCenterX - halfRange)
 				{
-					// カメラ処理
-					auto* playScene = dynamic_cast<PlayScene*>(m_scene);
-
-					Camera& camera = playScene->GetCamera();
-					float areaCenterX = m_areaXMin + (m_areaXMax - m_areaXMin) * 0.5f;
-					float halfRange = 640.0f;
-					float camPosX = areaCenterX;
-
-					if (pos.x < areaCenterX - halfRange)
-					{
-						camPosX = pos.x + halfRange;
-					}
-					else if (pos.x > areaCenterX + halfRange)
-					{
-						camPosX = pos.x - halfRange;
-					}
-					else
-					{
-						camPosX = areaCenterX;
-					}
-					camera.SetCenter({ camPosX, camera.GetCenter().y });
+					playerCamPosX = pos.x + halfRange;
+					isPlayerOut = true;
+				}
+				else if (pos.x > areaCenterX + halfRange)
+				{
+					playerCamPosX = pos.x - halfRange;
+					isPlayerOut = true;
 				}
 
 				if (!m_isPlayerInsideArea)
 				{
 					if (pos.x >= m_areaXMin && pos.x <= m_areaXMax)
 					{
-						m_isPlayerInsideArea = true; 
+						m_isPlayerInsideArea = true;
 					}
 				}
 				else
 				{
 					if (pos.x < m_areaXMin) pos.x = m_areaXMin;
-
 					if (pos.x > m_areaXMax) pos.x = m_areaXMax;
-
 					transform->SetPosition(pos);
 				}
 			}
+
+			float camPosX = areaCenterX;
+			if (m_isFollowingOtherActor && hasOtherActorOut)
+			{
+				camPosX = otherCamPosX;
+			}
+			else if (isPlayerOut)
+			{
+				camPosX = playerCamPosX;
+			}
+
+			camera.SetCenter({ camPosX, camera.GetCenter().y });
 		}
 
-		//イベント内の敵を閉じ込める処理
+		// イベント内の敵を閉じ込める処理
 		auto clampInside = [this](Actor* actor)
 			{
 				if (!actor || actor->GetState() == Actor::State::Dead) return;
@@ -947,7 +991,7 @@ void BattleEvent::Update(float deltaTime)
 			clampInside(enemy);
 		}
 
-		//エリア外部の敵を侵入させない処理
+		// エリア外部の敵を侵入させない処理
 		float areaCenter = (m_areaXMin + m_areaXMax) * 0.5f;
 
 		for (auto actor : m_scene->GetActors())

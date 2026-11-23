@@ -1,9 +1,9 @@
 type,name,time,pos,Lpath,Rpath,text
-TALK,「新聞屋」,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,「名古屋のヒーロー『金城』、失踪から早10日」<br>……いやあ全く、心苦しい見出しだね。
-TALK,「新聞屋」,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,ね、そこんところどう思う？　大の金城ファンである黒棲サンは。<br>好きな人がいきなり居なくなるってどんな気持ち？
-TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,からかうのはやめてくれ…<br>まあ、こんなに長く行方を晦ますなんて、金城らしくない。
-TALK,「新聞屋」,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,遺体も進展もないならさ、ヒーローが厭になっちゃって<br>電撃引退でもしたんじゃないの？
-TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,それを確かめに事件現場へ来たんだろ。<br>あの人に限って引退なんて――ありえない。
-TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,日数は経ってしまったけど、<br>まだ見つかっていない手掛かりがあるかも。
-TALK,「新聞屋」,None,L,assets\images\character\naoko1.png,assets\images\character\musashi.png,行動力は凄いが、良いのか？ 任務じゃないのにここまで遠出して。<br>この地区は廃墟になって久しいし、<br>不法占拠してるやつらだっているんだぞ？
-TALK,黒棲,None,R,assets\images\character\naoko1.png,assets\images\character\musashi.png,そう言っておいて、結局行くのは許すじゃない……まあいいや。<br>ちゃんと引き際は見極めるし、夜明けまでには帰るから大丈夫だよ。<br>行ってくる。
+TALK,「新聞屋」,None,R,assets\images\events\stand\kurozumi\think.png,assets\images\events\stand\shinbunya\read.png,「名古屋のヒーロー『金城』、失踪から早10日」<br>……いやあ全く、心苦しい見出しだね。
+TALK,「新聞屋」,None,R,assets\images\events\stand\kurozumi\think.png,assets\images\events\stand\shinbunya\read.png,ね、そこんところどう思う？　大の金城ファンである黒棲サンは。<br>好きな人がいきなり居なくなるってどんな気持ち？
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\think.png,assets\images\events\stand\shinbunya\read.png,からかうのはやめてくれ…<br>まあ、こんなに長く行方を晦ますなんて、金城らしくない。
+TALK,「新聞屋」,None,R,assets\images\events\stand\kurozumi\think.png,assets\images\events\stand\shinbunya\normal.png,遺体も進展もないならさ、ヒーローが厭になっちゃって<br>電撃引退でもしたんじゃないの？
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\shinbunya\normal.png,それを確かめに事件現場へ来たんだろ。<br>あの人に限って引退なんて――ありえない。
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\shinbunya\normal.png,日数は経ってしまったけど、<br>まだ見つかっていない手掛かりがあるかも。
+TALK,「新聞屋」,None,R,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\shinbunya\normal.png,行動力は凄いが、良いのか？ 任務じゃないのにここまで遠出して。<br>この地区は廃墟になって久しいし、<br>不法占拠してるやつらだっているんだぞ？
+TALK,黒棲,None,L,assets\images\events\stand\kurozumi\normal.png,assets\images\events\stand\shinbunya\normal.png,そう言っておいて、結局行くのは許すじゃない……まあいいや。<br>ちゃんと引き際は見極めるし、夜明けまでには帰るから大丈夫だよ。<br>行ってくる。
