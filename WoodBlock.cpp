@@ -38,7 +38,7 @@ bool WoodSBlock_03::Init()
 {
 	if (!BlockActor::Init()) return false;
 
-	m_sprite->SetDrawOffset(0.0f, -50.0f);
+	m_sprite->SetDrawOffset(0.0f, -30.0f);
 
 	return true;
 }
