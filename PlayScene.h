@@ -101,6 +101,7 @@ public:
 	void SaveCurrentSettings();
 
 	int m_bgHandle;
+	int m_bgFrontHandle;
 	int m_fgHandle;
 
 	void SpawnSmoke(const Vector2d& position, const Vector2d& size);

@@ -85,6 +85,7 @@ PlayScene::PlayScene(Game* game)
 	m_comboCount(0),
 	m_currentStage(1),
 	m_bgHandle(-1),
+	m_bgFrontHandle(-1),
 	m_fgHandle(-1),
 	m_eventTexture(std::make_unique<EventTexture>()),
 	m_eventManager(std::make_unique<EventManager>(this, m_eventTexture.get())), //イベントのため変更
@@ -612,12 +613,14 @@ bool PlayScene::StageInit(int stageNo) {
 	m_camera.SetBounds(Vector2d(0, 0), Vector2d(mapW, mapH));
 
 	const char* bgPath = nullptr;
+	const char* bgFrontPath = nullptr;
 	const char* fgPath = nullptr;
 
 	switch (m_stageIndex)
 	{
 	case 0:
 		bgPath = "assets/images/uies/bg1.png";
+		bgFrontPath = "assets/images/uies/bg1_front.png";
 		fgPath = "assets/images/uies/fg1.png";
 		break;
 
@@ -635,6 +638,11 @@ bool PlayScene::StageInit(int stageNo) {
 	if (m_bgHandle == -1 && bgPath != nullptr)
 	{
 		m_bgHandle = SpriteComponent::LoadCachedTexture(bgPath);
+	}
+
+	if (m_bgFrontHandle == -1 && bgFrontPath != nullptr)
+	{
+		m_bgFrontHandle = SpriteComponent::LoadCachedTexture(bgFrontPath);
 	}
 
 	if (m_fgHandle == -1 && fgPath != nullptr)
@@ -1035,6 +1043,23 @@ void PlayScene::Draw()
 			1.71f,
 			0.0f,
 			m_bgHandle,
+			true,
+			Vector2d(0, 0),
+			255,
+			false,
+			false,
+			true
+		);
+		renderer->DrawSpriteEx(
+			Vector2d(
+				-80.0f + (cam.x * 0.4f),
+				m_mapData.stages[m_stageIndex].height *
+				m_mapData.tileSize - 1100.0f
+			),
+			1.71f,
+			1.71f,
+			0.0f,
+			m_bgFrontHandle,
 			true,
 			Vector2d(0, 0),
 			255,
