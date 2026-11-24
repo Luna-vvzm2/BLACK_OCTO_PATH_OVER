@@ -519,12 +519,12 @@ bool PlayScene::StageInit(int stageNo) {
 				break;
 
 			case 8:
-				pos += Vector2d(0.0f, -100.0f);
+				pos += Vector2d(0.0f, -112.0f);
 				AddActor(new HouseBlock_Hide_01(this, pos, Vector2d(tileSize * 7.7f, 330.0f)));
 				break;
 
 			case 9:
-				pos += Vector2d(0.0f, -100.0f);
+				pos += Vector2d(0.0f, -172.0f);
 				AddActor(new HouseBlock_Hide_02(this, pos, Vector2d(tileSize * 4.0f, 530.0f)));
 				break;
 
