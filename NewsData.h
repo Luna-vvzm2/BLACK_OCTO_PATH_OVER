@@ -10,6 +10,8 @@ struct NewsData
     std::string date = "";       // 日付
     int stageNo = 0;             // 入手ステージ
     std::string imagePath = "";  // 表示する新聞画像のファイルパス
+    std::string body;
+    std::string portraitPath;
     bool unlocked = false;       // 所持・解放フラグ
 };
 
@@ -20,6 +22,8 @@ inline std::vector<NewsData> GetDefaultNewsList()
 
     NewsData n1;
     n1.id = 1;
+    n1.body = "名古屋のヒーロー「金城」が消息を絶ってから、10日が経過した。\n\n失踪の真相は、いまだ明らかになっていない。";
+    n1.portraitPath = "assets/images/events/stand/kinjo/normal.png";
     n1.title = "金城失踪から早10日";
     n1.date = "2000年5月23日";
     n1.stageNo = 1;

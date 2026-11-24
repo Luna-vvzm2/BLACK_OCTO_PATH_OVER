@@ -11,6 +11,9 @@ class Input;
 class NewsViewer {
 public:
     NewsViewer();
+    ~NewsViewer();
+    NewsViewer(const NewsViewer&) = delete;
+    NewsViewer& operator=(const NewsViewer&) = delete;
 
     void Open(const NewsData& news);    // 新聞を表示する
     void Close();
@@ -27,5 +30,10 @@ private:
     float m_timer;            // 開いてからの経過時間(フェードイン・誤入力防止用)
     std::string m_title;
     std::string m_date;
+    std::string m_body;
+    int m_portraitHandle = -1;
+    int m_headlineFont = -1;
+    int m_bodyFont = -1;
+    int m_captionFont = -1;
     int m_imageHandle;        // 新聞画像のハンドル(-1 = 画像なし)
 };

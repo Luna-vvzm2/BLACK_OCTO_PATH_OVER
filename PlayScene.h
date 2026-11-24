@@ -96,6 +96,8 @@ public:
 
 	// •ó” ‚©‚çŒÄ‚Ô: V•·‚ğ“üè‚µ‚Ä•\¦‚·‚é
 	void ShowNews(int id);
+	bool IsNewsOpen() const { return m_newsViewer.IsOpen(); }
+	void CloseNews() { m_newsViewer.Close(); }
 	void SaveCurrentSettings();
 
 	int m_bgHandle;

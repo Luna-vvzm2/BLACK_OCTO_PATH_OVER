@@ -1,5 +1,6 @@
 #include <fstream>
 #include <sstream>
+#include <exception>
 #include <algorithm>
 #include "EventManager.h"
 #include "EventTexture.h"
@@ -27,6 +28,53 @@ inline std::vector<std::string> SplitCSV(const std::string& line)
 		tokens.push_back(token);
 	}
 	return tokens;
+}
+
+namespace
+{
+    class NewspaperEvent : public EventBase
+    {
+    public:
+        NewspaperEvent(Scene* scene, const std::vector<std::string>& texts)
+            : m_scene(scene) { m_texts = texts; }
+
+        EventType GetType() const override { return EventType::News; }
+        void Init() override
+        {
+            m_playScene = dynamic_cast<PlayScene*>(m_scene);
+            m_isEnd = true;
+            if (!m_playScene) return;
+            for (const auto& text : m_texts)
+            {
+                const auto tokens = SplitCSV(text);
+                if (tokens.size() < 2 || tokens[0] != "NEWS") continue;
+                try
+                {
+                    m_playScene->ShowNews(std::stoi(tokens[1]));
+                    m_isEnd = !m_playScene->IsNewsOpen();
+                }
+                catch (const std::exception&)
+                {
+                    std::cerr << "Invalid newspaper event ID.`n";
+                }
+                break;
+            }
+        }
+        void Update(float) override
+        {
+            if (m_playScene && !m_playScene->IsNewsOpen()) m_isEnd = true;
+        }
+        void End() override
+        {
+            if (m_playScene) m_playScene->CloseNews();
+        }
+        bool IsEnd() const override { return m_isEnd; }
+        void Draw() override {}
+    private:
+        Scene* m_scene = nullptr;
+        PlayScene* m_playScene = nullptr;
+        bool m_isEnd = false;
+    };
 }
 
 EventManager::EventManager(Scene* scene, EventTexture* eventTexture)
@@ -152,6 +200,10 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 			{
 				m_eventQueue.push_back(std::make_unique<GetSkillEvent>(m_scene, eventTexts, this));
 			}
+            else if (eventType == "NEWS")
+            {
+                m_eventQueue.push_back(std::make_unique<NewspaperEvent>(m_scene, eventTexts));
+            }
 			eventTexts.clear();
 		};
 
@@ -166,7 +218,7 @@ void EventManager::LoadEventTimeLine(const std::string& filePath, const Vector2d
 		if (tokens[0] == "type" || tokens[0] == "enemyType") continue;
 
 		const std::string& typeToken = tokens[0];
-		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL" || typeToken == "GETSKILL")
+		if (typeToken == "TALK" || typeToken == "BATTLE" || typeToken == "CUTIN" || typeToken == "CLEAR" || typeToken == "TUTORIAL" || typeToken == "GETSKILL" || typeToken == "NEWS")
 		{
 			pushEvent();
 			eventType = typeToken;
