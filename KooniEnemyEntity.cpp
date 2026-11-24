@@ -148,9 +148,16 @@ void KooniEnemyEntity::Update(float deltaTime)
 
     PlayerEntity* player = FindPlayer();
     m_stateTimer += deltaTime;
-    if (CanSeePlayer(player) && player->GetPos().y - GetPos().y < -KOONI_CHASE_RANGE_Y)
+    if (CanSeePlayer(player))
     {
-        m_heightDifferenceTimer += deltaTime;
+        if (player->GetPos().y - GetPos().y < -KOONI_CHASE_RANGE_Y)
+        {
+            m_heightDifferenceTimer += deltaTime;
+        }
+        else
+        {
+            m_heightDifferenceTimer = 0.0f;
+        }
     }
     else
     {
@@ -175,8 +182,11 @@ void KooniEnemyEntity::Update(float deltaTime)
         break;
     }
 
-    SetChaseFlag(player != nullptr && !player->GetIsHide() &&
-        (m_status == Status::Move || m_status == Status::Attack));
+    // ChaseFlag tracks an active pursuit. Octo prevents starting a new chase,
+    // but an existing Move/Attack pursuit remains aware of the player.
+    const bool isPursuing =
+        m_status == Status::Move || m_status == Status::Attack;
+    SetChaseFlag(isPursuing && CanSeePlayer(player));
 
     if (m_sprite != nullptr)
     {
@@ -214,12 +224,21 @@ bool KooniEnemyEntity::CanSeePlayer(const PlayerEntity* player) const
         return false;
     }
 
-    if (player->GetIsHide()) { return false; }
-    if (player->GetIsJutsu(0) && GetChaseFlag() == false) { return false; }
+    if (player->GetIsHide())
+    {
+        return false;
+    }
+
+    const bool isAlreadyPursuing =
+        m_status == Status::Move || m_status == Status::Attack;
+    if (player->GetIsJutsu(0) && !isAlreadyPursuing)
+    {
+        return false;
+    }
 
     const Vector2d difference = player->GetPos() - GetPos();
-    return std::fabs(difference.x) <= SEARCH_RANGE_X &&
-        std::fabs(difference.y) <= SEARCH_RANGE_Y;
+    return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X &&
+        std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
 }
 
 bool KooniEnemyEntity::CanReachPlayer(const PlayerEntity* player) const
@@ -481,14 +500,7 @@ void KooniEnemyEntity::OnDead()
 bool KooniEnemyEntity::IsPlayerInSearchRange() const
 {
     PlayerEntity* player = FindPlayer();
-    if (player == nullptr || player->IsDead())
-    {
-        return false;
-    }
-
-    const Vector2d difference = player->GetPos() - GetPos();
-
-    return std::fabs(difference.x) <= KOONI_SIGHT_RANGE_X && std::fabs(difference.y) <= KOONI_SIGHT_RANGE_Y;
+    return CanSeePlayer(player);
 }
 
 std::string KooniEnemyEntity::GetTexturePath() const

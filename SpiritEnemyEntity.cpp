@@ -653,13 +653,8 @@ bool SpiritEnemyEntity::IsPlayerInSearchRange() const
 
     float distanceY =
         std::abs(playerPos.y - enemyPos.y);
-    bool flg;
-    if (distanceX <= m_detectRange && distanceY <= 250.0f)
-    {
-        flg = true;
-    }
-    else { flg = false; }
-    return GetChaseFlag();
+    
+    return (distanceX <= m_detectRange && distanceY <= 250.0f);
 }
 
 void SpiritEnemyEntity::TakeDamage(
